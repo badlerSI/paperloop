@@ -1,0 +1,39 @@
+{
+  "assignment_id": "sci7-density-01",
+  "title": "Density: Short Answer",
+  "subject": "science",
+  "grade_band": "middle school (grade 7)",
+  "instructions": "Answer each question in its box, in pencil or dark pen. Write your ID number, not your name.",
+  "questions": [
+    {
+      "q": 1,
+      "prompt": "Why does ice float on water?",
+      "key": "Ice is less dense than liquid water.",
+      "points": 2
+    },
+    {
+      "q": 2,
+      "prompt": "A block has a mass of 40 g and a volume of 20 cm³. What is its density? Show your work and include units.",
+      "key": "Density = mass / volume = 40 g / 20 cm³ = 2 g/cm³. Full credit needs the value 2 and the units g/cm³.",
+      "points": 2
+    },
+    {
+      "q": 3,
+      "prompt": "You cut a wooden block in half. What happens to the density of each half? Explain.",
+      "key": "The density stays the same. Mass and volume are both cut in half, so mass divided by volume does not change; density depends on the material, not the size.",
+      "points": 2
+    },
+    {
+      "q": 4,
+      "prompt": "Oil floats on top of water. What does that tell you about the densities of oil and water?",
+      "key": "Oil is less dense than water.",
+      "points": 2
+    },
+    {
+      "q": 5,
+      "prompt": "A rock and a log have the same mass. The rock sinks in water but the log floats. Explain why, using the word volume.",
+      "key": "The log has a much larger volume for the same mass, so its density is lower than water's and it floats. The rock has a small volume, so its density is greater than water's and it sinks.",
+      "points": 2
+    }
+  ]
+}

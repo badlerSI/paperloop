@@ -1,0 +1,36 @@
+[build-system]
+requires = ["setuptools>=69"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "paperloop"
+version = "0.1.0.dev0"
+description = "Turn a school copier into a feedback machine: print worksheets, scan the stack, get marked-up paper back."
+readme = "README.md"
+license = "Apache-2.0"
+requires-python = ">=3.11"
+dependencies = [
+    "anthropic>=2.3",
+    "numpy>=2.0",
+    "opencv-python-headless>=4.8",
+    "pillow>=10.0",
+    "pydantic>=2.6",
+    "pypdf>=4.0",
+    "pypdfium2>=4.25",
+    "python-dotenv>=1.0",
+    "qrcode>=7.4",
+    "reportlab>=4.0",
+    "typer>=0.12",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+paperloop = "paperloop.cli:app"
+
+[tool.setuptools]
+packages = ["paperloop"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
