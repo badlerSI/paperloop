@@ -7,21 +7,116 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from typing import Literal, TypeVar
+from typing import Annotated, Any, Literal, TypeVar, Union
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Discriminator, Field, Tag
 
 Rect = tuple[float, float, float, float]
+QuestionType = Literal["short", "choice", "label", "draw"]
 
 
 # --- Worksheet definition (input to make) -----------------------------------
 
-class Question(BaseModel):
+class Shape(BaseModel):
+    """One element of a printed diagram. Coordinates are points inside the diagram, origin bottom-left."""
+
+    shape: Literal["rect", "circle", "line", "arrow", "polyline", "polygon", "text"]
+    id: str | None = None  # lets the simulator find regions, e.g. the "iron" box
+    x: float = 0
+    y: float = 0
+    w: float = 0
+    h: float = 0
+    r: float = 0
+    points: list[tuple[float, float]] = Field(default_factory=list)  # line, arrow, polyline, polygon
+    text: str = ""
+    size: float = 9
+    bold: bool = False
+    align: Literal["left", "center", "right"] = "left"
+    fill: float | None = None  # gray level, 0 black to 1 white; None for no fill
+    stroke: float | None = 0.0  # gray level of the outline; None for no outline
+    width: float = 1.0
+
+
+class Diagram(BaseModel):
+    width: float
+    height: float
+    shapes: list[Shape] = Field(default_factory=list)
+    description: str = ""  # plain words for the model: what's printed, before the student touches it
+
+
+class Option(BaseModel):
+    letter: str
+    text: str
+    why: str = ""  # printed beside the question when this option is chosen
+
+
+class LabelSpot(BaseModel):
+    n: int
+    box: tuple[float, float, float, float]  # x, y, w, h inside the diagram
+    points_to: tuple[float, float] | None = None
+    answer: str
+    accept: list[str] = Field(default_factory=list)
+    points: int = 1
+
+
+class CheckItem(BaseModel):
+    item: str  # what the model checks for, in observable terms
+    short: str = ""  # shorter wording printed on the returned page
+    points: int = 1
+
+
+class ShortQ(BaseModel):
+    type: Literal["short"] = "short"
     q: int
     prompt: str
     key: str
     points: int = 2
     lines: int = 4  # writing lines in the answer box
+
+
+class ChoiceQ(BaseModel):
+    type: Literal["choice"] = "choice"
+    q: int
+    prompt: str
+    options: list[Option]
+    answer: str
+    points: int = 1
+
+
+class LabelQ(BaseModel):
+    type: Literal["label"] = "label"
+    q: int
+    prompt: str
+    diagram: Diagram
+    labels: list[LabelSpot]
+    word_bank: list[str] = Field(default_factory=list)
+
+    @property
+    def points(self) -> int:
+        return sum(spot.points for spot in self.labels)
+
+
+class DrawQ(BaseModel):
+    type: Literal["draw"] = "draw"
+    q: int
+    prompt: str
+    diagram: Diagram  # the printed scaffold; its size is the drawing area
+    checklist: list[CheckItem]
+
+    @property
+    def points(self) -> int:
+        return sum(c.points for c in self.checklist)
+
+
+def _question_type(value: Any) -> str:
+    return value.get("type", "short") if isinstance(value, dict) else getattr(value, "type", "short")
+
+
+Question = Annotated[
+    Union[Annotated[ShortQ, Tag("short")], Annotated[ChoiceQ, Tag("choice")],
+          Annotated[LabelQ, Tag("label")], Annotated[DrawQ, Tag("draw")]],
+    Discriminator(_question_type),
+]
 
 
 class WorksheetDef(BaseModel):
@@ -35,12 +130,26 @@ class WorksheetDef(BaseModel):
 
 # --- Layout and key (output of make) ----------------------------------------
 
+class OptionSpot(BaseModel):
+    letter: str
+    rect: Rect  # the whole option row; a circle anywhere in it counts as choosing it
+    letter_at: tuple[float, float]  # center of the printed letter
+
+
+class LabelBoxSpot(BaseModel):
+    n: int
+    rect: Rect
+
+
 class Box(BaseModel):
     q: int
-    rect: Rect
+    type: QuestionType = "short"
+    rect: Rect  # region cropped for marking
     feedback_rect: Rect  # gutter beside the box where comments get stamped
     prompt: str
     points: int
+    options: list[OptionSpot] = Field(default_factory=list)
+    labels: list[LabelBoxSpot] = Field(default_factory=list)
 
 
 class IdGrid(BaseModel):
@@ -75,9 +184,16 @@ class Layout(BaseModel):
 
 class KeyItem(BaseModel):
     q: int
+    type: QuestionType = "short"
     prompt: str
-    key: str
     points: int
+    key: str = ""  # short
+    options: list[Option] = Field(default_factory=list)  # choice
+    answer: str = ""  # choice
+    labels: list[LabelSpot] = Field(default_factory=list)  # label
+    word_bank: list[str] = Field(default_factory=list)  # label
+    checklist: list[CheckItem] = Field(default_factory=list)  # draw
+    diagram: str = ""  # label and draw: what's printed, in words
 
 
 class AnswerKey(BaseModel):
@@ -126,14 +242,51 @@ class BoxMark(BaseModel):
     key_ambiguous: bool = False
 
 
+class ChoiceRead(BaseModel):
+    """The model's reading of a circle-the-answer question the scan alone couldn't settle."""
+
+    selected: list[str]
+    crossed_out: list[str] = Field(default_factory=list)
+    confidence: float
+
+
+class LabelRead(BaseModel):
+    n: int
+    transcription: str
+    verdict: Literal["correct", "incorrect", "blank", "unreadable"]
+    confidence: float
+
+
+class LabelMark(BaseModel):
+    labels: list[LabelRead]
+    comment: str
+    confidence: float
+
+
+class ItemCheck(BaseModel):
+    n: int
+    met: Literal["yes", "no", "unclear"]
+    note: str = ""
+
+
+class DrawMark(BaseModel):
+    description: str  # what the student drew, before any judging
+    items: list[ItemCheck]
+    comment: str
+    confidence: float
+
+
 class BoxResult(BoxMark):
     q: int
+    type: QuestionType = "short"
     points_possible: int
     points_awarded: float
     flagged: bool
     flag_reasons: list[str] = Field(default_factory=list)
     reviewed: bool = False
     crop: str
+    # Per-part results: a choice's reading, each label, or each checklist item.
+    details: list[dict[str, Any]] = Field(default_factory=list)
 
 
 class PageSummary(BaseModel):

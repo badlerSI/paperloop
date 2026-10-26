@@ -93,6 +93,41 @@ Sonnet 5.5 at medium effort: about 0.6¢ per page averaged over the set, about 0
 
 Next: print four copies, fill them in per `paperloop fill-guide` (the key is already in `scans/day1/truth.json`), scan them, then `paperloop run` and `paperloop sweep` on `runs/day1`.
 
+## Richer question types (built Oct 26)
+
+Circle-the-answer, labeling, and drawing-with-checklist questions now work end to end. "Density Detectives" (`examples/sci7-density-02.json`) uses all of them: two circle-the-answer mysteries with a printed "why" for every option, one short answer, a density column to label, and a pine-vs-iron particle drawing.
+
+How each is judged:
+- **Circles are read from the scan, not by the model.** Ink that isn't on the blank page is counted per option row. One clear mark means no API call. Two marked rows, such as circling A, crossing it out, and circling B, go to the model, which reports the final choice and what was crossed out.
+- **Labels and drawings are sent as a pair:** the blank printed region and the student's. The model can then tell the student's marks from the printing.
+- **Drawings are described before they're judged** ("Pine wood box: 12 circles… Iron box: about 12"), then each checklist item gets yes, no, or unclear. Unclear goes to review.
+
+Simulated results, Sonnet 5.5 at medium effort, 3 runs:
+
+| Check | Result |
+| --- | --- |
+| Verdicts matching expected | 45/45 |
+| Circled answers read right | 6/6 per run; 1 needed the model |
+| Drawing checklist items matching expected | 9/9 per run |
+| Misspellings kept, including in labels ("vegtable", "watter", "hunny") | all |
+| Flags | 0% |
+| Cost | 0.64¢ per page |
+| Comments over 15 words | 8/45 |
+
+**Two prompt fixes came out of this.** First, label and drawing comments ran long; the "one short sentence" wording helped. Second, the model was explaining layers with "the heaviest liquid sinks, the lightest floats," which is the misconception the lesson corrects. Every marking prompt now says to use the key's precise vocabulary, never the everyday word the lesson is correcting. That took it to zero.
+
+**Rendering:** check and cross marks are drawn as strokes. The built-in symbol font rendered as solid squares in at least one PDF viewer.
+
+## Next iteration: worksheets kids want to do (Ben, Oct 26)
+
+Day 1's worksheet tests function, and it's blank and boring: five short-answer boxes. The next iteration needs more than short answer. Directions to explore:
+
+- **Question types.** Circle-the-answer, labeling, and drawing with checklist keys are built (above). Still to do: matching (draw a line), fill-in tables, numbers with units, ordering and sorting, claim-evidence-reasoning in three labeled boxes, and plotting on printed axes (points on a printed grid can be checked by image processing alone).
+- **More diagram scaffolds.** Axes, a food web's organisms, a circuit. Keys stay checklists of things you can see; open-ended drawings get higher flag rates by design.
+- **Engagement.** Phenomenon-first prompts ("Why does the can of diet soda float and the regular one sink?"), illustrations, and a scenario that runs through the page. The Make step drafts this from a lesson description.
+- **IDs printed into the QR code instead of bubbles.** Print one copy per student from the roster. The QR carries an opaque per-class student code (never a name or district ID), and the header shows the student's first name for handing out. Spares get a "spare" code, and the teacher assigns them in review. This drops bubbles entirely (hard for young kids and for kids with motor issues) and makes per-student accommodations possible.
+- **Accommodations applied automatically, from a local profile per student** (the v0.2 plan). At print time: larger print, fewer items, word bank, sentence starters, extra space. At marking time: "spelling isn't assessed", "accept a drawn or dictated answer". The model sees only a generic instruction, never the IEP, a diagnosis, or who the student is. Variants should look like the regular sheet. The teacher confirms a print summary ("5 students get the word bank version"), and a delivery log records what each student got. Profiles come only from the teacher or case manager; the tool never infers who needs one.
+
 ## Top three for Day 2 (provisional until the handwriting run)
 
 1. **Run the sweep on Ben's handwriting** and pick the default model and effort from it, plus the confidence threshold from its flag rate.

@@ -13,25 +13,16 @@ from pathlib import Path
 
 import cv2
 import numpy as np
-import pypdfium2 as pdfium
 
 from . import template as T
 from .make import load_assignment
+from .raster import DARK, render_pages
 from .schemas import IdGrid, IngestResult, PageScan, Rect, save
 
-DARK = 160  # grayscale below this counts as ink; printed faint guides sit above it
 BLANK_INK_FRACTION = 0.002
 BUBBLE_FILLED = 0.35  # share of a bubble's center that must be dark to count as filled
 BUBBLE_AMBIGUOUS = 0.6  # a runner-up this close to the darkest bubble makes the digit ambiguous
 MAX_REPROJECTION_PX = 6.0
-
-
-def render_pages(pdf_path: Path, dpi: int) -> list[np.ndarray]:
-    doc = pdfium.PdfDocument(str(pdf_path))
-    try:
-        return [np.array(doc[i].render(scale=dpi / 72).to_pil().convert("L")) for i in range(len(doc))]
-    finally:
-        doc.close()
 
 
 @cache

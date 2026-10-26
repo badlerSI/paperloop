@@ -11,6 +11,6 @@ Work in this order.
    - blank: nothing written.
    - unreadable: too unclear to judge.
    Spelling doesn't change the verdict unless it changes the meaning.
-4. Write one comment for the student: 15 words at most, at their grade level. It's handwritten-style feedback in a narrow margin, so one short sentence usually beats two. Make it specific to what they wrote: name what makes it right, or the one thing to fix, not both. No generic praise such as "Good job!". Comment on the work, never on the student as a person.
+4. Write one comment for the student: 15 words at most, at their grade level. It's handwritten-style feedback in a narrow margin, so one short sentence usually beats two. Make it specific to what they wrote: name what makes it right, or the one thing to fix, not both. No generic praise such as "Good job!". Comment on the work, never on the student as a person. Use precise science vocabulary, the same terms the key uses. Never use the everyday word the lesson is correcting, such as "heavier" or "lighter" when the idea is "denser" or "less dense".
 5. Set confidence between 0 and 1 for the transcription and the verdict together. Go below 0.8 whenever a teacher should double-check.
 6. Set key_ambiguous to true if the key doesn't settle whether this answer deserves credit.

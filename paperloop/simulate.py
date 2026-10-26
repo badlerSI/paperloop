@@ -1,16 +1,19 @@
 """Simulate: fake a filled-in, scanned class set so the pipeline runs without a printer.
 
-Writes answers in handwriting-style system fonts, fills ID bubbles, then adds
-scan damage: skew, shift, blur, noise, one sheet fed upside down, a blank page,
-and shuffled order. Also writes truth.json with what each page really says, so
-tests can measure routing, misreads, and silent autocorrect.
+Each worksheet's fake students live in examples/<assignment_id>.students.json:
+what they write, circle, label, and draw. This writes their answers in
+handwriting-style system fonts, fills the ID bubbles, then adds scan damage:
+skew, shift, blur, noise, one sheet fed upside down, a blank page, and
+shuffled order. It also writes truth.json, so tests can measure routing,
+misreads, and silent autocorrect.
 
-This is a stand-in for Day 1's hand-filled copies, not a replacement for them.
+This is a stand-in for hand-filled copies, not a replacement for them.
 """
 
 from __future__ import annotations
 
 import json
+import math
 import random
 import re
 from pathlib import Path
@@ -20,48 +23,24 @@ import numpy as np
 from PIL import Image, ImageDraw, ImageFont
 
 from . import template as T
-from .ingest import render_pages
 from .make import load_assignment
+from .raster import render_pages
+from .schemas import Box, WorksheetDef, load
 
 FONT_DIRS = [Path("/System/Library/Fonts/Supplemental"), Path("/System/Library/Fonts"), Path("/Library/Fonts")]
+EXAMPLES_DIR = Path(__file__).resolve().parent.parent / "examples"
+HAND_PT = 15  # handwriting size
 
-# Four copies, matching Day 1: clean, messy, crossed out with misspellings, blank.
-# ~~word~~ is written and then struck through. Misspellings are listed so tests
-# can check the transcription kept them (silent autocorrect).
-STUDENTS = [
-    {
-        "id": "0417", "style": "clean", "font": "Noteworthy.ttc",
-        "answers": {
-            1: ("Ice is less dense than liquid water, so it floats.", [], "correct"),
-            2: ("D = m / V = 40 g / 20 cm3 = 2 g/cm3", [], "correct"),
-            3: ("It stays the same. Both the mass and the volume are cut in half.", [], "correct"),
-            4: ("Oil is less dense than water.", [], "correct"),
-            5: ("The log has more volume, so it is less dense than water and floats. "
-                "The rock has less volume, so it is denser than water and sinks.", [], "correct"),
-        },
-    },
-    {
-        "id": "2093", "style": "messy", "font": "Bradley Hand Bold.ttf",
-        "answers": {
-            1: ("ice is lighter then water", ["then"], "partial"),
-            2: ("2", [], "partial"),
-            3: ("each half is half as dense", [], "incorrect"),
-            4: ("oil is thicker than water", [], "incorrect"),
-            5: ("the log is bigger", [], "partial"),
-        },
-    },
-    {
-        "id": "3158", "style": "crossed", "font": "ChalkboardSE.ttc",
-        "answers": {
-            1: ("Ice is less ~~heavy~~ dense then water", ["then"], "correct"),
-            2: ("denisty = 40/20 = 2 g/cm3", ["denisty"], "correct"),
-            3: ("the densty stays the same becuase its the same wood", ["densty", "becuase"], "correct"),
-            4: ("oil is less dence than water", ["dence"], "correct"),
-            5: ("the rock has ~~more~~ less volume so it is more dense", [], "partial"),
-        },
-    },
-    {"id": "0006", "style": "blank", "font": "MarkerFelt.ttc", "answers": {}},
-]
+
+def students_path(assignment_id: str) -> Path:
+    return EXAMPLES_DIR / f"{assignment_id}.students.json"
+
+
+def load_students(assignment_id: str, path: Path | None = None) -> dict:
+    path = Path(path) if path else students_path(assignment_id)
+    if not path.exists():
+        raise FileNotFoundError(f"No simulated students for {assignment_id}: expected {path}")
+    return json.loads(path.read_text())
 
 
 def _font(name: str, size: int) -> ImageFont.FreeTypeFont:
@@ -93,6 +72,53 @@ def _write_box(draw: ImageDraw.ImageDraw, rect, text: str, font, rng: random.Ran
         x += width
 
 
+def _write_label(draw: ImageDraw.ImageDraw, rect, text: str, font_name: str, rng: random.Random,
+                 ink: int, dpi: int) -> None:
+    """Write one label inside its box, shrinking the writing to fit like a kid would."""
+    left, top, right, bottom = T.rect_to_px(rect, dpi)
+    size = round(13 * T.scale(dpi))
+    font = _font(font_name, size)
+    while draw.textlength(text, font=font) > (right - left) - 34 and size > 18:
+        size -= 2
+        font = _font(font_name, size)
+    draw.text((left + 26 + rng.randint(-3, 3), bottom - 14 + rng.randint(-2, 2)), text,
+              font=font, fill=ink, anchor="ls")
+
+
+def _circle_option(draw: ImageDraw.ImageDraw, box: Box, letter: str, crossed: bool, rng: random.Random,
+                   ink: int, dpi: int) -> None:
+    spot = next(o for o in box.options if o.letter == letter)
+    cx, cy = T.pt_to_px(*spot.letter_at, dpi)
+    s = T.scale(dpi)
+    cx, cy = cx + rng.uniform(-1.5, 1.5) * s, cy + rng.uniform(-1.5, 1.5) * s
+    rx, ry = rng.uniform(10, 12) * s, rng.uniform(8, 9.5) * s
+    draw.ellipse([cx - rx, cy - ry, cx + rx, cy + ry], outline=ink, width=4)
+    if crossed:
+        draw.line([(cx - rx, cy - ry), (cx + rx, cy + ry)], fill=ink, width=4)
+        draw.line([(cx - rx, cy + ry), (cx + rx, cy - ry)], fill=ink, width=4)
+
+
+def _draw_particles(draw: ImageDraw.ImageDraw, region, count: int, style: str, rng: random.Random,
+                    ink: int, dpi: int) -> None:
+    """Same-size particles on a jittered grid, so more particles means closer packing."""
+    x, y, w, h = region
+    x, y, w, h = x + 6, y + 6, w - 12, h - 12
+    cols = max(1, round(math.sqrt(count * w / h)))
+    rows = math.ceil(count / cols)
+    cells = [(c, r) for r in range(rows) for c in range(cols)]
+    rng.shuffle(cells)
+    cw, ch = w / cols, h / rows
+    radius = 4.5 if style == "circle" else 3.2
+    for c, r in cells[:count]:
+        px = x + (c + 0.5 + rng.uniform(-0.2, 0.2)) * cw
+        py = y + (r + 0.5 + rng.uniform(-0.2, 0.2)) * ch
+        (cx, cy), rp = T.pt_to_px(px, py, dpi), radius * T.scale(dpi)
+        if style == "dot":
+            draw.ellipse([cx - rp, cy - rp, cx + rp, cy + rp], fill=ink)
+        else:
+            draw.ellipse([cx - rp, cy - rp, cx + rp, cy + rp], outline=ink, width=3)
+
+
 def _fill_id(draw: ImageDraw.ImageDraw, grid, student_id: str, font, rng: random.Random, ink: int, dpi: int) -> None:
     s = T.scale(dpi)
     for d, digit in enumerate(student_id):
@@ -102,6 +128,27 @@ def _fill_id(draw: ImageDraw.ImageDraw, grid, student_id: str, font, rng: random
         r = grid.bubble_r * s * rng.uniform(0.8, 0.95)
         jx, jy = rng.uniform(-1.5, 1.5), rng.uniform(-1.5, 1.5)
         draw.ellipse([cx - r + jx, cy - r * 0.9 + jy, cx + r + jx, cy + r * 0.9 + jy], fill=ink)
+
+
+def _answer(draw: ImageDraw.ImageDraw, box: Box, answer: dict, defn: WorksheetDef, student: dict,
+            hand, rng: random.Random, ink: int, dpi: int) -> None:
+    if "text" in answer:
+        _write_box(draw, box.rect, answer["text"], hand, rng, ink, dpi)
+    if "circle" in answer:
+        for mark in answer["circle"]:
+            _circle_option(draw, box, mark.strip("~"), mark.startswith("~~"), rng, ink, dpi)
+    if "labels" in answer:
+        spots = {s.n: s.rect for s in box.labels}
+        for n, text in answer["labels"].items():
+            _write_label(draw, spots[int(n)], text, student["font"], rng, ink, dpi)
+    if "particles" in answer:
+        question = next(q for q in defn.questions if q.q == box.q)
+        shapes = {s.id: s for s in question.diagram.shapes if s.id}
+        ox, oy = box.rect[0], box.rect[1]
+        for region_id, spec in answer["particles"].items():
+            s = shapes[region_id]
+            _draw_particles(draw, (ox + s.x, oy + s.y, s.w, s.h), spec["count"], spec.get("style", "circle"),
+                            rng, ink, dpi)
 
 
 def _scan_damage(img: np.ndarray, rng: random.Random, angle: float, flip: bool) -> np.ndarray:
@@ -114,16 +161,19 @@ def _scan_damage(img: np.ndarray, rng: random.Random, angle: float, flip: bool) 
     return np.clip(out.astype(np.float32) * 0.97 + noise + 4, 0, 255).astype(np.uint8)
 
 
-def simulate(assignment_dir: Path, out_pdf: Path, seed: int = 7, dpi: int = T.DPI) -> Path:
+def simulate(assignment_dir: Path, out_pdf: Path, seed: int = 7, students: Path | None = None,
+             dpi: int = T.DPI) -> Path:
     """Write a fake scanned class set and truth.json beside it. Returns the PDF path."""
     assignment_dir, out_pdf = Path(assignment_dir), Path(out_pdf)
     layout, _ = load_assignment(assignment_dir)
+    defn = load(WorksheetDef, assignment_dir / "worksheet.json")
+    roster = load_students(layout.assignment_id, students)
     rng = random.Random(seed)
     blanks = render_pages(assignment_dir / "worksheet.pdf", dpi)
 
     sheets = []  # (image, truth)
-    for student in STUDENTS:
-        hand = _font(student["font"], round(15 * T.scale(dpi)))
+    for student in roster["students"]:
+        hand = _font(student["font"], round(HAND_PT * T.scale(dpi)))
         ink = 70 if student["style"] == "messy" else 45
         flip = student["style"] == "messy"  # one sheet goes through the feeder upside down
         for page_layout, blank in zip(layout.pages, blanks):
@@ -131,8 +181,9 @@ def simulate(assignment_dir: Path, out_pdf: Path, seed: int = 7, dpi: int = T.DP
             draw = ImageDraw.Draw(pil)
             _fill_id(draw, page_layout.id_grid, student["id"], hand, rng, ink, dpi)
             for box in page_layout.boxes:
-                if box.q in student["answers"]:
-                    _write_box(draw, box.rect, student["answers"][box.q][0], hand, rng, ink, dpi)
+                answer = student["answers"].get(str(box.q))
+                if answer:
+                    _answer(draw, box, answer, defn, student, hand, rng, ink, dpi)
             damaged = _scan_damage(np.array(pil), rng, rng.uniform(-1.8, 1.8), flip)
             sheets.append((damaged, {"student_id": student["id"], "page": page_layout.page, "upside_down": flip}))
 
@@ -147,16 +198,7 @@ def simulate(assignment_dir: Path, out_pdf: Path, seed: int = 7, dpi: int = T.DP
     truth = {
         "assignment_id": layout.assignment_id,
         "scan_pages": [{"scan_index": i, **t} for i, (_, t) in enumerate(sheets, start=1)],
-        "students": [
-            {
-                "id": s["id"], "style": s["style"],
-                "answers": {
-                    str(q): {"text": text, "misspellings": miss, "expected": expected}
-                    for q, (text, miss, expected) in s["answers"].items()
-                },
-            }
-            for s in STUDENTS
-        ],
+        "students": roster["students"],
     }
-    (out_pdf.with_suffix(".truth.json")).write_text(json.dumps(truth, indent=2) + "\n")
+    out_pdf.with_suffix(".truth.json").write_text(json.dumps(truth, indent=2) + "\n")
     return out_pdf

@@ -33,12 +33,27 @@ paperloop score runs/sim-class --truth scans/sim/sim-class.truth.json
 
 ## Day 1 with real paper
 
-1. `paperloop make examples/sci7-density-01.json`, then print `assignments/sci7-density-01/worksheet.pdf` four times, double-sided.
-2. `paperloop fill-guide --truth scans/day1/truth.json` prints what to write on each copy (clean, messy, crossed out with misspellings, blank) and saves the matching answer key.
+1. `paperloop make examples/sci7-density-02.json`, then print `assignments/sci7-density-02/worksheet.pdf` four times, double-sided. (`sci7-density-01` is the plain short-answer version.)
+2. `paperloop fill-guide assignments/sci7-density-02 --truth scans/day1/truth.json` prints what to write, circle, label, and draw on each copy (clean, messy, crossed out with misspellings, blank) and saves the matching answer key.
 3. Scan the four sheets at 300 dpi grayscale into `scans/day1/`. On an HP Color LaserJet Pro MFP 3301sdw, put them in the document feeder and choose two-sided scanning to PDF. One PDF or several is fine, in any order: if a scanner only does one side at a time, scan the fronts, flip the stack, and scan the backs.
-4. `paperloop run scans/day1/*.pdf --assignment assignments/sci7-density-01 --work runs/day1`
+4. `paperloop run scans/day1/*.pdf --assignment assignments/sci7-density-02 --work runs/day1`
 5. `paperloop score runs/day1 --truth scans/day1/truth.json`
 6. Print `runs/day1/out/returned.pdf` and mark every misread and every wrong or unhelpful comment.
+
+## Writing a worksheet
+
+A worksheet is a JSON file; see [examples/sci7-density-02.json](examples/sci7-density-02.json) ("Density Detectives") for every question type. Each question has a `type`:
+
+| Type | Students | How it's marked |
+| --- | --- | --- |
+| `short` | write in a ruled box | The model transcribes literally, then judges against `key`. |
+| `choice` | circle one letter | Read from the scan: no model call. Only an unclear mark (say, one circled, crossed out, and another circled) goes to the model. Each option's `why` is printed beside the question when it's chosen. |
+| `label` | write in numbered boxes on a printed diagram | The model reads each box against its `answer` and `accept` list. Misspellings that still name the right thing count. |
+| `draw` | draw into a frame over a printed scaffold | The model first describes what's drawn, then checks each `checklist` item ("yes", "no", "unclear"). One point per item. |
+
+Diagrams for `label` and `draw` are a list of `shapes` (`rect`, `circle`, `line`, `arrow`, `polyline`, `polygon`, `text`) in points, with the origin at the diagram's bottom-left. For labels and drawings, the model gets the blank printed region next to the student's version, so it can tell their marks from the printing. Write checklist items as things you can see on the page ("the iron box has clearly more particles"), not as judgments ("shows understanding of density").
+
+Each worksheet's simulated students live in `examples/<assignment_id>.students.json`, and `simulate` and `fill-guide` read them.
 
 ## Compare models and effort levels
 

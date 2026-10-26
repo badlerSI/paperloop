@@ -89,6 +89,11 @@ def review(workdir: Path, accept_all: bool = False, ask: Callable[[str], str] = 
             say(f"  read as:  {box.transcription!r}"
                 + (f"  unsure: {', '.join(box.uncertain_words)}" if box.uncertain_words else ""))
             say(f"  verdict:  {box.verdict} ({box.points_awarded:g}/{box.points_possible})")
+            for d in box.details:
+                if box.type == "label":
+                    say(f"    label {d['n']}: {d['read']!r} -> {d['verdict']} (expected {d['answer']})")
+                elif box.type == "draw":
+                    say(f"    item {d['n']}: {d['met']}: {d['item']}" + (f" ({d['note']})" if d.get("note") else ""))
             say(f"  comment:  {box.comment}")
             choice = ask("  [a]ccept, [e]dit comment, [v]erdict, [s]kip comment, [o]pen image, [q]uit: ")
             choice = (choice.strip().lower() or "a")[0]

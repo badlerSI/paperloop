@@ -1,0 +1,98 @@
+{
+  "assignment_id": "sci7-density-02",
+  "title": "Density Detectives",
+  "subject": "science",
+  "grade_band": "middle school (grade 7)",
+  "instructions": "Solve each mystery. For multiple choice, circle one letter. Write your ID number, not your name.",
+  "questions": [
+    {
+      "type": "choice",
+      "q": 1,
+      "prompt": "The Sinking Soda: A can of regular soda sinks in a tub of water, but a can of diet soda floats. Which explanation fits best?",
+      "options": [
+        {"letter": "A", "text": "The diet soda can is made of thinner, lighter aluminum.",
+         "why": "Both cans use the same aluminum. Compare what's dissolved in each soda."},
+        {"letter": "B", "text": "Regular soda has lots of sugar dissolved in it, which adds mass without adding much volume.",
+         "why": "Yes: more mass in the same volume means a higher density."},
+        {"letter": "C", "text": "Diet soda has more bubbles, and bubbles always make things float.",
+         "why": "Both sodas are fizzy. The difference is the dissolved sugar."},
+        {"letter": "D", "text": "The regular soda can holds more soda.",
+         "why": "The cans are the same size: same volume, different mass."}
+      ],
+      "answer": "B",
+      "points": 1
+    },
+    {
+      "type": "choice",
+      "q": 2,
+      "prompt": "The Densest Cube: Four cubes each have a volume of 10 cm³. Which cube is the densest?",
+      "options": [
+        {"letter": "A", "text": "Cork, mass 2.4 g", "why": "Cork is 2.4 g / 10 cm³ = 0.24 g/cm³. Check each one."},
+        {"letter": "B", "text": "Ice, mass 9.2 g", "why": "Ice is 0.92 g/cm³. Which cube packs the most mass in?"},
+        {"letter": "C", "text": "Aluminum, mass 27 g", "why": "Yes: 2.7 g/cm³, the most mass in the same space."},
+        {"letter": "D", "text": "Pine wood, mass 5 g", "why": "Pine is 0.5 g/cm³. Divide each mass by 10 cm³."}
+      ],
+      "answer": "C",
+      "points": 1
+    },
+    {
+      "type": "short",
+      "q": 3,
+      "prompt": "The Mystery Block: A block has a mass of 40 g and a volume of 20 cm³. What is its density? Show your work and include units.",
+      "key": "Density = mass / volume = 40 g / 20 cm³ = 2 g/cm³. Full credit needs the value 2 and the units g/cm³; the value without units is partial.",
+      "points": 2,
+      "lines": 3
+    },
+    {
+      "type": "label",
+      "q": 4,
+      "prompt": "The Layered Cylinder: Ms. Rivera poured honey, water, and vegetable oil into a cylinder and waited a few minutes. Label each layer.",
+      "word_bank": ["honey", "water", "vegetable oil"],
+      "diagram": {
+        "width": 300,
+        "height": 172,
+        "description": "A tall cylinder holding three liquid layers. Numbered label boxes point to the layers: box 1 to the top layer, box 2 to the middle layer, box 3 to the bottom layer.",
+        "shapes": [
+          {"shape": "rect", "x": 30, "y": 2, "w": 110, "h": 8, "fill": 0.45, "stroke": null},
+          {"shape": "rect", "x": 40, "y": 10, "w": 90, "h": 46, "fill": 0.62, "stroke": null},
+          {"shape": "rect", "x": 40, "y": 56, "w": 90, "h": 44, "fill": 0.92, "stroke": null},
+          {"shape": "rect", "x": 40, "y": 100, "w": 90, "h": 42, "fill": 0.78, "stroke": null},
+          {"shape": "polyline", "points": [[40, 166], [40, 10], [130, 10], [130, 166]], "width": 1.6},
+          {"shape": "line", "points": [[40, 30], [47, 30]], "width": 0.6},
+          {"shape": "line", "points": [[40, 50], [47, 50]], "width": 0.6},
+          {"shape": "line", "points": [[40, 70], [47, 70]], "width": 0.6},
+          {"shape": "line", "points": [[40, 90], [47, 90]], "width": 0.6},
+          {"shape": "line", "points": [[40, 110], [47, 110]], "width": 0.6},
+          {"shape": "line", "points": [[40, 130], [47, 130]], "width": 0.6},
+          {"shape": "line", "points": [[40, 150], [47, 150]], "width": 0.6}
+        ]
+      },
+      "labels": [
+        {"n": 1, "box": [180, 109, 112, 24], "points_to": [112, 121], "answer": "vegetable oil", "accept": ["oil"]},
+        {"n": 2, "box": [180, 66, 112, 24], "points_to": [112, 78], "answer": "water"},
+        {"n": 3, "box": [180, 21, 112, 24], "points_to": [112, 33], "answer": "honey"}
+      ]
+    },
+    {
+      "type": "draw",
+      "q": 5,
+      "prompt": "Pine vs. Iron: A block of pine and a block of iron are the same size, but the iron is much heavier. In each box, draw the particles as small circles to show why iron is denser. Pretend every particle has the same mass.",
+      "diagram": {
+        "width": 300,
+        "height": 150,
+        "description": "Two empty boxes of equal size: the left one labeled Pine wood, the right one labeled Iron. Everything inside the boxes was drawn by the student.",
+        "shapes": [
+          {"shape": "rect", "id": "pine", "x": 12, "y": 10, "w": 128, "h": 112, "stroke": 0.3, "width": 1.2},
+          {"shape": "rect", "id": "iron", "x": 160, "y": 10, "w": 128, "h": 112, "stroke": 0.3, "width": 1.2},
+          {"shape": "text", "x": 76, "y": 130, "text": "Pine wood", "size": 10, "bold": true, "align": "center"},
+          {"shape": "text", "x": 224, "y": 130, "text": "Iron", "size": 10, "bold": true, "align": "center"}
+        ]
+      },
+      "checklist": [
+        {"item": "Both boxes contain particles drawn as small circles or dots.", "short": "Particles in both boxes"},
+        {"item": "The Iron box has clearly more particles than the Pine wood box, roughly twice as many or more.", "short": "More particles in the iron"},
+        {"item": "The particles in the Iron box are packed closer together, with less empty space between them, than the particles in the Pine wood box.", "short": "Iron's particles packed closer"}
+      ]
+    }
+  ]
+}

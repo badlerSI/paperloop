@@ -1,0 +1,41 @@
+{
+  "assignment_id": "sci7-density-02",
+  "note": "Four copies: clean, messy, crossed out with misspellings, blank. In 'circle', ~~A~~ means circle A, then cross it out.",
+  "students": [
+    {
+      "id": "0417", "style": "clean", "font": "Noteworthy.ttc",
+      "answers": {
+        "1": {"circle": ["B"], "expected": "correct"},
+        "2": {"circle": ["C"], "expected": "correct"},
+        "3": {"text": "D = m / V = 40 g / 20 cm3 = 2 g/cm3", "expected": "correct"},
+        "4": {"labels": {"1": "vegetable oil", "2": "water", "3": "honey"}, "expected": "correct"},
+        "5": {"particles": {"pine": {"count": 7}, "iron": {"count": 24}},
+              "expected_items": {"1": "yes", "2": "yes", "3": "yes"}, "expected": "correct"}
+      }
+    },
+    {
+      "id": "2093", "style": "messy", "font": "Bradley Hand Bold.ttf",
+      "answers": {
+        "1": {"circle": ["A"], "expected": "incorrect"},
+        "2": {"circle": ["B"], "expected": "incorrect"},
+        "3": {"text": "2", "expected": "partial"},
+        "4": {"labels": {"1": "water", "2": "oil", "3": "honey"}, "expected": "partial"},
+        "5": {"particles": {"pine": {"count": 12}, "iron": {"count": 12}},
+              "expected_items": {"1": "yes", "2": "no", "3": "no"}, "expected": "partial"}
+      }
+    },
+    {
+      "id": "3158", "style": "crossed", "font": "ChalkboardSE.ttc",
+      "answers": {
+        "1": {"circle": ["~~A~~", "B"], "expected": "correct"},
+        "2": {"circle": ["C"], "expected": "correct"},
+        "3": {"text": "denisty = 40/20 = 2 g/cm3", "misspellings": ["denisty"], "expected": "correct"},
+        "4": {"labels": {"1": "vegtable oil", "2": "watter", "3": "hunny"},
+              "misspellings": ["vegtable", "watter", "hunny"], "expected": "correct"},
+        "5": {"particles": {"pine": {"count": 8, "style": "dot"}, "iron": {"count": 22, "style": "dot"}},
+              "expected_items": {"1": "yes", "2": "yes", "3": "yes"}, "expected": "correct"}
+      }
+    },
+    {"id": "0006", "style": "blank", "font": "MarkerFelt.ttc", "answers": {}}
+  ]
+}

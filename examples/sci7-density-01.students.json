@@ -1,0 +1,37 @@
+{
+  "assignment_id": "sci7-density-01",
+  "note": "Four copies for Day 1: clean, messy, crossed out with misspellings, blank. ~~word~~ is written, then struck through.",
+  "students": [
+    {
+      "id": "0417", "style": "clean", "font": "Noteworthy.ttc",
+      "answers": {
+        "1": {"text": "Ice is less dense than liquid water, so it floats.", "expected": "correct"},
+        "2": {"text": "D = m / V = 40 g / 20 cm3 = 2 g/cm3", "expected": "correct"},
+        "3": {"text": "It stays the same. Both the mass and the volume are cut in half.", "expected": "correct"},
+        "4": {"text": "Oil is less dense than water.", "expected": "correct"},
+        "5": {"text": "The log has more volume, so it is less dense than water and floats. The rock has less volume, so it is denser than water and sinks.", "expected": "correct"}
+      }
+    },
+    {
+      "id": "2093", "style": "messy", "font": "Bradley Hand Bold.ttf",
+      "answers": {
+        "1": {"text": "ice is lighter then water", "misspellings": ["then"], "expected": "partial"},
+        "2": {"text": "2", "expected": "partial"},
+        "3": {"text": "each half is half as dense", "expected": "incorrect"},
+        "4": {"text": "oil is thicker than water", "expected": "incorrect"},
+        "5": {"text": "the log is bigger", "expected": "partial"}
+      }
+    },
+    {
+      "id": "3158", "style": "crossed", "font": "ChalkboardSE.ttc",
+      "answers": {
+        "1": {"text": "Ice is less ~~heavy~~ dense then water", "misspellings": ["then"], "expected": "correct"},
+        "2": {"text": "denisty = 40/20 = 2 g/cm3", "misspellings": ["denisty"], "expected": "correct"},
+        "3": {"text": "the densty stays the same becuase its the same wood", "misspellings": ["densty", "becuase"], "expected": "correct"},
+        "4": {"text": "oil is less dence than water", "misspellings": ["dence"], "expected": "correct"},
+        "5": {"text": "the rock has ~~more~~ less volume so it is more dense", "expected": "partial"}
+      }
+    },
+    {"id": "0006", "style": "blank", "font": "MarkerFelt.ttc", "answers": {}}
+  ]
+}

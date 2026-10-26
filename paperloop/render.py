@@ -47,18 +47,63 @@ def printable(text: str) -> str:
     return "".join(out)
 
 
-def _draw_comment(c: canvas.Canvas, rect, verdict: str, comment: str) -> None:
-    x0, _, x1, y1 = rect
+CHECK_SIZE, CHECK_LEADING = 8.5, 10.5
+_MARK_KIND = {"yes": "check", "correct": "check", "no": "cross", "incorrect": "cross"}
+
+
+def _draw_mark(c: canvas.Canvas, state: str, x: float, y: float, size: float) -> None:
+    """A check, cross, or ? drawn as strokes, so it prints the same in every viewer (symbol fonts don't)."""
+    kind = _MARK_KIND.get(state)
+    c.setStrokeColorRGB(*PEN)
+    c.setLineWidth(max(1.2, size / 6))
+    c.setLineCap(1)
+    c.setLineJoin(1)
+    if kind == "check":
+        p = c.beginPath()
+        p.moveTo(x, y + 0.45 * size)
+        p.lineTo(x + 0.35 * size, y + 0.05 * size)
+        p.lineTo(x + size, y + 0.9 * size)
+        c.drawPath(p, stroke=1, fill=0)
+    elif kind == "cross":
+        c.line(x + 0.1 * size, y + 0.05 * size, x + 0.8 * size, y + 0.75 * size)
+        c.line(x + 0.1 * size, y + 0.75 * size, x + 0.8 * size, y + 0.05 * size)
+    else:
+        c.setFont("Helvetica-Bold", size + 1)
+        c.drawString(x + 0.1 * size, y, "-" if state == "blank" else "?")
+
+
+def _draw_comment(c: canvas.Canvas, rect, verdict: str, comment: str,
+                  checks: list[tuple[str, str]] = ()) -> None:
+    """Comment at the top of the gutter, then one marked line per label or checklist item."""
+    x0, y0, x1, y1 = rect
     x, y = x0 + 4, y1 - COMMENT_SIZE - 2
     c.setFillColorRGB(*PEN)
     if verdict == "correct":
-        c.setFont("ZapfDingbats", 12)
-        c.drawString(x, y - 1, "4")  # check mark
+        _draw_mark(c, "correct", x, y - 1, 10)
         x += 16
     c.setFont(COMMENT_FONT, COMMENT_SIZE)
     for line in simpleSplit(printable(comment), COMMENT_FONT, COMMENT_SIZE, x1 - x - 2):
         c.drawString(x, y, line)
         y -= COMMENT_LEADING
+    if checks:
+        y -= 4
+    for state, text in checks:
+        if y < y0 + 2:
+            return
+        _draw_mark(c, state, x0 + 4, y - 1, CHECK_SIZE)
+        c.setFillColorRGB(*PEN)
+        c.setFont("Helvetica", CHECK_SIZE)
+        for line in simpleSplit(printable(text), "Helvetica", CHECK_SIZE, x1 - x0 - 20):
+            c.drawString(x0 + 16, y, line)
+            y -= CHECK_LEADING
+
+
+def _checks(result) -> list[tuple[str, str]]:
+    if result.type == "label":
+        return [(d["verdict"], f"Label {d['n']}") for d in result.details]
+    if result.type == "draw":
+        return [(d["met"], d["item"]) for d in result.details]
+    return []
 
 
 def _draw_summary(c: canvas.Canvas, rect, page: PageFeedback, score: str | None) -> None:
@@ -122,8 +167,9 @@ def render(workdir: Path, grade: Grade = "off", force: bool = False, duplex: boo
             boxes = {b.q: b for b in page.boxes}
             for box in page_layout.boxes:
                 result = boxes[box.q]
-                if result.comment or result.verdict == "correct":
-                    _draw_comment(c, box.feedback_rect, result.verdict, result.comment)
+                checks = [] if result.verdict == "blank" else _checks(result)
+                if result.comment or result.verdict == "correct" or checks:
+                    _draw_comment(c, box.feedback_rect, result.verdict, result.comment, checks)
             last = page is pages[-1]
             score = f"Score: {earned:g} / {possible}" if grade == "back" and last else None
             _draw_summary(c, page_layout.summary_rect, page, score)

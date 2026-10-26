@@ -17,6 +17,7 @@ from . import review as review_mod
 from . import score as score_mod
 from .make import load_assignment, make_worksheet
 from .schemas import IngestResult, WorksheetDef, load
+from .simulate import load_students
 from .simulate import simulate as simulate_scans
 
 app = typer.Typer(help="Print worksheets, scan the class stack, get marked-up paper back.",
@@ -51,9 +52,10 @@ def make(worksheet: Path = typer.Argument(..., help="Worksheet definition JSON (
 @app.command()
 def simulate(assignment: Path = typer.Argument(..., help="Assignment folder from `make`."),
              out: Path = typer.Option(Path("scans/sim/sim-class.pdf"), help="Fake scan PDF to write."),
+             students: Path = typer.Option(None, help="Students file. Default: examples/<id>.students.json."),
              seed: int = typer.Option(7, help="Random seed for handwriting wobble and page order.")) -> None:
-    """Write a fake filled-in, scanned class set (four students) for testing without a printer."""
-    pdf = simulate_scans(assignment, out, seed=seed)
+    """Write a fake filled-in, scanned class set for testing without a printer."""
+    pdf = simulate_scans(assignment, out, seed=seed, students=students)
     typer.echo(f"Wrote {pdf} and {pdf.with_suffix('.truth.json')}")
 
 
@@ -173,12 +175,16 @@ def run(scans: list[Path] = typer.Argument(..., help="Scanned class-set PDF(s), 
 
 
 @app.command("fill-guide")
-def fill_guide(truth: Path = typer.Option(None, help="Also write the matching truth JSON for `score`.")) -> None:
-    """Print what to write on each of the four Day 1 test copies."""
-    typer.echo(score_mod.guide_text())
+def fill_guide(assignment: Path = typer.Argument(..., help="Assignment folder from `make`."),
+               students: Path = typer.Option(None, help="Students file. Default: examples/<id>.students.json."),
+               truth: Path = typer.Option(None, help="Also write the matching truth JSON for `score`.")) -> None:
+    """Print what to write, circle, label, and draw on each test copy."""
+    layout, _ = load_assignment(assignment)
+    roster = load_students(layout.assignment_id, students)
+    typer.echo(score_mod.guide_text(roster))
     if truth:
         truth.parent.mkdir(parents=True, exist_ok=True)
-        truth.write_text(json.dumps(score_mod.guide_truth(), indent=2) + "\n")
+        truth.write_text(json.dumps(score_mod.guide_truth(roster), indent=2) + "\n")
         typer.echo(f"Wrote {truth}")
 
 
