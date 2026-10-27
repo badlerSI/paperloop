@@ -1,10 +1,26 @@
 # Paper Loop
 
-Print worksheets, scan the class stack on the school copier, and get marked-up paper back: comments beside every answer, a strength and next steps at the bottom, the grade only if you want it. The copier only scans and prints; everything else runs on the teacher's laptop.
+Print worksheets, scan the class stack on the school copier, and get marked-up paper back: comments beside every answer, a strength and next steps at the bottom, the grade only if you want it. The copier only scans and prints.
 
-Status: Day 1 of v0.1. [SPEC.md](SPEC.md) is the plan, [NOTES.md](NOTES.md) is where Day 1 stands.
+It comes two ways: a Claude Cowork plugin, where Claude marks the work within a teacher's Claude account, and a command-line version that calls the API with your own key. The command-line version is the test bench for accuracy.
 
-## Setup
+Status: v0.1. [SPEC.md](SPEC.md) is the plan, [NOTES.md](NOTES.md) is where things stand.
+
+## For teachers: use it inside Claude, no setup
+
+Paper Loop is also a plugin for Claude Cowork. Claude does the marking itself, so there's no API key and nothing to install on your computer. Cowork works in the Claude desktop app and in a web browser, including on a Chromebook. US K-12 teachers can get it free through [Claude for Teachers](https://www.anthropic.com/news/claude-for-teachers).
+
+1. In Claude, open Cowork, then **Customize → Plugins**, and add the marketplace `Badlerz/paperloop`. Install **Paper Loop**. You can also zip the `plugin/` folder and upload it there.
+2. **Make a worksheet:** "Make me a one-page Paper Loop worksheet on the water cycle for 6th grade: two multiple choice, a short answer, a diagram to label, and one to draw." Print the PDF it gives you.
+3. Students write a 4-digit class ID number in the boxes, never their name.
+4. Scan the stack on the copier (to Google Drive, email, or USB), in any order and orientation. Give Claude the PDF: "Mark this scan of Water's Wild Ride."
+5. Claude reads every answer, asks you about anything it isn't sure of, and gives you one PDF to print and hand back.
+
+Privacy: Claude only looks at the cropped answers and the ID boxes, never the whole page, and never sees names. On your own Claude for Teachers account, keep student work de-identified (class ID numbers, no names) unless your school or district has authorized Claude for student records. See [Anthropic's terms for teachers](https://support.claude.com/en/articles/15926041-claude-for-teachers-your-data-and-our-terms).
+
+The plugin is in [`plugin/`](plugin/). Its scripts use only numpy, scipy, Pillow, pypdfium2, and reportlab, which Claude's sandboxes ship with. The skill's instructions are [`plugin/skills/paper-loop/SKILL.md`](plugin/skills/paper-loop/SKILL.md).
+
+## Setup (the command-line version, for testing and development)
 
 ```bash
 python3.12 -m venv .venv

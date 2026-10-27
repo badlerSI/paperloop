@@ -1,0 +1,221 @@
+"""Stamp comments beside each answer and the summary at the bottom; one PDF sorted by student ID.
+
+Each returned page is the lined-up scan with feedback drawn in the gutter the template left empty,
+so comments always land beside the right answer. Pages that couldn't be read go to a review pile.
+"""
+
+from __future__ import annotations
+
+import csv
+from collections import defaultdict
+from pathlib import Path
+
+from reportlab.lib.utils import simpleSplit
+from reportlab.pdfgen import canvas
+
+from . import sheet as S
+
+COMMENT_FONT, COMMENT_SIZE, COMMENT_LEADING = "Helvetica-Oblique", 10.0, 12.0
+SUMMARY_SIZE, SUMMARY_LEADING = 9.5, 11.5
+CHECK_SIZE, CHECK_LEADING = 8.5, 10.5
+PEN = (0.1, 0.1, 0.45)  # dark blue; prints as near-black on a mono copier
+WASH_ALPHA = 0.85  # students doodle in the margin: fade it behind each line of feedback, don't hide it
+_MARK_KIND = {"yes": "check", "correct": "check", "no": "cross", "incorrect": "cross"}
+_ASCII = {"→": "->", "←": "<-", "≥": ">=", "≤": "<=", "×": "x", "÷": "/", "−": "-", "≈": "~"}
+
+
+def printable(text: str) -> str:
+    """Keep only what the built-in PDF fonts can draw (Windows-1252)."""
+    out = []
+    for ch in text:
+        ch = _ASCII.get(ch, ch)
+        try:
+            ch.encode("cp1252")
+            out.append(ch)
+        except UnicodeEncodeError:
+            out.append("?")
+    return "".join(out)
+
+
+def _draw_mark(c: canvas.Canvas, state: str, x: float, y: float, size: float) -> None:
+    """A check, cross, or ? drawn as strokes, so it prints the same in every viewer (symbol fonts don't)."""
+    kind = _MARK_KIND.get(state)
+    c.setStrokeColorRGB(*PEN)
+    c.setLineWidth(max(1.2, size / 6))
+    c.setLineCap(1)
+    c.setLineJoin(1)
+    if kind == "check":
+        p = c.beginPath()
+        p.moveTo(x, y + 0.45 * size)
+        p.lineTo(x + 0.35 * size, y + 0.05 * size)
+        p.lineTo(x + size, y + 0.9 * size)
+        c.drawPath(p, stroke=1, fill=0)
+    elif kind == "cross":
+        c.line(x + 0.1 * size, y + 0.05 * size, x + 0.8 * size, y + 0.75 * size)
+        c.line(x + 0.1 * size, y + 0.75 * size, x + 0.8 * size, y + 0.05 * size)
+    else:
+        c.setFillColorRGB(*PEN)
+        c.setFont("Helvetica-Bold", size + 1)
+        c.drawString(x + 0.1 * size, y, "-" if state == "blank" else "?")
+
+
+def _wash(c: canvas.Canvas, left: float, right: float, baseline: float, size: float, leading: float) -> None:
+    """A white band behind one line of text. Bands of adjacent lines meet without overlapping."""
+    c.saveState()
+    c.setFillColorRGB(1, 1, 1)
+    c.setFillAlpha(WASH_ALPHA)
+    c.rect(left, baseline + 0.255 * size - leading / 2, right - left, leading, stroke=0, fill=1)
+    c.restoreState()
+
+
+def _draw_comment(c: canvas.Canvas, rect, verdict: str, comment: str, checks: list[tuple[str, str]]) -> None:
+    """Comment at the top of the gutter, then one marked line per label or checklist item."""
+    x0, y0, x1, y1 = rect
+    x = x0 + 4 + (16 if verdict == "correct" else 0)
+    # On a packed page the space beside a question can be short: shrink the comment to fit it
+    # (with the checklist lines below it), and trim only as a last resort.
+    room = (y1 - y0) + 6 - len(checks) * CHECK_LEADING - (4 if checks else 0)
+    for size in (COMMENT_SIZE, 9.0, 8.0):
+        leading = size * COMMENT_LEADING / COMMENT_SIZE
+        lines = simpleSplit(printable(comment), COMMENT_FONT, size, x1 - x - 2)
+        if len(lines) * leading <= room:
+            break
+    else:
+        keep = max(1, int(room // leading))
+        if len(lines) > keep:
+            lines = lines[:keep]
+            lines[-1] = lines[-1].rstrip(" .,;") + "…"
+    y = y1 - size - 2
+    for n, line in enumerate(lines):
+        _wash(c, x0 + 2 if n == 0 else x - 2, x + c.stringWidth(line, COMMENT_FONT, size) + 2,
+              y - n * leading, size, leading)
+    if verdict == "correct":
+        _draw_mark(c, "correct", x0 + 4, y - 1, 10)
+    c.setFillColorRGB(*PEN)
+    c.setFont(COMMENT_FONT, size)
+    for line in lines:
+        c.drawString(x, y, line)
+        y -= leading
+    if checks:
+        y -= 4
+    for state, text in checks:
+        if y < y0 + 2:
+            return
+        wrapped = simpleSplit(printable(text), "Helvetica", CHECK_SIZE, x1 - x0 - 20)
+        for n, line in enumerate(wrapped):
+            _wash(c, x0 + 2 if n == 0 else x0 + 14, x0 + 18 + c.stringWidth(line, "Helvetica", CHECK_SIZE),
+                  y - n * CHECK_LEADING, CHECK_SIZE, CHECK_LEADING)
+        _draw_mark(c, state, x0 + 4, y - 1, CHECK_SIZE)
+        c.setFillColorRGB(*PEN)
+        c.setFont("Helvetica", CHECK_SIZE)
+        for line in wrapped:
+            c.drawString(x0 + 16, y, line)
+            y -= CHECK_LEADING
+
+
+def _checks(result: dict) -> list[tuple[str, str]]:
+    if result["type"] == "label":
+        return [(d["verdict"], f"Label {d['n']}") for d in result["details"]]
+    if result["type"] == "draw":
+        return [(d["met"], d["item"]) for d in result["details"]]
+    return []
+
+
+def _draw_summary(c: canvas.Canvas, rect, summary: dict, score: str | None) -> None:
+    x0, y0, x1, y1 = rect
+    # Cover the printed placeholder label, then write the summary.
+    c.setFillGray(1)
+    c.rect(x0 + 1, y1 - 12, 200, 11, stroke=0, fill=1)
+    c.setFillColorRGB(*PEN)
+    if score:
+        c.setFont("Helvetica-Bold", 12)
+        c.drawRightString(x1 - 6, y1 - 15, printable(score))
+    fixes = summary.get("fixes", [])
+    entries = [("Strength:", summary["strength"])] if summary.get("strength") else []
+    entries += [("Next step:" if len(fixes) == 1 else f"Next step {n}:", fix) for n, fix in enumerate(fixes, 1)]
+    left, right = x0 + 5, x1 - 6 - (90 if score else 0)
+    y = y1 - SUMMARY_SIZE - 3
+    for label, text in entries:
+        indent = c.stringWidth(label + " ", "Helvetica-Bold", SUMMARY_SIZE)
+        for n, line in enumerate(simpleSplit(printable(text), "Helvetica", SUMMARY_SIZE, right - left - indent)):
+            if y < y0 + 3:
+                return
+            _wash(c, left - 2 if n == 0 else left + indent - 2,
+                  left + indent + c.stringWidth(line, "Helvetica", SUMMARY_SIZE) + 2, y, SUMMARY_SIZE, SUMMARY_LEADING)
+            c.setFillColorRGB(*PEN)
+            if n == 0:
+                c.setFont("Helvetica-Bold", SUMMARY_SIZE)
+                c.drawString(left, y, label)
+            c.setFont("Helvetica", SUMMARY_SIZE)
+            c.drawString(left + indent, y, line)
+            y -= SUMMARY_LEADING
+
+
+def render(work: Path, pages: list[dict], summary_by_scan: dict, grade: str = "off") -> dict:
+    """returned.pdf (and review_pile.pdf, grades.csv) in work/out. `grade` is off, back, or csv."""
+    work = Path(work)
+    manifest = S.read_json(work / "manifest.json")
+    layout = S.read_json(Path(manifest["assignment_dir"]) / "layout.json")
+    layout_pages = {p["page"]: p for p in layout["pages"]}
+    images = {p["scan_index"]: work / p["image"] for p in manifest["pages"] if p["image"]}
+    out_dir = work / "out"
+    out_dir.mkdir(exist_ok=True)
+    by_student: dict[str, list[dict]] = defaultdict(list)
+    for page in pages:
+        by_student[page["student_id"]].append(page)
+
+    returned = out_dir / "returned.pdf"
+    c = canvas.Canvas(str(returned), pagesize=(S.PAGE_W, S.PAGE_H))
+    c.setTitle(f"{manifest['assignment_id']}: marked")
+    sheets, totals = 0, {}
+    for student_id in sorted(by_student):
+        student_pages = sorted(by_student[student_id], key=lambda p: p["page"])
+        earned = sum(b["points_awarded"] for p in student_pages for b in p["boxes"])
+        possible = sum(b["points_possible"] for p in student_pages for b in p["boxes"])
+        totals[student_id] = (earned, possible)
+        for page in student_pages:
+            page_layout = layout_pages[page["page"]]
+            c.drawImage(str(images[page["scan_index"]]), 0, 0, S.PAGE_W, S.PAGE_H)
+            results = {b["q"]: b for b in page["boxes"]}
+            for box in page_layout["boxes"]:
+                result = results[box["q"]]
+                checks = [] if result["verdict"] == "blank" else _checks(result)
+                if result["comment"] or result["verdict"] == "correct" or checks:
+                    _draw_comment(c, box["feedback_rect"], result["verdict"], result["comment"], checks)
+            last = page is student_pages[-1]
+            score = f"Score: {earned:g} / {possible}" if grade == "back" and last else None
+            _draw_summary(c, page_layout["summary_rect"], summary_by_scan.get(str(page["scan_index"]), {}), score)
+            c.showPage()
+            sheets += 1
+        if len(layout["pages"]) > 1 and len(student_pages) % 2:
+            c.showPage()  # blank back, so each student starts on a new sheet when printed double-sided
+            sheets += 1
+    c.save()
+    out = {"returned": returned, "sheets": sheets, "students": len(by_student),
+           "double_sided": len(layout["pages"]) > 1}
+
+    if grade == "csv":
+        questions = [b["q"] for p in layout["pages"] for b in p["boxes"]]
+        out["grades"] = out_dir / "grades.csv"
+        with out["grades"].open("w", newline="") as f:
+            writer = csv.writer(f)
+            writer.writerow(["student_id", *[f"q{q}" for q in questions], "total", "possible"])
+            for student_id in sorted(by_student):
+                points = {b["q"]: b["points_awarded"] for p in by_student[student_id] for b in p["boxes"]}
+                earned, possible = totals[student_id]
+                writer.writerow([student_id, *[f"{points[q]:g}" if q in points else "" for q in questions],
+                                 f"{earned:g}", possible])
+
+    pile = [p for p in manifest["pages"] if p["status"] == "review"]
+    if pile:
+        out["review_pile"] = out_dir / "review_pile.pdf"
+        c = canvas.Canvas(str(out["review_pile"]), pagesize=(S.PAGE_W, S.PAGE_H))
+        for p in pile:
+            image = next((work / f for f in (p["raw_image"], p["image"]) if f and (work / f).exists()), None)
+            if image:
+                c.drawImage(str(image), 36, 36, S.PAGE_W - 72, S.PAGE_H - 96, preserveAspectRatio=True)
+            c.setFont("Helvetica-Bold", 11)
+            c.drawString(36, S.PAGE_H - 40, printable(f"Review pile, scan page {p['scan_index']}: {p['reason']}"))
+            c.showPage()
+        c.save()
+    return out

@@ -24,7 +24,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8"]
+dev = ["pytest>=8", "scipy>=1.11"]  # scipy: the Cowork plugin's scripts (plugin/), tested from here
 
 [project.scripts]
 paperloop = "paperloop.cli:app"

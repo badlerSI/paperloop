@@ -1,0 +1,16 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "paper-loop",
+  "description": "Paper Loop: free, open-source paper feedback for K-12 teachers, run by Claude.",
+  "owner": {
+    "name": "Ben Adler"
+  },
+  "plugins": [
+    {
+      "name": "paper-loop",
+      "description": "Make worksheets Claude can mark from a copier scan, then mark scanned class sets with a comment beside every answer and print the marked pages to hand back.",
+      "source": "./plugin",
+      "category": "education"
+    }
+  ]
+}

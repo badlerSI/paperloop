@@ -223,6 +223,64 @@ The 2 checklist items every model "missed" are arguable, and the answer key is p
 - **Strength length.** One Sonnet strength ran 26 words against "under 20".
 - **Misspellings one letter from a real word** get normalized by every model ("undergrownd"). This only matters if spelling feedback is turned on.
 
+## The Cowork plugin: Claude marks, no API key (Oct 26)
+
+The rollout plan is Claude for Teachers: a free Claude Team plan for verified US K-12 teachers, with Cowork, which runs plugins in the desktop app or a web browser. So Paper Loop is now also a Cowork plugin (`plugin/`, with a marketplace file at `.claude-plugin/marketplace.json`). Claude reads the crops and writes the marks itself. The scripts do everything else.
+
+**What's different from the CLI:**
+- **Only what Claude's sandboxes ship with:** numpy, scipy, Pillow, pypdfium2, reportlab. The documented code-execution sandbox has no OpenCV, and Team plans may block package installs. Corner-marker finding, the homography, warping, and flattening are rewritten with numpy and scipy. The corner markers are the same ArUco patterns, read from hard-coded bits. On the four real day-2 pages the corners land within about 1px of OpenCV's, and choice reads and blank checks match the CLI exactly. A test runs the scripts with OpenCV, pydantic, qrcode, typer, and the anthropic SDK blocked.
+- **A bit strip instead of the QR code.** 32 squares where the QR code was: 18 bits of assignment hash, 6 of page number, 8 of CRC, so one misread square fails the check instead of naming the wrong page. Pages printed with the old QR code are recognized by matching the question area against the blank template: 0.98 or more for the right page, 0.30 or less for other worksheets.
+- **Handwritten ID boxes only:** no bubbles. Claude reads the ID strips in the same conversation as the answers, so the IDs must be class numbers, not names or district IDs.
+- **Same files as the CLI.** `layout.json` and `key.json` are identical for the same worksheet, and `render` writes `feedback.json` and `ingest.json`, so `paperloop score` measures the plugin's marking.
+- **The flow:** `prepare` (line up, crop) → Claude reads ID strips into `ids.json` → `ids` (the roster rule) → `todo` (one work order per question) → Claude writes `marks/qN.json`, one question across the whole class at a time → `check` (validates, lists flags, asks for shorter comments) → Claude writes `summaries.json` → teacher reviews flags → `render`. `render` refuses while flags are unreviewed, unless the teacher says to print as marked.
+
+**Two trials on the day-2 scan.** In each, a fresh agent with none of this conversation followed SKILL.md in a folder set up like a teacher's: the skill, the assignment, the scan, and the class ID list. The second trial ran on the skill as fixed after the first, with the roster saved the way a spreadsheet saves it (`417`, `6`). I removed every day-2 example from the skill first, since the rules had quoted "denisity" and "undergrownd" and the format guide had used the water-cycle questions.
+
+| | Skill, trial 1 | Skill, trial 2 | API, Opus 5.5 low (3 runs) | API, Sonnet 5.5 medium (3 runs) |
+| --- | --- | --- | --- | --- |
+| Verdicts | **18/18** | **18/18** | 17/18 each | 16-17/18 |
+| Drawing checklist items | 14/15 | **15/15** | 13/15 each | 11-13/15 |
+| Words transcribed right | 97% | **99%** | 96% | 97% |
+| Comments over 15 words | **0/18** | **0/18** | 3/54 | 16/54 |
+| Flags | 1/24 | 0/24 | 1/24 | 2/24 |
+| Misspellings kept | 3/4 | 3/4 | 3/4 | 3/4 |
+| What it cost | 118k tokens, 43 tool calls, 7 min | 122k tokens, 52 tool calls, 8 min | 3.2¢/page | 1.5¢/page |
+
+- **Every reader, in every run, turned "undergrownd" into "underground".**
+- **Trial 1's one flag was 2093's mark before "evaporation"** ("a T or an up-arrow"). Zoomed in, it's an up-arrow, so the key's "yes" was right.
+- **Trial 2 had `zoom` and used it 9 times.** It got that item, and 0417's faint arrowhead, right.
+- **Why the skill beats the API pipeline here:** probably because it marks one question across the whole class with the rules in hand, can zoom, and is told when a comment runs long. The API pipeline marks each crop alone in one shot.
+- **Caveat:** two runs on four pages. That shows the approach works, not how much it varies.
+
+**Fixes from the first trial's feedback:**
+- `todo` and `check` now name pages where every answer is blank (an absent student, or work on another sheet), and the summary for those pages is left empty for the teacher.
+- `check` now validates summaries too and gives the right next step; before, it always said "write summaries.json".
+- `check` shows how each flag is scored for now, for example 1/5 with an "unclear" item counting as not earned. SKILL.md says what to tell a teacher who has stepped away.
+- `PL zoom` makes an enlarged, darkened copy of part of a crop, for faint arrowheads and crossed-out letters.
+- The rules now say an uncertain word goes below 0.8 only if it could change the verdict, so flagging is less arbitrary.
+- `ids` says when a read got through because of the roster. SKILL.md explains the ID rule and the roster format, and dropped leading zeros (`6` for `0006`) are handled.
+- Every path in SKILL.md is quoted (the assignment folder was "Water's Wild Ride"), and it says what's printed for the student: comments, check marks, and summary, never transcriptions.
+
+**Fixes from the second trial's feedback:**
+- **Marking rules:**
+  - when you can't tell if a word is crossed out, write [maybe crossed out: word];
+  - an ambiguous letter shape is a reading question, not a misspelling;
+  - short answers get an optional note for the teacher;
+  - a clear ID read is 0.95 or more, and don't aim at the cutoff;
+  - one next step can cover an idea several wrong answers share.
+- **Script output:**
+  - `check` says "0 flagged" when nothing is flagged;
+  - `ids` and `todo` say what's next, and `todo` names questions settled for every student;
+  - `render` says whether scores were printed.
+- **Work orders:**
+  - every path is absolute, crops and output file alike;
+  - example values are placeholders (`"<letter>"`, `<0 to 1>`) that fail the check if copied as they are.
+
+**Still open:**
+- **Usage limits.** About 120k tokens for 4 pages includes reading the skill and rules once. A class of 30 needs measuring on a real teacher account: it may need subagents (one per question) to keep each context small, and it may not fit one usage window.
+- **The CLI can't read sheets made by the plugin**, because they have the bit strip instead of a QR code; the plugin reads both. The two should share one core: the plugin's, since it has no OpenCV.
+- **Not yet tried in real Cowork:** plugin install, the cloud sandbox's Python packages, and uploads from Google Drive.
+
 ## Next iteration: worksheets kids want to do (Ben, Oct 26)
 
 Day 1's worksheet tests function, and it's blank and boring: five short-answer boxes. The next iteration needs more than short answer. Directions to explore:
@@ -235,6 +293,7 @@ Day 1's worksheet tests function, and it's blank and boring: five short-answer b
 
 ## Top three for Day 2
 
+0. **Try the plugin in real Cowork, on a Claude for Teachers account.** Check that it installs from the marketplace, that the cloud sandbox has numpy, scipy, Pillow, pypdfium2, and reportlab, and that a scan can come in from Google Drive. Then mark a full class set (print 25-30 copies) and measure how much of the plan's usage it takes, with and without a subagent per question.
 1. ~~**Pick the default model.**~~ Done Oct 26: Ben chose Opus 5.5 at low effort, about 3¢ a page. That's double Sonnet, and it departs from SPEC.md's "Default Sonnet 5.5". `--model claude-sonnet-5-5 --effort medium` still works for a cheaper run.
 2. **Rubric-style keys.** Have each key say what full and partial credit need, as Q2's does. That should remove most "the key doesn't settle this" flags. The Make step (spec pipeline step 1, drafting from a lesson description) should write keys this way.
 3. **Fix routing in review instead of reprinting.** Let the teacher type the ID for review-pile pages, so a smudged bubble doesn't send a page back. Then the Batch API for overnight runs at half price.
