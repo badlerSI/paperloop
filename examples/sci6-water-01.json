@@ -1,0 +1,306 @@
+{
+  "assignment_id": "sci6-water-01",
+  "title": "Water's Wild Ride",
+  "subject": "science",
+  "grade_band": "middle school (grade 6)",
+  "instructions": "Write your ID in the boxes at the top right, not your name. For multiple choice, circle one letter.",
+  "id_style": "write",
+  "compact": true,
+  "questions": [
+    {
+      "type": "choice",
+      "q": 1,
+      "columns": 2,
+      "prompt": "Puddle Mystery: A puddle on the playground is gone by lunch on a sunny day. Where did the water go?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Into the air as water vapor",
+          "why": "Yes: the sun's energy evaporated it into the air."
+        },
+        {
+          "letter": "B",
+          "text": "It was destroyed by the heat",
+          "why": "Matter isn't destroyed. It became a gas you can't see."
+        },
+        {
+          "letter": "C",
+          "text": "Down to the center of the Earth",
+          "why": "Some soaks in, but on a sunny day most rises as vapor."
+        },
+        {
+          "letter": "D",
+          "text": "It turned into oxygen",
+          "why": "Water vapor is still water, just as a gas."
+        }
+      ],
+      "answer": "A"
+    },
+    {
+      "type": "choice",
+      "q": 2,
+      "columns": 4,
+      "prompt": "Cloud Factory: Which step of the water cycle forms clouds?",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Evaporation",
+          "why": "Evaporation lifts vapor up; clouds form when it cools."
+        },
+        {
+          "letter": "B",
+          "text": "Condensation",
+          "why": "Yes: vapor cools and condenses into tiny droplets."
+        },
+        {
+          "letter": "C",
+          "text": "Precipitation",
+          "why": "Precipitation is water falling out of clouds."
+        },
+        {
+          "letter": "D",
+          "text": "Collection",
+          "why": "Collection is water gathering in lakes and oceans."
+        }
+      ],
+      "answer": "B"
+    },
+    {
+      "type": "short",
+      "q": 3,
+      "prompt": "Sweaty Glass: On a hot day, drops of water form on the outside of a glass of ice-cold lemonade. Where do the drops come from?",
+      "key": "Water vapor in the air touches the cold glass, cools, and condenses into liquid drops. Full credit: the water comes from the air (water vapor) and cooling or condensing turns it into drops. Partial: names condensation but not where the water comes from, or says it comes from the air but not why it turns to drops. Incorrect: the lemonade leaks or seeps through the glass.",
+      "points": 2,
+      "lines": 2
+    },
+    {
+      "type": "label",
+      "q": 4,
+      "prompt": "State Changes: Label each arrow with the change it shows.",
+      "word_bank": [
+        "melting",
+        "freezing",
+        "evaporation",
+        "condensation"
+      ],
+      "diagram": {
+        "width": 344,
+        "height": 84,
+        "description": "Three boxes in a row: Ice (solid), Water (liquid), Water vapor (gas). Arrow 1 points from ice to water, with label box 1 above it. Arrow 2 points from water to water vapor, with label box 2 above it. Arrow 3 points back from water vapor to water, with label box 3 below it.",
+        "shapes": [
+          {
+            "shape": "rect",
+            "x": 0,
+            "y": 22,
+            "w": 60,
+            "h": 40,
+            "stroke": 0.3
+          },
+          {
+            "shape": "rect",
+            "x": 142,
+            "y": 22,
+            "w": 60,
+            "h": 40,
+            "stroke": 0.3
+          },
+          {
+            "shape": "rect",
+            "x": 284,
+            "y": 22,
+            "w": 60,
+            "h": 40,
+            "stroke": 0.3
+          },
+          {
+            "shape": "text",
+            "x": 30,
+            "y": 45,
+            "text": "Ice",
+            "size": 9,
+            "bold": true,
+            "align": "center"
+          },
+          {
+            "shape": "text",
+            "x": 30,
+            "y": 33,
+            "text": "(solid)",
+            "size": 7.5,
+            "align": "center"
+          },
+          {
+            "shape": "text",
+            "x": 172,
+            "y": 45,
+            "text": "Water",
+            "size": 9,
+            "bold": true,
+            "align": "center"
+          },
+          {
+            "shape": "text",
+            "x": 172,
+            "y": 33,
+            "text": "(liquid)",
+            "size": 7.5,
+            "align": "center"
+          },
+          {
+            "shape": "text",
+            "x": 314,
+            "y": 45,
+            "text": "Water vapor",
+            "size": 9,
+            "bold": true,
+            "align": "center"
+          },
+          {
+            "shape": "text",
+            "x": 314,
+            "y": 33,
+            "text": "(gas)",
+            "size": 7.5,
+            "align": "center"
+          },
+          {
+            "shape": "arrow",
+            "points": [
+              [
+                62,
+                40
+              ],
+              [
+                139,
+                40
+              ]
+            ],
+            "width": 1.2
+          },
+          {
+            "shape": "arrow",
+            "points": [
+              [
+                204,
+                50
+              ],
+              [
+                281,
+                50
+              ]
+            ],
+            "width": 1.2
+          },
+          {
+            "shape": "arrow",
+            "points": [
+              [
+                282,
+                32
+              ],
+              [
+                205,
+                32
+              ]
+            ],
+            "width": 1.2
+          }
+        ]
+      },
+      "labels": [
+        {
+          "n": 1,
+          "box": [
+            63,
+            47,
+            76,
+            22
+          ],
+          "points_to": [
+            101,
+            40
+          ],
+          "answer": "melting",
+          "accept": [
+            "melts"
+          ]
+        },
+        {
+          "n": 2,
+          "box": [
+            205,
+            59,
+            76,
+            22
+          ],
+          "points_to": [
+            243,
+            50
+          ],
+          "answer": "evaporation",
+          "accept": [
+            "evaporating",
+            "boiling"
+          ]
+        },
+        {
+          "n": 3,
+          "box": [
+            205,
+            2,
+            76,
+            22
+          ],
+          "points_to": [
+            243,
+            32
+          ],
+          "answer": "condensation",
+          "accept": [
+            "condensing"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "draw",
+      "q": 5,
+      "prompt": "The Whole Cycle: Draw the water cycle with a lake or ocean, a cloud, and arrows. Label evaporation, condensation, and precipitation.",
+      "diagram": {
+        "width": 344,
+        "height": 140,
+        "description": "An empty frame. Everything inside it was drawn by the student."
+      },
+      "checklist": [
+        {
+          "item": "A body of water (a lake, ocean, or river) is drawn.",
+          "short": "Lake or ocean"
+        },
+        {
+          "item": "An arrow goes up from the water toward the sky or a cloud, labeled evaporation (any spelling).",
+          "short": "Evaporation arrow up"
+        },
+        {
+          "item": "A cloud is drawn, labeled condensation (any spelling) at or near the cloud.",
+          "short": "Condensation at the cloud"
+        },
+        {
+          "item": "Rain or snow is shown falling from the cloud, labeled precipitation (any spelling).",
+          "short": "Precipitation falling"
+        },
+        {
+          "item": "The water's path returns to the lake or ocean (an arrow, runoff, or rain landing in it), closing the loop.",
+          "short": "Back to the water"
+        }
+      ]
+    },
+    {
+      "type": "short",
+      "q": 6,
+      "prompt": "Mountain to Sea: How does rain on a mountain reach the ocean?",
+      "key": "Full credit names a path: it runs downhill over the ground into streams and rivers that flow to the ocean (runoff), or it soaks into the ground and flows underground (groundwater) to the ocean. Partial: says it flows or moves without saying how or where. Incorrect: it stays on the mountain or disappears.",
+      "points": 2,
+      "lines": 2
+    }
+  ]
+}

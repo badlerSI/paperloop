@@ -81,6 +81,7 @@ class ChoiceQ(BaseModel):
     options: list[Option]
     answer: str
     points: int = 1
+    columns: int = 1  # options side by side, for short options on a packed page
 
 
 class LabelQ(BaseModel):
@@ -125,6 +126,10 @@ class WorksheetDef(BaseModel):
     subject: str = "science"
     grade_band: str = "middle school"
     instructions: str = "Answer each question in its box. Write your ID number, not your name."
+    # "bubbles" are read on the laptop. "write" is four handwritten digits, read by the model in a
+    # request that carries only the ID boxes, never any answers.
+    id_style: Literal["bubbles", "write"] = "bubbles"
+    compact: bool = False  # tighter spacing and a smaller summary box, to fit more on a page
     questions: list[Question]
 
 
@@ -148,6 +153,7 @@ class Box(BaseModel):
     feedback_rect: Rect  # gutter beside the box where comments get stamped
     prompt: str
     points: int
+    lines: int = 0  # short answers: ruled writing lines in the box
     options: list[OptionSpot] = Field(default_factory=list)
     labels: list[LabelBoxSpot] = Field(default_factory=list)
 
@@ -163,7 +169,8 @@ class PageLayout(BaseModel):
     page: int
     qr: str
     qr_rect: Rect
-    id_grid: IdGrid
+    id_grid: IdGrid | None = None  # bubble ID
+    id_boxes: list[Rect] = Field(default_factory=list)  # handwritten ID, one digit per box
     summary_rect: Rect
     boxes: list[Box]
 
@@ -224,6 +231,7 @@ class IngestResult(BaseModel):
     assignment_dir: str
     dpi: int
     pages: list[PageScan]
+    id_usage: "Usage" = Field(default_factory=lambda: Usage())  # model calls that read handwritten IDs
 
 
 # --- Mark ----------------------------------------------------------------------
@@ -240,6 +248,13 @@ class BoxMark(BaseModel):
     comment: str
     confidence: float
     key_ambiguous: bool = False
+
+
+class IdRead(BaseModel):
+    """The model's reading of a handwritten ID: one character per box, "?" where it can't tell."""
+
+    digits: list[str]
+    confidence: float
 
 
 class ChoiceRead(BaseModel):

@@ -1,7 +1,9 @@
 """Ingest: split a scanned class set, deskew each page, read its QR code and student ID.
 
 Pages come in any order and orientation. The four corner markers give a
-homography to the template, so every later step works in template coordinates.
+homography to the template, and the printed content then corrects the bow that
+paper curl and the feeder leave in the middle of the page, so every later step
+works in template coordinates.
 Anything that can't be read for certain goes to the review pile; never guess.
 """
 
@@ -10,19 +12,28 @@ from __future__ import annotations
 from collections import defaultdict
 from functools import cache
 from pathlib import Path
+from typing import Callable
 
 import cv2
 import numpy as np
 
+from . import raster
 from . import template as T
 from .make import load_assignment
-from .raster import DARK, render_pages
-from .schemas import IdGrid, IngestResult, PageScan, Rect, save
+from .raster import DARK, PRINTED, load_template, render_pages, student_ink
+from .schemas import IdGrid, IngestResult, PageScan, Rect, Usage, save
 
 BLANK_INK_FRACTION = 0.002
+ID_MIN_INK_PX = 80  # student ink in the ID boxes below this means nothing was written
+ID_CONFIDENCE = 0.9  # stricter than marking: a misread ID hands one student's work to another
+# On real handwriting the model's confidence sits at 0.6-0.9 even for reads that are right (an open 0
+# looks like a 6 to it), so with a roster a lower bar is enough when no one-digit slip could reach this ID.
+ID_CONFIDENCE_ON_ROSTER = 0.5
 BUBBLE_FILLED = 0.35  # share of a bubble's center that must be dark to count as filled
 BUBBLE_AMBIGUOUS = 0.6  # a runner-up this close to the darkest bubble makes the digit ambiguous
 MAX_REPROJECTION_PX = 6.0
+FLATTEN_TILE_PX = 160  # patches of printing, about 0.8in at 200 dpi, each measured for drift
+FLATTEN_MIN_TILES = 8
 
 
 @cache
@@ -61,6 +72,54 @@ def register(gray: np.ndarray, markers: dict[int, np.ndarray], dpi: int) -> tupl
     error = float(np.mean(np.linalg.norm(projected - dst_a, axis=1)))
     canonical = cv2.warpPerspective(gray, H, T.canonical_size(dpi), flags=cv2.INTER_LINEAR, borderValue=255)
     return canonical, error
+
+
+def _quadratic(c: np.ndarray, u: np.ndarray, v: np.ndarray) -> np.ndarray:
+    return c[0] + c[1] * u + c[2] * v + c[3] * u * u + c[4] * u * v + c[5] * v * v
+
+
+def flatten(canonical: np.ndarray, blank: np.ndarray) -> np.ndarray:
+    """Undo what four corner markers can't: paper curl and the feeder bow the middle of a page several
+    pixels off the template while the corners line up. Measures how far printed-only patches drifted,
+    fits a smooth (quadratic) warp to those shifts, and resamples the scan through it."""
+    h, w = blank.shape
+    t = FLATTEN_TILE_PX
+    printed = blank < PRINTED
+    # Judge handwriting generously, so drifted printing isn't mistaken for it; patches with any are skipped.
+    near_print = cv2.dilate(printed.astype(np.uint8), np.ones((17, 17), np.uint8)).astype(bool)
+    handwriting = (canonical < DARK) & ~near_print
+    window = cv2.createHanningWindow((t, t), cv2.CV_32F)
+    # Ink as bright on black: a white background would match itself (and the window) at zero shift.
+    template_f, scan_f = 255 - blank.astype(np.float32), 255 - canonical.astype(np.float32)
+    centers, shifts = [], []
+    for y in range(0, h - t + 1, t // 2):
+        for x in range(0, w - t + 1, t // 2):
+            if printed[y:y + t, x:x + t].mean() < 0.02 or handwriting[y:y + t, x:x + t].mean() > 0.001:
+                continue
+            (dx, dy), response = cv2.phaseCorrelate(template_f[y:y + t, x:x + t], scan_f[y:y + t, x:x + t], window)
+            if response > 0.2 and abs(dx) < 15 and abs(dy) < 15:
+                centers.append(((x + t / 2) / w - 0.5, (y + t / 2) / h - 0.5))
+                shifts.append((dx, dy))
+    if len(centers) < FLATTEN_MIN_TILES:
+        return canonical
+    centers, shifts = np.array(centers), np.array(shifts)
+    terms = np.stack([np.ones(len(centers)), centers[:, 0], centers[:, 1],
+                      centers[:, 0] ** 2, centers[:, 0] * centers[:, 1], centers[:, 1] ** 2], axis=1)
+    keep = np.ones(len(terms), bool)
+    for _ in range(2):  # refit without patches the smooth warp doesn't explain (a repeating pattern, a stray mark)
+        coef, *_ = np.linalg.lstsq(terms[keep], shifts[keep], rcond=None)
+        keep = np.linalg.norm(terms @ coef - shifts, axis=1) < 1.5
+        if keep.sum() < FLATTEN_MIN_TILES:
+            return canonical
+    coef, *_ = np.linalg.lstsq(terms[keep], shifts[keep], rcond=None)
+    u = (np.arange(w, dtype=np.float32) / w - 0.5)[None, :]
+    v = (np.arange(h, dtype=np.float32) / h - 0.5)[:, None]
+    dx, dy = _quadratic(coef[:, 0], u, v), _quadratic(coef[:, 1], u, v)
+    if max(np.abs(dx).max(), np.abs(dy).max()) < 0.5:
+        return canonical  # already flat: don't blur it with another resample
+    map_x = (np.arange(w, dtype=np.float32)[None, :] + dx).astype(np.float32)
+    map_y = (np.arange(h, dtype=np.float32)[:, None] + dy).astype(np.float32)
+    return cv2.remap(canonical, map_x, map_y, cv2.INTER_LINEAR, borderValue=255)
 
 
 def _crop(img: np.ndarray, rect: Rect, dpi: int, pad_pt: float = 0.0) -> np.ndarray:
@@ -114,8 +173,13 @@ def read_student_id(canonical: np.ndarray, grid: IdGrid, dpi: int) -> tuple[str 
     return "".join(digits), None
 
 
-def ingest(scan_pdfs: Path | list[Path], assignment_dir: Path, workdir: Path, dpi: int = T.DPI) -> IngestResult:
-    """Scans can be one PDF or several (fronts and backs scanned separately); order doesn't matter."""
+def ingest(scan_pdfs: Path | list[Path], assignment_dir: Path, workdir: Path, dpi: int = T.DPI,
+           id_reader: Callable | None = None, roster: set[str] | None = None) -> IngestResult:
+    """Scans can be one PDF or several (fronts and backs scanned separately); order doesn't matter.
+
+    Handwritten IDs need `id_reader` (a marker's `read_id`); without one those pages go to review.
+    `roster` is the set of valid IDs, if known: anything else goes to review rather than to a stranger.
+    """
     scan_pdfs = [scan_pdfs] if isinstance(scan_pdfs, (str, Path)) else list(scan_pdfs)
     layout, _ = load_assignment(assignment_dir)
     workdir = Path(workdir)
@@ -124,8 +188,9 @@ def ingest(scan_pdfs: Path | list[Path], assignment_dir: Path, workdir: Path, dp
 
     grays = [gray for pdf in scan_pdfs for gray in render_pages(pdf, dpi)]
     results: list[PageScan] = []
+    id_usage = Usage()
     for index, gray in enumerate(grays, start=1):
-        scan = _ingest_page(index, gray, layout, workdir, dpi)
+        scan = _ingest_page(index, gray, layout, Path(assignment_dir), workdir, dpi, id_reader, roster, id_usage)
         if scan.status == "review":
             raw = workdir / "raw" / f"scan-{index:03}.png"
             cv2.imwrite(str(raw), gray)
@@ -135,13 +200,53 @@ def ingest(scan_pdfs: Path | list[Path], assignment_dir: Path, workdir: Path, dp
     _flag_duplicates(results)
     result = IngestResult(
         source_pdfs=[str(Path(p).resolve()) for p in scan_pdfs],
-        assignment_dir=str(Path(assignment_dir).resolve()), dpi=dpi, pages=results,
+        assignment_dir=str(Path(assignment_dir).resolve()), dpi=dpi, pages=results, id_usage=id_usage,
     )
     save(result, workdir / "ingest.json")
     return result
 
 
-def _ingest_page(index: int, gray: np.ndarray, layout, workdir: Path, dpi: int) -> PageScan:
+def _one_digit_apart(a: str, b: str) -> bool:
+    return len(a) == len(b) and sum(x != y for x, y in zip(a, b)) == 1
+
+
+def read_written_id(canonical: np.ndarray, boxes: list[Rect], assignment_dir: Path, page: int, dpi: int,
+                    id_reader: Callable | None, usage: Usage,
+                    roster: set[str] | None = None) -> tuple[str | None, str | None]:
+    """Handwritten ID: crop only the ID boxes and have the model read them in a request of their own.
+
+    Below ID_CONFIDENCE, a read is still accepted if it's on the roster and no other roster ID is one
+    digit away: a misread usually changes one digit, so it can't have come from a classmate's ID.
+    """
+    x0, y0 = min(b[0] for b in boxes), min(b[1] for b in boxes)
+    x1, y1 = max(b[2] for b in boxes), max(b[3] for b in boxes)
+    region = (x0 - 3, y0 - 3, x1 + 3, y1 + 3)
+    ink = student_ink(canonical, load_template(str(assignment_dir), page))
+    if int(raster.crop(ink, region, dpi).sum()) < ID_MIN_INK_PX:
+        return None, "no ID written"
+    if id_reader is None:
+        return None, "handwritten ID needs the model to read it (no API key, or --mock)"
+    png = cv2.imencode(".png", raster.crop(canonical, region, dpi))[1].tobytes()
+    try:
+        read, u = id_reader(png, len(boxes))
+    except Exception as e:  # never route on a failed read
+        return None, f"ID couldn't be read ({type(e).__name__})"
+    usage.add(u)
+    digits = "".join(read.digits)
+    if len(read.digits) != len(boxes) or not digits.isdigit():
+        return None, f"ID read as {digits or 'nothing'!r}: not {len(boxes)} clear digits"
+    if read.confidence >= ID_CONFIDENCE:
+        return digits, None
+    if roster is not None and digits in roster and read.confidence >= ID_CONFIDENCE_ON_ROSTER:
+        neighbor = next((other for other in sorted(roster) if _one_digit_apart(other, digits)), None)
+        if neighbor is None:
+            return digits, None
+        return None, f"ID read as {digits} ({read.confidence:.2f} sure), but {neighbor} on the roster is one digit away"
+    return None, f"ID read as {digits}, but only {read.confidence:.2f} sure"
+
+
+def _ingest_page(index: int, gray: np.ndarray, layout, assignment_dir: Path, workdir: Path, dpi: int,
+                 id_reader: Callable | None, roster: set[str] | None, id_usage: Usage) -> PageScan:
     markers = find_markers(gray)
     if len(markers) < 3:
         if np.mean(gray < DARK) < BLANK_INK_FRACTION:
@@ -173,10 +278,19 @@ def _ingest_page(index: int, gray: np.ndarray, layout, workdir: Path, dpi: int) 
     except KeyError:
         scan.reason = f"{assignment_id} has no page {page_no}"
         return scan
+    canonical = flatten(canonical, load_template(str(assignment_dir), page_no))
+    cv2.imwrite(str(image), canonical)
 
-    student_id, problem = read_student_id(canonical, page_layout.id_grid, dpi)
+    if page_layout.id_grid:
+        student_id, problem = read_student_id(canonical, page_layout.id_grid, dpi)
+    else:
+        student_id, problem = read_written_id(canonical, page_layout.id_boxes, assignment_dir, page_no, dpi,
+                                              id_reader, id_usage, roster)
     if student_id is None:
         scan.reason = problem
+        return scan
+    if roster is not None and student_id not in roster:
+        scan.reason = f"ID {student_id} isn't on the class roster"
         return scan
     scan.student_id = student_id
     scan.status = "ok"

@@ -24,12 +24,14 @@ import numpy as np
 from . import raster
 from .make import load_assignment
 from .schemas import (
-    AnswerKey, Box, BoxMark, BoxResult, ChoiceRead, DrawMark, Feedback, IngestResult, KeyItem, LabelMark,
+    AnswerKey, Box, BoxMark, BoxResult, ChoiceRead, DrawMark, Feedback, IdRead, IngestResult, KeyItem, LabelMark,
     PageFeedback, PageScan, PageSummary, Usage, load, save,
 )
 
-DEFAULT_MODEL = "claude-sonnet-5-5"
-DEFAULT_EFFORT = "medium"
+# Chosen from two runs on real handwriting (NOTES.md): Opus kept misspellings Sonnet corrected, judged
+# drawings the same way every run, and gave the same verdicts at every effort, so low is enough. ~3¢/page.
+DEFAULT_MODEL = "claude-opus-5-5"
+DEFAULT_EFFORT = "low"
 DEFAULT_THRESHOLD = 0.8
 PROMPTS_DIR = Path(__file__).resolve().parent.parent / "prompts"
 
@@ -45,6 +47,9 @@ FALLBACK_BETA = "server-side-fallback-2026-07-01"
 
 MIN_INK_PX = 60  # student-ink pixels below which an answer counts as empty
 BOX_INSET_PT = 2.0  # crop short answers just inside the printed border
+# The empty-answer check looks further in: a scan that sits 2-3px off leaves a sliver of printed border
+# inside a 2pt inset, and a whole frame edge is enough ink to count as an answer.
+EMPTY_INSET_PT = 4.0
 MIN_MARK_PX = 150  # a circle around an option leaves at least this much ink in its row
 MARK_AMBIGUOUS = 0.35  # a runner-up row with this share of the top row's ink means two marks
 
@@ -60,6 +65,12 @@ BOX_SCHEMA = {
         "key_ambiguous": {"type": "boolean"},
     },
     "required": ["transcription", "uncertain_words", "verdict", "comment", "confidence", "key_ambiguous"],
+    "additionalProperties": False,
+}
+ID_SCHEMA = {
+    "type": "object",
+    "properties": {"digits": {"type": "array", "items": {"type": "string"}}, "confidence": {"type": "number"}},
+    "required": ["digits", "confidence"],
     "additionalProperties": False,
 }
 CHOICE_SCHEMA = {
@@ -169,8 +180,8 @@ class ClaudeMarker:
         self.key, self.model, self.effort = key, model, effort
         self.client = client or anthropic.Anthropic()
         self.use_fallbacks = model in FALLBACK_MODELS
-        self.systems = {name: _prompt(f"{name}.md", key)
-                        for name in ("mark_region", "read_choice", "mark_labels", "mark_drawing", "page_summary")}
+        self.systems = {name: _prompt(f"{name}.md", key) for name in
+                        ("mark_region", "read_choice", "mark_labels", "mark_drawing", "page_summary", "read_id")}
 
     def _create(self, **kwargs):
         if self.use_fallbacks:
@@ -208,6 +219,12 @@ class ClaudeMarker:
         data, usage = self._call("mark_region", content, BOX_SCHEMA)
         return BoxMark.model_validate(data), usage
 
+    def read_id(self, png: bytes, n_digits: int) -> tuple[IdRead, Usage]:
+        """Only the cropped ID boxes go in this request: no answers, no other part of the page."""
+        content = [_image(png), {"type": "text", "text": f"The ID has {n_digits} boxes."}]
+        data, usage = self._call("read_id", content, ID_SCHEMA)
+        return IdRead.model_validate(data), usage
+
     def read_choice(self, item: KeyItem, png: bytes) -> tuple[ChoiceRead, Usage]:
         options = "\n".join(f"{o.letter}. {o.text}" for o in item.options)
         content = [_image(png), {"type": "text", "text": f"Question {item.q}: {item.prompt}\nOptions:\n{options}"}]
@@ -239,8 +256,17 @@ class ClaudeMarker:
         lines = []
         for b in boxes:
             item = self.key.item(b.q)
-            lines.append(f"Question {b.q} ({b.type}): {item.prompt}\nStudent's answer: {b.transcription!r}\n"
-                         f"Verdict: {b.verdict}\nComment beside it: {b.comment}")
+            line = (f"Question {b.q} ({b.type}): {item.prompt}\nStudent's answer: {b.transcription!r}\n"
+                    f"Verdict: {b.verdict}\nComment beside it: {b.comment}")
+            # The checklist and labels are what the next steps must come from; without them the model
+            # reconstructs requirements from the drawing's description and invents new ones.
+            if b.type == "draw" and b.details:
+                line += "\nChecklist: " + "; ".join(
+                    f"{item.checklist[d['n'] - 1].item} ({d['met']})" for d in b.details)
+            if b.type == "label" and b.details:
+                line += "\nLabels: " + "; ".join(
+                    f"box {d['n']} {d['read']!r} ({d['verdict']}, expected {d['answer']})" for d in b.details)
+            lines.append(line)
         data, usage = self._call("page_summary", [{"type": "text", "text": "\n\n".join(lines)}], SUMMARY_SCHEMA)
         return PageSummary.model_validate(data), usage
 
@@ -249,6 +275,9 @@ class MockMarker:
     """Stand-in that calls no model, for testing the pipeline without an API key."""
 
     model, effort = "mock", "none"
+
+    def read_id(self, png: bytes, n_digits: int) -> tuple[IdRead, Usage]:
+        return IdRead(digits=["?"] * n_digits, confidence=0.0), Usage()  # can't read handwriting
 
     def mark_box(self, item: KeyItem, png: bytes) -> tuple[BoxMark, Usage]:
         return BoxMark(
@@ -394,10 +423,8 @@ class Job:
 
 
 def _answer_ink(ink: np.ndarray, box: Box, dpi: int) -> int:
-    if box.type == "label":
-        return sum(int(raster.crop(ink, spot.rect, dpi).sum()) for spot in box.labels)
-    inset = BOX_INSET_PT if box.type == "short" else 2.0
-    return int(raster.crop(ink, box.rect, dpi, inset).sum())
+    rects = [spot.rect for spot in box.labels] if box.type == "label" else [box.rect]
+    return sum(int(raster.crop(ink, rect, dpi, EMPTY_INSET_PT).sum()) for rect in rects)
 
 
 def mark(workdir: Path, marker=None, threshold: float = DEFAULT_THRESHOLD, workers: int = 4,

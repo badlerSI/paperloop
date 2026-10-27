@@ -1,0 +1,102 @@
+{
+  "assignment_id": "sci6-water-01",
+  "note": "Four copies: clean, messy, crossed out with misspellings, blank. In 'circle', ~~C~~ means circle C, then cross it out. Sketch shapes are in points inside the drawing frame (344 x 140), origin bottom-left.",
+  "students": [
+    {
+      "id": "0417", "style": "clean", "font": "Noteworthy.ttc",
+      "answers": {
+        "1": {"circle": ["A"], "expected": "correct"},
+        "2": {"circle": ["B"], "expected": "correct"},
+        "3": {"text": "Water vapor in the air touches the cold glass, cools, and condenses into drops.", "expected": "correct"},
+        "4": {"labels": {"1": "melting", "2": "evaporation", "3": "condensation"}, "expected": "correct"},
+        "5": {
+          "describe": "an ocean at the bottom left labeled \"ocean\", a sun, an arrow going up from the ocean labeled \"evaporation\", a cloud labeled \"condensation\", rain falling from it labeled \"precipitation\", and a mountain with an arrow back down to the ocean labeled \"runoff\"",
+          "sketch": [
+            {"shape": "polyline", "points": [[8, 20], [28, 26], [48, 18], [68, 26], [88, 18], [108, 26], [128, 18], [150, 24]]},
+            {"shape": "text", "x": 50, "y": 6, "text": "ocean", "size": 11},
+            {"shape": "circle", "x": 28, "y": 112, "r": 11},
+            {"shape": "arrow", "points": [[96, 32], [150, 98]]},
+            {"shape": "text", "x": 82, "y": 74, "text": "evaporation", "size": 10},
+            {"shape": "circle", "x": 212, "y": 112, "r": 11},
+            {"shape": "circle", "x": 230, "y": 118, "r": 13},
+            {"shape": "circle", "x": 248, "y": 112, "r": 11},
+            {"shape": "text", "x": 264, "y": 122, "text": "condensation", "size": 10},
+            {"shape": "line", "points": [[214, 96], [210, 82]]},
+            {"shape": "line", "points": [[228, 96], [224, 82]]},
+            {"shape": "line", "points": [[242, 96], [238, 82]]},
+            {"shape": "text", "x": 250, "y": 84, "text": "precipitation", "size": 10},
+            {"shape": "polyline", "points": [[200, 22], [262, 66], [330, 22]]},
+            {"shape": "arrow", "points": [[214, 30], [160, 22]]},
+            {"shape": "text", "x": 166, "y": 34, "text": "runoff", "size": 10}
+          ],
+          "expected_items": {"1": "yes", "2": "yes", "3": "yes", "4": "yes", "5": "yes"},
+          "expected": "correct"
+        },
+        "6": {"text": "It runs downhill into streams and rivers that flow to the ocean.", "expected": "correct"}
+      }
+    },
+    {
+      "id": "2093", "style": "messy", "font": "Bradley Hand Bold.ttf",
+      "answers": {
+        "1": {"circle": ["B"], "expected": "incorrect"},
+        "2": {"circle": ["A"], "expected": "incorrect"},
+        "3": {"text": "the lemonade leaks through the glass", "expected": "incorrect"},
+        "4": {"labels": {"1": "freezing", "2": "evaporation", "3": "melting"}, "expected": "partial"},
+        "5": {
+          "describe": "water at the bottom left labeled \"water\", a sun, an arrow going up labeled \"evaporation\", and over the land on the right a cloud with rain falling onto the ground. No other labels and no arrow back to the water",
+          "sketch": [
+            {"shape": "polyline", "points": [[8, 20], [28, 26], [48, 18], [68, 26], [88, 18], [108, 24]]},
+            {"shape": "text", "x": 40, "y": 6, "text": "water", "size": 11},
+            {"shape": "circle", "x": 30, "y": 110, "r": 12},
+            {"shape": "arrow", "points": [[70, 32], [110, 96]]},
+            {"shape": "text", "x": 96, "y": 60, "text": "evaporation", "size": 10},
+            {"shape": "line", "points": [[150, 26], [336, 26]]},
+            {"shape": "circle", "x": 250, "y": 112, "r": 12},
+            {"shape": "circle", "x": 270, "y": 116, "r": 14},
+            {"shape": "circle", "x": 290, "y": 112, "r": 12},
+            {"shape": "line", "points": [[254, 96], [250, 64]]},
+            {"shape": "line", "points": [[270, 96], [266, 64]]},
+            {"shape": "line", "points": [[286, 96], [282, 64]]}
+          ],
+          "expected_items": {"1": "yes", "2": "yes", "3": "no", "4": "no", "5": "no"},
+          "expected": "partial"
+        },
+        "6": {"text": "it flows", "expected": "partial"}
+      }
+    },
+    {
+      "id": "3158", "style": "crossed", "font": "ChalkboardSE.ttc",
+      "answers": {
+        "1": {"circle": ["~~C~~", "A"], "expected": "correct"},
+        "2": {"circle": ["B"], "expected": "correct"},
+        "3": {"text": "water vaper from the air ~~melts~~ condenses on the cold glass", "misspellings": ["vaper"], "expected": "correct"},
+        "4": {"labels": {"1": "melting", "2": "evaperation", "3": "condensashun"}, "misspellings": ["evaperation", "condensashun"], "expected": "correct"},
+        "5": {
+          "describe": "the same picture as the clean copy, but spell the labels \"evaperation\", \"condensashun\", \"precipatation\", and \"runof\"",
+          "sketch": [
+            {"shape": "polyline", "points": [[8, 20], [28, 26], [48, 18], [68, 26], [88, 18], [108, 26], [128, 18], [150, 24]]},
+            {"shape": "text", "x": 50, "y": 6, "text": "ocean", "size": 11},
+            {"shape": "circle", "x": 28, "y": 112, "r": 11},
+            {"shape": "arrow", "points": [[96, 32], [150, 98]]},
+            {"shape": "text", "x": 82, "y": 74, "text": "evaperation", "size": 10},
+            {"shape": "circle", "x": 212, "y": 112, "r": 11},
+            {"shape": "circle", "x": 230, "y": 118, "r": 13},
+            {"shape": "circle", "x": 248, "y": 112, "r": 11},
+            {"shape": "text", "x": 264, "y": 122, "text": "condensashun", "size": 10},
+            {"shape": "line", "points": [[214, 96], [210, 82]]},
+            {"shape": "line", "points": [[228, 96], [224, 82]]},
+            {"shape": "line", "points": [[242, 96], [238, 82]]},
+            {"shape": "text", "x": 250, "y": 84, "text": "precipatation", "size": 10},
+            {"shape": "polyline", "points": [[200, 22], [262, 66], [330, 22]]},
+            {"shape": "arrow", "points": [[214, 30], [160, 22]]},
+            {"shape": "text", "x": 166, "y": 34, "text": "runof", "size": 10}
+          ],
+          "expected_items": {"1": "yes", "2": "yes", "3": "yes", "4": "yes", "5": "yes"},
+          "expected": "correct"
+        },
+        "6": {"text": "it soaks into the ground and flows undergrownd to the ocean", "misspellings": ["undergrownd"], "expected": "correct"}
+      }
+    },
+    {"id": "0006", "style": "blank", "font": "MarkerFelt.ttc", "answers": {}}
+  ]
+}

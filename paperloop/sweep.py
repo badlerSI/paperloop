@@ -31,7 +31,9 @@ def _run_one(base: Path, out: Path, truth: dict, model: str, effort: str, rep: i
         shutil.rmtree(work)
     work.mkdir(parents=True)
     shutil.copy(base / "ingest.json", work / "ingest.json")
-    (work / "pages").symlink_to((base / "pages").resolve(), target_is_directory=True)
+    for images in ("pages", "raw"):
+        if (base / images).exists():
+            (work / images).symlink_to((base / images).resolve(), target_is_directory=True)
     _, key = load_assignment(Path(load(IngestResult, base / "ingest.json").assignment_dir))
 
     started = time.monotonic()

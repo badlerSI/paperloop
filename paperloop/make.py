@@ -1,8 +1,8 @@
 """Make: lay out a printable worksheet and write layout.json + key.json.
 
 The template decides where everything goes, so later steps never guess
-coordinates: ingest reads the markers, QR code, and ID bubbles from fixed
-positions, and mark crops each question from its rect in layout.json.
+coordinates: ingest reads the markers, QR code, and ID from fixed positions,
+and mark crops each question from its rect in layout.json.
 
 Question types: short answer (a ruled box), choice (circle a letter), label
 (write in numbered boxes on a printed diagram), and draw (draw into a framed
@@ -12,6 +12,7 @@ area over a printed scaffold, judged against a checklist).
 from __future__ import annotations
 
 import math
+from dataclasses import dataclass
 from pathlib import Path
 
 import cv2
@@ -26,18 +27,30 @@ from .schemas import (
     PageLayout, ShortQ, WorksheetDef, load, save,
 )
 
-PROMPT_FONT, PROMPT_SIZE, PROMPT_LEADING = "Helvetica", 11.0, 14.0
-PROMPT_GAP = 6.0  # between prompt text and what follows
-LINE_SPACING = 22.0  # ruled writing lines inside answer boxes
-BLOCK_GAP = 18.0  # between questions
-OPTION_SIZE, OPTION_LEADING, OPTION_GAP = 10.5, 13.0, 9.0
-OPTION_TEXT_X = T.LEFT + 30
-OPTION_REACH = 16.0  # a circle drawn around a letter pokes left of the margin; count that ink too
-WORD_BANK_H = 20.0
+PROMPT_FONT = "Helvetica"
+OPTION_REACH = 16.0  # a circle drawn around a letter pokes left of its text; count that ink too
 
 INK = 0.0
 OUTLINE = 0.35
 FAINT = 0.8  # light enough that ingest's darkness threshold ignores it
+
+
+@dataclass(frozen=True)
+class Style:
+    prompt_size: float = 11.0
+    prompt_leading: float = 14.0
+    prompt_gap: float = 6.0  # between prompt text and what follows
+    line_spacing: float = 22.0  # ruled writing lines inside answer boxes
+    block_gap: float = 18.0  # between questions
+    option_size: float = 10.5
+    option_leading: float = 13.0
+    option_gap: float = 9.0
+    word_bank_h: float = 20.0
+
+
+ROOMY = Style()
+COMPACT = Style(prompt_size=10.5, prompt_leading=12.5, prompt_gap=4.0, line_spacing=21.0, block_gap=11.0,
+                option_size=10.0, option_leading=12.0, option_gap=6.0, word_bank_h=17.0)
 
 
 def id_grid() -> IdGrid:
@@ -49,44 +62,61 @@ def id_grid() -> IdGrid:
     return IdGrid(digits=T.ID_DIGITS, bubble_r=T.ID_BUBBLE_R, writein_rects=writeins, centers=centers)
 
 
+def id_boxes() -> list[tuple[float, float, float, float]]:
+    return [(T.ID_WRITE_X + d * T.ID_WRITE_W, T.ID_WRITE_Y, T.ID_WRITE_X + (d + 1) * T.ID_WRITE_W,
+             T.ID_WRITE_Y + T.ID_WRITE_H) for d in range(T.ID_DIGITS)]
+
+
 # --- Measuring --------------------------------------------------------------
 
-def _prompt_lines(question) -> list[str]:
-    return simpleSplit(f"{question.q}. {question.prompt}", PROMPT_FONT, PROMPT_SIZE, T.BOX_RIGHT - T.LEFT)
+def _prompt_lines(question, st: Style) -> list[str]:
+    return simpleSplit(f"{question.q}. {question.prompt}", PROMPT_FONT, st.prompt_size, T.BOX_RIGHT - T.LEFT)
 
 
-def _option_lines(text: str) -> list[str]:
-    return simpleSplit(text, "Helvetica", OPTION_SIZE, T.BOX_RIGHT - OPTION_TEXT_X)
+def _option_geometry(question: ChoiceQ, st: Style):
+    """Column width, text indent, and each option's wrapped lines."""
+    columns = max(1, question.columns)
+    col_w = (T.BOX_RIGHT - T.LEFT) / columns
+    indent = 30.0 if columns == 1 else 20.0
+    width = col_w - indent - (0 if columns == 1 else 4)
+    lines = [simpleSplit(o.text, "Helvetica", st.option_size, width) for o in question.options]
+    return columns, col_w, indent, lines
 
 
-def _body_height(question) -> float:
+def _option_rows(question: ChoiceQ, st: Style) -> list[float]:
+    columns, _, _, lines = _option_geometry(question, st)
+    rows = [lines[i:i + columns] for i in range(0, len(lines), columns)]
+    return [max(len(l) for l in row) * st.option_leading for row in rows]
+
+
+def _body_height(question, st: Style) -> float:
     if isinstance(question, ShortQ):
-        return question.lines * LINE_SPACING
+        return question.lines * st.line_spacing
     if isinstance(question, ChoiceQ):
-        rows = [len(_option_lines(o.text)) * OPTION_LEADING for o in question.options]
-        return sum(rows) + OPTION_GAP * (len(rows) - 1)
+        rows = _option_rows(question, st)
+        return sum(rows) + st.option_gap * (len(rows) - 1)
     if isinstance(question, LabelQ):
-        return question.diagram.height + (WORD_BANK_H if question.word_bank else 0)
+        return question.diagram.height + (st.word_bank_h if question.word_bank else 0)
     return question.diagram.height
 
 
-def _block_height(question) -> float:
-    return len(_prompt_lines(question)) * PROMPT_LEADING + PROMPT_GAP + _body_height(question)
+def _block_height(question, st: Style) -> float:
+    return len(_prompt_lines(question, st)) * st.prompt_leading + st.prompt_gap + _body_height(question, st)
 
 
-def _paginate(defn: WorksheetDef) -> list[list[int]]:
+def _paginate(defn: WorksheetDef, st: Style, top: float, bottom: float) -> list[list[int]]:
     """Group question indexes into pages."""
     pages: list[list[int]] = [[]]
-    y = T.CONTENT_TOP
+    y = top
     for i, question in enumerate(defn.questions):
         if isinstance(question, (LabelQ, DrawQ)) and question.diagram.width > T.BOX_RIGHT - T.LEFT:
             raise ValueError(f"question {question.q}: diagram is wider than {T.BOX_RIGHT - T.LEFT:g}pt")
-        height = _block_height(question)
-        if y - height < T.CONTENT_BOTTOM and pages[-1]:
+        height = _block_height(question, st)
+        if y - height < bottom and pages[-1]:
             pages.append([])
-            y = T.CONTENT_TOP
+            y = top
         pages[-1].append(i)
-        y -= height + BLOCK_GAP
+        y -= height + st.block_gap
     return pages
 
 
@@ -119,7 +149,9 @@ def _draw_qr(c: canvas.Canvas, payload: str, rect) -> None:
                 c.rect(x0 + col * cell, y1 - (r + 1) * cell, cell + 0.05, cell + 0.05, stroke=0, fill=1)
 
 
-def _draw_header(c: canvas.Canvas, defn: WorksheetDef, page_no: int, n_pages: int, grid: IdGrid) -> None:
+def _draw_header(c: canvas.Canvas, defn: WorksheetDef, page_no: int, n_pages: int, grid: IdGrid | None,
+                 boxes: list) -> float:
+    """Title, instructions, and the ID area. Returns the y of the rule under the header."""
     c.setFillGray(INK)
     c.setFont("Helvetica-Bold", 15)
     c.drawString(138, 744, defn.title)
@@ -127,30 +159,45 @@ def _draw_header(c: canvas.Canvas, defn: WorksheetDef, page_no: int, n_pages: in
     c.drawString(138, 730, f"Page {page_no} of {n_pages}")
     c.setFont("Helvetica", 8.5)
     y = 716.0
-    for line in simpleSplit(defn.instructions, "Helvetica", 8.5, 205):
+    width = 205 if grid else 290
+    for line in simpleSplit(defn.instructions, "Helvetica", 8.5, width):
         c.drawString(138, y, line)
         y -= 10.5
 
-    c.setFont("Helvetica-Bold", 7.5)
-    c.drawString(T.ID_WRITEIN_X, 746, "STUDENT ID: write each digit, then fill its bubble")
     c.setLineWidth(0.8)
-    for writein, row in zip(grid.writein_rects, grid.centers):
-        x0, y0, x1, y1 = writein
-        c.setStrokeGray(OUTLINE)
-        c.rect(x0, y0, x1 - x0, y1 - y0, stroke=1, fill=0)
-        for value, (cx, cy) in enumerate(row):
+    if grid:
+        c.setFont("Helvetica-Bold", 7.5)
+        c.drawString(T.ID_WRITEIN_X, 746, "STUDENT ID: write each digit, then fill its bubble")
+        for writein, row in zip(grid.writein_rects, grid.centers):
+            x0, y0, x1, y1 = writein
             c.setStrokeGray(OUTLINE)
-            c.circle(cx, cy, grid.bubble_r, stroke=1, fill=0)
-            c.setFillGray(FAINT)
-            c.setFont("Helvetica", 6)
-            c.drawCentredString(cx, cy - 2.1, str(value))
+            c.rect(x0, y0, x1 - x0, y1 - y0, stroke=1, fill=0)
+            for value, (cx, cy) in enumerate(row):
+                c.setStrokeGray(OUTLINE)
+                c.circle(cx, cy, grid.bubble_r, stroke=1, fill=0)
+                c.setFillGray(FAINT)
+                c.setFont("Helvetica", 6)
+                c.drawCentredString(cx, cy - 2.1, str(value))
+        rule = 666.0
+    else:
+        c.setFillGray(INK)
+        c.setFont("Helvetica-Bold", 10)
+        c.drawRightString(boxes[0][0] - 6, boxes[0][1] + 11, "ID #")
+        c.setFont("Helvetica", 6.5)
+        c.setFillGray(0.45)
+        c.drawString(boxes[0][0], boxes[0][1] - 9, "one digit per box, not your name")
+        c.setStrokeGray(OUTLINE)
+        for x0, y0, x1, y1 in boxes:
+            c.rect(x0, y0, x1 - x0, y1 - y0, stroke=1, fill=0)
+        rule = T.CONTENT_TOP_WRITTEN_ID + 8
     c.setFillGray(INK)
     c.setStrokeGray(OUTLINE)
-    c.line(T.LEFT, 666, T.GUTTER_RIGHT, 666)
+    c.line(T.LEFT, rule, T.GUTTER_RIGHT, rule)
+    return rule
 
 
-def _draw_footer(c: canvas.Canvas, defn: WorksheetDef, page_no: int, n_pages: int) -> None:
-    x0, y0, x1, y1 = T.SUMMARY_RECT
+def _draw_footer(c: canvas.Canvas, defn: WorksheetDef, page_no: int, n_pages: int, summary) -> None:
+    x0, y0, x1, y1 = summary
     c.setStrokeGray(FAINT)
     c.setLineWidth(0.8)
     c.rect(x0, y0, x1 - x0, y1 - y0, stroke=1, fill=0)
@@ -203,55 +250,76 @@ def draw_diagram(c: canvas.Canvas, diagram: Diagram, x0: float, y0: float) -> No
             draw(x0 + s.x, y0 + s.y, s.text)
 
 
-def _draw_prompt(c: canvas.Canvas, question, y: float) -> float:
+def _draw_prompt(c: canvas.Canvas, question, y: float, st: Style) -> float:
     """Draws the numbered prompt; returns the y where the body starts."""
-    lines = _prompt_lines(question)
+    lines = _prompt_lines(question, st)
     c.setFillGray(INK)
-    c.setFont(PROMPT_FONT, PROMPT_SIZE)
+    c.setFont(PROMPT_FONT, st.prompt_size)
     for n, line in enumerate(lines):
-        c.drawString(T.LEFT, y - PROMPT_SIZE - n * PROMPT_LEADING, line)
-    return y - len(lines) * PROMPT_LEADING - PROMPT_GAP
+        c.drawString(T.LEFT, y - st.prompt_size - n * st.prompt_leading, line)
+    return y - len(lines) * st.prompt_leading - st.prompt_gap
 
 
-def _draw_question(c: canvas.Canvas, question, y: float) -> Box:
+def _leader(c: canvas.Canvas, box, point) -> None:
+    """A line from a label box to the spot it names: from the side facing the spot."""
+    bx, by, bw, bh = box
+    px, py = point
+    if bx <= px <= bx + bw:
+        start = (bx + bw / 2, by + bh if py > by + bh else by)
+    else:
+        start = (bx if px < bx else bx + bw, by + bh / 2)
+    c.setStrokeGray(OUTLINE)
+    c.setLineWidth(0.8)
+    c.line(*start, px, py)
+    c.setFillGray(OUTLINE)
+    c.circle(px, py, 1.6, stroke=0, fill=1)
+
+
+def _draw_question(c: canvas.Canvas, question, y: float, st: Style) -> Box:
     top = y
-    body_top = _draw_prompt(c, question, y)
-    bottom = y - _block_height(question)
+    body_top = _draw_prompt(c, question, y, st)
+    bottom = y - _block_height(question, st)
     feedback = (T.GUTTER_LEFT, bottom, T.GUTTER_RIGHT, top)
     box = Box(q=question.q, type=question.type, rect=(T.LEFT, bottom, T.BOX_RIGHT, body_top),
               feedback_rect=feedback, prompt=question.prompt, points=question.points)
 
     if isinstance(question, ShortQ):
+        box.lines = question.lines
         c.setStrokeGray(FAINT)
         c.setLineWidth(0.6)
         for k in range(1, question.lines):
-            ly = bottom + k * LINE_SPACING
+            ly = bottom + k * st.line_spacing
             c.line(T.LEFT + 6, ly, T.BOX_RIGHT - 6, ly)
         c.setStrokeGray(OUTLINE)
         c.setLineWidth(1)
         c.rect(T.LEFT, bottom, T.BOX_RIGHT - T.LEFT, body_top - bottom, stroke=1, fill=0)
 
     elif isinstance(question, ChoiceQ):
+        columns, col_w, indent, lines = _option_geometry(question, st)
+        row_heights = _option_rows(question, st)
         row_top = body_top
-        for option in question.options:
-            lines = _option_lines(option.text)
-            baseline = row_top - OPTION_SIZE
+        for i, option in enumerate(question.options):
+            row, col = divmod(i, columns)
+            if col == 0 and row > 0:
+                row_top -= row_heights[row - 1] + st.option_gap
+            x = T.LEFT + col * col_w
+            baseline = row_top - st.option_size
             c.setFillGray(INK)
-            c.setFont("Helvetica-Bold", OPTION_SIZE + 0.5)
-            c.drawString(T.LEFT + 10, baseline, option.letter)
-            c.setFont("Helvetica", OPTION_SIZE)
-            for n, line in enumerate(lines):
-                c.drawString(OPTION_TEXT_X, baseline - n * OPTION_LEADING, line)
-            row_h = len(lines) * OPTION_LEADING
+            c.setFont("Helvetica-Bold", st.option_size + 0.5)
+            c.drawString(x + 10, baseline, option.letter)
+            c.setFont("Helvetica", st.option_size)
+            for n, line in enumerate(lines[i]):
+                c.drawString(x + indent, baseline - n * st.option_leading, line)
+            row_h = row_heights[row]
+            left = x - OPTION_REACH if col == 0 else x - 4
+            right = x + col_w if columns == 1 else x + col_w - 4
             box.options.append(OptionSpot(
                 letter=option.letter,
-                rect=(T.LEFT - OPTION_REACH, row_top - row_h - OPTION_GAP / 2, T.BOX_RIGHT,
-                      row_top + OPTION_GAP / 2),
-                letter_at=(T.LEFT + 10 + c.stringWidth(option.letter, "Helvetica-Bold", OPTION_SIZE + 0.5) / 2,
+                rect=(left, row_top - row_h - st.option_gap / 2, right, row_top + st.option_gap / 2),
+                letter_at=(x + 10 + c.stringWidth(option.letter, "Helvetica-Bold", st.option_size + 0.5) / 2,
                            baseline + 3.8),
             ))
-            row_top -= row_h + OPTION_GAP
-        box.rect = (T.LEFT - OPTION_REACH, bottom - OPTION_GAP / 2, T.BOX_RIGHT, body_top + OPTION_GAP / 2)
+        box.rect = (T.LEFT - OPTION_REACH, bottom - st.option_gap / 2, T.BOX_RIGHT, body_top + st.option_gap / 2)
 
     elif isinstance(question, LabelQ):
         diagram_top = body_top
@@ -261,7 +329,7 @@ def _draw_question(c: canvas.Canvas, question, y: float) -> Box:
             c.drawString(T.LEFT, body_top - 12, "Word bank:")
             c.setFont("Helvetica", 9.5)
             c.drawString(T.LEFT + 58, body_top - 12, "     •     ".join(question.word_bank))
-            diagram_top -= WORD_BANK_H
+            diagram_top -= st.word_bank_h
         x0, y0 = T.LEFT, diagram_top - question.diagram.height
         draw_diagram(c, question.diagram, x0, y0)
         for spot in question.labels:
@@ -273,13 +341,7 @@ def _draw_question(c: canvas.Canvas, question, y: float) -> Box:
             c.setFont("Helvetica-Bold", 7)
             c.drawString(x0 + bx + 2.5, y0 + by + bh - 8, str(spot.n))
             if spot.points_to:
-                px, py = spot.points_to
-                ex = bx if px < bx else bx + bw
-                c.setStrokeGray(OUTLINE)
-                c.setLineWidth(0.8)
-                c.line(x0 + ex, y0 + by + bh / 2, x0 + px, y0 + py)
-                c.setFillGray(OUTLINE)
-                c.circle(x0 + px, y0 + py, 1.6, stroke=0, fill=1)
+                _leader(c, (x0 + bx, y0 + by, bw, bh), (x0 + spot.points_to[0], y0 + spot.points_to[1]))
             box.labels.append(LabelBoxSpot(n=spot.n, rect=(x0 + bx, y0 + by, x0 + bx + bw, y0 + by + bh)))
         box.rect = (x0, y0, x0 + question.diagram.width, diagram_top)
 
@@ -316,9 +378,14 @@ def make_worksheet(defn: WorksheetDef, out_dir: Path) -> tuple[Path, Layout, Ans
     for question in defn.questions:
         if isinstance(question, ChoiceQ) and question.answer not in {o.letter for o in question.options}:
             raise ValueError(f"question {question.q}: answer {question.answer!r} isn't one of the options")
+    st = COMPACT if defn.compact else ROOMY
+    summary = T.SUMMARY_RECT_COMPACT if defn.compact else T.SUMMARY_RECT
+    written = defn.id_style == "write"
+    grid, boxes = (None, id_boxes()) if written else (id_grid(), [])
+    top = T.CONTENT_TOP_WRITTEN_ID if written else T.CONTENT_TOP
+    bottom = summary[3] + 12
     pdf_path = out_dir / "worksheet.pdf"
-    grid = id_grid()
-    pages = _paginate(defn)
+    pages = _paginate(defn, st, top, bottom)
 
     c = canvas.Canvas(str(pdf_path), pagesize=(T.PAGE_W, T.PAGE_H))
     c.setTitle(defn.title)
@@ -329,19 +396,19 @@ def make_worksheet(defn: WorksheetDef, out_dir: Path) -> tuple[Path, Layout, Ans
         for marker_id, rect in T.MARKER_RECTS.items():
             _draw_marker(c, marker_id, rect)
         _draw_qr(c, payload, T.QR_RECT)
-        _draw_header(c, defn, page_no, len(pages), grid)
-        _draw_footer(c, defn, page_no, len(pages))
+        _draw_header(c, defn, page_no, len(pages), grid, boxes)
+        _draw_footer(c, defn, page_no, len(pages), summary)
 
-        boxes: list[Box] = []
-        y = T.CONTENT_TOP
+        page_boxes: list[Box] = []
+        y = top
         for i in indexes:
             question = defn.questions[i]
-            boxes.append(_draw_question(c, question, y))
-            y -= _block_height(question) + BLOCK_GAP
+            page_boxes.append(_draw_question(c, question, y, st))
+            y -= _block_height(question, st) + st.block_gap
 
         page_layouts.append(PageLayout(
-            page=page_no, qr=payload, qr_rect=T.QR_RECT, id_grid=grid,
-            summary_rect=T.SUMMARY_RECT, boxes=boxes,
+            page=page_no, qr=payload, qr_rect=T.QR_RECT, id_grid=grid, id_boxes=boxes,
+            summary_rect=summary, boxes=page_boxes,
         ))
         c.showPage()
     c.save()

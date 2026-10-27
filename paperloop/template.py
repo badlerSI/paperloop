@@ -36,14 +36,21 @@ ID_FIRST_ROW_Y = 734.0
 ID_WRITEIN_X = 358.0
 ID_FIRST_BUBBLE_X = 390.0
 
+# Handwritten ID instead of bubbles: one box per digit, top right. Frees the space the bubbles took.
+ID_WRITE_X = 446.0
+ID_WRITE_Y = 722.0
+ID_WRITE_W, ID_WRITE_H = 26.0, 30.0
+
 # Content area for questions, and the summary box above the bottom markers.
-CONTENT_TOP = 652.0
+CONTENT_TOP = 652.0  # below the bubble grid
+CONTENT_TOP_WRITTEN_ID = 680.0  # below the QR code, when the ID is handwritten
 CONTENT_BOTTOM = 150.0
 LEFT = 48.0
 BOX_RIGHT = 392.0
 GUTTER_LEFT = 404.0
 GUTTER_RIGHT = 572.0
 SUMMARY_RECT = (48.0, 64.0, 572.0, 136.0)
+SUMMARY_RECT_COMPACT = (48.0, 56.0, 572.0, 106.0)
 
 # Canonical raster for deskewed pages, crops, and rendering.
 DPI = 200

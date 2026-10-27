@@ -50,10 +50,11 @@ def _font(name: str, size: int) -> ImageFont.FreeTypeFont:
     return ImageFont.load_default(size)
 
 
-def _write_box(draw: ImageDraw.ImageDraw, rect, text: str, font, rng: random.Random, ink: int, dpi: int) -> None:
+def _write_box(draw: ImageDraw.ImageDraw, rect, text: str, font, rng: random.Random, ink: int, dpi: int,
+               lines: int = 0) -> None:
     """Write words left to right on the box's ruled lines, wrapping, with a little wobble."""
     left, top, right, bottom = T.rect_to_px(rect, dpi)
-    line_h = round(22 * T.scale(dpi))
+    line_h = round((bottom - top) / lines) if lines else round(22 * T.scale(dpi))
     x, baseline = left + 14, top + line_h - 10
     for token in re.findall(r"~~[^~]+~~|\S+", text):
         crossed = token.startswith("~~")
@@ -119,7 +120,51 @@ def _draw_particles(draw: ImageDraw.ImageDraw, region, count: int, style: str, r
             draw.ellipse([cx - rp, cy - rp, cx + rp, cy + rp], outline=ink, width=3)
 
 
-def _fill_id(draw: ImageDraw.ImageDraw, grid, student_id: str, font, rng: random.Random, ink: int, dpi: int) -> None:
+def _sketch(draw: ImageDraw.ImageDraw, origin, shapes: list[dict], font_name: str, rng: random.Random,
+            ink: int, dpi: int) -> None:
+    """Freehand drawing from shape specs (points inside the frame): wobbly lines, handwritten words."""
+    ox, oy = origin
+    s = T.scale(dpi)
+
+    def px(x, y):
+        jx, jy = rng.uniform(-1.2, 1.2), rng.uniform(-1.2, 1.2)
+        return T.pt_to_px(ox + x + jx, oy + y + jy, dpi)
+
+    for shape in shapes:
+        kind = shape["shape"]
+        if kind == "circle":
+            cx, cy = T.pt_to_px(ox + shape["x"], oy + shape["y"], dpi)
+            r = shape["r"] * s * rng.uniform(0.95, 1.05)
+            draw.ellipse([cx - r, cy - r * rng.uniform(0.85, 1.0), cx + r, cy + r], outline=ink, width=3)
+        elif kind == "rect":
+            x, y, w, h = shape["x"], shape["y"], shape["w"], shape["h"]
+            corners = [px(x, y), px(x + w, y), px(x + w, y + h), px(x, y + h)]
+            draw.line(corners + corners[:1], fill=ink, width=3)
+        elif kind in ("line", "polyline", "arrow"):
+            points = [px(x, y) for x, y in shape["points"]]
+            draw.line(points, fill=ink, width=3, joint="curve")
+            if kind == "arrow":
+                (ax, ay), (bx, by) = points[-2], points[-1]
+                angle = math.atan2(by - ay, bx - ax)
+                for side in (-1, 1):
+                    a = angle + math.pi - side * math.radians(28)
+                    draw.line([(bx, by), (bx + 9 * s * math.cos(a), by + 9 * s * math.sin(a))], fill=ink, width=3)
+        elif kind == "text":
+            font = _font(font_name, round(shape.get("size", 12) * s))
+            x, y = T.pt_to_px(ox + shape["x"], oy + shape["y"], dpi)
+            draw.text((x + rng.randint(-3, 3), y + rng.randint(-2, 2)), shape["text"], font=font, fill=ink,
+                      anchor="ls")
+
+
+def _fill_id(draw: ImageDraw.ImageDraw, page_layout, student_id: str, font, rng: random.Random, ink: int,
+             dpi: int) -> None:
+    if not page_layout.id_grid:
+        for box, digit in zip(page_layout.id_boxes, student_id):
+            x0, y0, x1, y1 = T.rect_to_px(box, dpi)
+            draw.text(((x0 + x1) / 2 + rng.randint(-4, 4), (y0 + y1) / 2 + rng.randint(-3, 3)), digit,
+                      font=font, fill=ink, anchor="mm")
+        return
+    grid = page_layout.id_grid
     s = T.scale(dpi)
     for d, digit in enumerate(student_id):
         x0, y0, x1, y1 = T.rect_to_px(grid.writein_rects[d], dpi)
@@ -133,7 +178,9 @@ def _fill_id(draw: ImageDraw.ImageDraw, grid, student_id: str, font, rng: random
 def _answer(draw: ImageDraw.ImageDraw, box: Box, answer: dict, defn: WorksheetDef, student: dict,
             hand, rng: random.Random, ink: int, dpi: int) -> None:
     if "text" in answer:
-        _write_box(draw, box.rect, answer["text"], hand, rng, ink, dpi)
+        _write_box(draw, box.rect, answer["text"], hand, rng, ink, dpi, box.lines)
+    if "sketch" in answer:
+        _sketch(draw, (box.rect[0], box.rect[1]), answer["sketch"], student["font"], rng, ink, dpi)
     if "circle" in answer:
         for mark in answer["circle"]:
             _circle_option(draw, box, mark.strip("~"), mark.startswith("~~"), rng, ink, dpi)
@@ -179,7 +226,7 @@ def simulate(assignment_dir: Path, out_pdf: Path, seed: int = 7, students: Path 
         for page_layout, blank in zip(layout.pages, blanks):
             pil = Image.fromarray(blank.copy())
             draw = ImageDraw.Draw(pil)
-            _fill_id(draw, page_layout.id_grid, student["id"], hand, rng, ink, dpi)
+            _fill_id(draw, page_layout, student["id"], hand, rng, ink, dpi)
             for box in page_layout.boxes:
                 answer = student["answers"].get(str(box.q))
                 if answer:

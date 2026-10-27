@@ -118,6 +118,111 @@ Simulated results, Sonnet 5.5 at medium effort, 3 runs:
 
 **Rendering:** check and cross marks are drawn as strokes. The built-in symbol font rendered as solid squares in at least one PDF viewer.
 
+## Ben's handwriting (Oct 26)
+
+Four copies of Density Detectives, filled in by hand per `fill-guide`. They printed single-sided, giving 8 loose sheets, scanned in one pass on the HP 3301sdw's feeder with macOS Image Capture at 300 dpi. The 3301sdw can't scan both sides in one pass, despite its spec sheet. The real scan had things the fonts never did: an X across A that strays into the question text, "g/cm³" written as a stacked fraction, a "y" hanging below its label box, particles drawn as open loops, and "denisity" written as "density" with an extra i squeezed in.
+
+Comparison: 3 runs per setting, on 15 answered questions.
+
+| Model | Effort | ¢/page | Verdicts | "denisity" kept | Other misspellings kept | Drawing items | Flags | Comments over 15 words |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| Haiku 5.5 | low–high | 0.04–0.08 | 45/45 | 0/9 | lost "vegtable" 9/9 | 78/81 | 5–10% | 2/135 |
+| Sonnet 5.5 | low–high | 0.59–0.73 | 45/45 | 0/9 | all | 81/81 | 0% | 37/135 |
+| Opus 5.5 | low | 1.36 | 45/45 | 3/3 | all | 27/27 | 0% | 7/45 |
+| Opus 5.5 | medium | 1.51 | 45/45 | 3/3 | all | 27/27 | 0% | 3/45 |
+| Opus 5.5 | high | 2.20 | 45/45 | 2/3 | all | 27/27 | 0% | 0/45 |
+
+Every setting: pages routed 8/8, circled answers read right 6/6, no wrong answer marked correct.
+
+- **Sonnet can't see a squeezed-in letter.** It read "density" with 0.93 confidence and no uncertainty in every run. Telling it to transcribe inserted letters as written didn't change that (0/6), and Opus at low effort did worse with it, so the rule was reverted.
+- **Opus reads it and also says it's unsure.** It put "denisity" in `uncertain_words`, but at 0.85 confidence, just above the 0.80 flag line. Flagging any answer with uncertain words would send such cases to the teacher.
+- **Opus at medium effort is the only setting that met the spec's silent-autocorrect target** on real handwriting (6/6 across two comparisons). It also writes the tightest comments, at about 1.5¢ a page: roughly 90¢ for a 30-student, two-page set, against about 36¢ on Sonnet.
+- The squeezed-in letter is a borderline case: a squeezed letter usually means a self-correction, so reading "density" is what many teachers would do. The verdict was right either way.
+
+## One-page worksheet with a handwritten ID (Oct 26)
+
+"Water's Wild Ride" (`examples/sci6-water-01.json`) puts 6 questions on one sheet: two circle-the-answer questions with options in 2 and 4 columns, two 2-line short answers, a state-changes diagram to label, and the whole water cycle drawn from scratch with no printed scaffold, judged on a 5-item checklist. `compact: true` tightens spacing and shrinks the summary box. `id_style: "write"` replaces the bubble grid with four ID boxes.
+
+**Handwritten IDs** are read by the model in a request that carries only the cropped ID strip, never any answers, so the provider never sees an ID next to a student's work. An ID goes to the review pile instead of being guessed when:
+- a box is unclear, or the model's confidence is under 0.9 (stricter than marking, because a misread ID hands one student's feedback to another);
+- the ID isn't on the class roster, if one is given with `--roster`.
+
+This bends the spec's "IDs read locally, never by the model," so it's a per-worksheet setting and bubbles stay the default. A fully local route would be the Mac's built-in handwriting recognition, but that's Mac-only.
+
+Simulated results, Sonnet 5.5 at medium effort, 3 runs:
+
+| Check | Result |
+| --- | --- |
+| Handwritten IDs | 3 of 4 routed. "0006" was read correctly but at 0.85 confidence (the prompt warns about 0/6 lookalikes), so it went to review. |
+| Verdicts | 54/54 |
+| Drawing checklist items | 15/15 per run, after one fix |
+| Misspellings kept | all |
+| Cost | 1.8¢ per page (one sheet holds all 6 questions), plus about 0.13¢ per ID read |
+
+**Fix:** on the messy copy's water cycle, the model wrote "no 'precipitation' label, so the item is only partly met" and still answered yes. The drawing prompt now says "yes" only if every part of the item, including any label it asks for, is on the page, and that partly met is "no". After the fix: 15/15 in every run.
+
+**Other fixes from this round:**
+- A long comment is shrunk to fit beside its question, so it can't run into the next one on a packed page.
+- One-page worksheets no longer get a blank padding page after each student; they print single-sided.
+- `sweep` now links the original scans too, so the review pile renders.
+
+**Teaching call for Ben:** for wrong short answers, Sonnet's comment sometimes gives the answer away ("The drops come from water vapor in the air that condenses…") instead of hinting. The label comments hint. Decide which one the prompt should ask for.
+
+## Water's Wild Ride on paper (Oct 26)
+
+Four copies filled in by hand following `fill-guide.pdf`, then scanned on the HP into one 4-page PDF (`scans/day2/`). Copy 3158 also has margin doodles ("Hydro blast is SUPER effective", "Skool Sucks", a fish in the ocean).
+
+**Handwritten IDs: every read was right, but the confidence number is useless as a gate.** Each of the four ID strips was read 3 times by each model at low and medium effort:
+
+| Model | Reads right | Wrong digits | Confidence on right reads | Cost per read |
+| --- | --- | --- | --- | --- |
+| Haiku 5.5 | 17/24 | 0 (the rest were "?") | 0.60-0.88 | 0.01-0.02¢ |
+| Sonnet 5.5 | 24/24 | 0 | 0.60-0.90 | 0.13¢ |
+| Opus 5.5 | 24/24 | 0 | 0.60-0.92 | 0.26-0.61¢ |
+
+No model ever guessed a wrong digit; when unsure they wrote "?". But confidence on correct reads of clear handwriting sat at 0.6-0.9, so the 0.9 cutoff sent 3 of 4 pages to review. "0006" always scored lowest, because its zeros are open like a C and the prompt warns about 0/6 lookalikes.
+
+**Fix: the roster does the protecting.** With `--roster`, a read under 0.9 (down to 0.5) is accepted if it's on the roster and no other roster ID is one digit away. A misread usually changes one digit, so it can't have come from a classmate's ID. An ID one digit from a classmate's still needs 0.9. Without a roster nothing changed. In a class of 30 random 4-digit IDs, about 3 students will have a one-digit neighbour and still need the higher bar. After the fix: 4/4 routed.
+
+**Marking: every model, 3 runs each** (`runs/day2-sweep`, about $2 for all 27 runs). Out of 18 answers with a key, 4 pages:
+
+| Model | Verdicts right per run | Cost per page | Comments over 15 words | Errors beyond the arguable ones |
+| --- | --- | --- | --- | --- |
+| Opus 5.5, low effort | 17/18 every run | 3.2¢ (2.9¢ once the prompt cache is warm) | 7/54 | none |
+| Opus 5.5, medium | 17/18 every run | 4.3¢ | 3/54 | none |
+| Opus 5.5, high | 17/18 every run | 5.1¢ | 3/54 | none |
+| Sonnet 5.5, low/medium/high | 16-17/18 | 1.4-1.5¢ | 11-17/54 | marked 3158's water cycle partial in 7 of 9 runs, though its runoff reaches the ocean |
+| Haiku 5.5, low/medium/high | 15-16/18 | 0.1-0.2¢ | 0-7/52 | misread the crossed-out C as the answer, or as nothing; lost "vaper" |
+
+- **No model ever called a wrong answer right.**
+- **Effort barely matters.** Opus gave the same verdicts at every effort level, and so did Sonnet, give or take its wobble on 3158.
+- **Opus's one miss isn't really a miss.** 0417's evaporation line has no arrowhead, and the checklist says "an arrow goes up". The key expected yes; Opus said no, every time.
+- **Every model, in every run, read "undergrownd" as "underground".** It's one letter from a real word, and "ground" is written correctly on the line above. "vaper", "evaperation", "condensashun", "runof" and "precipatation" were kept by everything except Haiku.
+- **Both real-handwriting tests now point the same way.** On Day 1, Opus kept "denisity" 6/6 and Sonnet 0/15. **Recommendation, accepted by Ben: Opus 5.5 at low effort is now the default.** It's about 3¢ a page, which is the spec's target, is exactly repeatable, and makes the fewest flags (4%).
+
+The 2 checklist items every model "missed" are arguable, and the answer key is partly at fault:
+- 0417's evaporation line has no arrowhead (above).
+- 2093 drew a T-like mark before "evaporation" that may be a tiny arrow. The model said there was no arrow.
+
+**What broke and got fixed:**
+- **Pages bowed in the scanner.** Measuring printed-only patches showed 3 of 4 pages lined up at the corners but sat 3px across and 5-7px down in the middle of the page. That's paper curl or feeder stretch, which a 4-marker homography can't model. Day 1's scan had the same, smaller (about 2px). Printing that drifted more than the 4px slack showed up as "student ink", with three effects:
+  - the blank copy's empty multiple-choice questions and drawing frame looked answered;
+  - the messy copy's Q1 had "ink" on every option;
+  - each of those cost a model call.
+  
+  `ingest` now flattens each page after the homography: it measures the shift of print-only patches across the page, fits a smooth quadratic warp, and resamples. Answer areas are now within 1px. 0417's header had a finer ripple, and a couple of pixels remain there. Results:
+  - the blank copy reads 0 ink everywhere;
+  - 5 of 6 circled answers are read on the laptop (only the circled-then-crossed-out one needs the model);
+  - model calls went from 17 to 13.
+- **Blank drawing frame marked wrong, with five ✗s.** On the blank copy, the drift put a sliver of the frame's own border inside the 2pt inset: 1,296 "ink" pixels. Flattening fixes the cause. The empty-answer check now also looks 4pt inside the border, as a second guard.
+- **Next steps the key never asked for.** The summary said "Add arrows from the cloud to the rain" on two pages; no checklist item asks for that. The summary step only saw each drawing's description, so it reconstructed what was "missing". It now gets the checklist and label results, and the prompt says each next step must fix an answer that isn't correct or a checklist item that isn't "yes".
+- **Doodles under the feedback.** Doodles never reach the model: margins aren't cropped. But feedback prints in the right margin, right where a 13-year-old doodles, and the comments became hard to read. Each line of feedback now has a white band behind it at 85% opacity, so the comment reads cleanly and the doodle still shows around it.
+
+**Still open:**
+- **Comment length.** Sonnet runs over the 15-word rule on about a third of comments (16-19 words); Opus on about 1 in 10. They still fit on the page, so this is style, not layout.
+- **Strength length.** One Sonnet strength ran 26 words against "under 20".
+- **Misspellings one letter from a real word** get normalized by every model ("undergrownd"). This only matters if spelling feedback is turned on.
+
 ## Next iteration: worksheets kids want to do (Ben, Oct 26)
 
 Day 1's worksheet tests function, and it's blank and boring: five short-answer boxes. The next iteration needs more than short answer. Directions to explore:
@@ -128,8 +233,8 @@ Day 1's worksheet tests function, and it's blank and boring: five short-answer b
 - **IDs printed into the QR code instead of bubbles.** Print one copy per student from the roster. The QR carries an opaque per-class student code (never a name or district ID), and the header shows the student's first name for handing out. Spares get a "spare" code, and the teacher assigns them in review. This drops bubbles entirely (hard for young kids and for kids with motor issues) and makes per-student accommodations possible.
 - **Accommodations applied automatically, from a local profile per student** (the v0.2 plan). At print time: larger print, fewer items, word bank, sentence starters, extra space. At marking time: "spelling isn't assessed", "accept a drawn or dictated answer". The model sees only a generic instruction, never the IEP, a diagnosis, or who the student is. Variants should look like the regular sheet. The teacher confirms a print summary ("5 students get the word bank version"), and a delivery log records what each student got. Profiles come only from the teacher or case manager; the tool never infers who needs one.
 
-## Top three for Day 2 (provisional until the handwriting run)
+## Top three for Day 2
 
-1. **Run the sweep on Ben's handwriting** and pick the default model and effort from it, plus the confidence threshold from its flag rate.
+1. ~~**Pick the default model.**~~ Done Oct 26: Ben chose Opus 5.5 at low effort, about 3¢ a page. That's double Sonnet, and it departs from SPEC.md's "Default Sonnet 5.5". `--model claude-sonnet-5-5 --effort medium` still works for a cheaper run.
 2. **Rubric-style keys.** Have each key say what full and partial credit need, as Q2's does. That should remove most "the key doesn't settle this" flags. The Make step (spec pipeline step 1, drafting from a lesson description) should write keys this way.
 3. **Fix routing in review instead of reprinting.** Let the teacher type the ID for review-pile pages, so a smudged bubble doesn't send a page back. Then the Batch API for overnight runs at half price.

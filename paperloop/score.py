@@ -33,12 +33,13 @@ def _particle_words(particles: dict) -> str:
     )
 
 
-def guide_text(roster: dict) -> str:
+def guide_text(roster: dict, written_id: bool = False) -> str:
     """What to write on each copy, so hand-filled scans have a known answer key."""
     lines = ["Fill in one printed copy per student below, exactly like this. ~~word~~ means write it, then cross",
              "it out. Keep the misspellings: they test whether the model silently fixes them.", ""]
+    how = "write one digit per box at the top" if written_id else "write the digits and fill the bubbles"
     for s in roster["students"]:
-        lines.append(f"Copy {s['style']}: ID {s['id']} (write the digits and fill the bubbles on every page)")
+        lines.append(f"Copy {s['style']}: ID {s['id']} ({how} on every page)")
         if not s["answers"]:
             lines.append("  Leave every answer empty.")
         for q, a in sorted(s["answers"].items(), key=lambda kv: int(kv[0])):
@@ -51,18 +52,57 @@ def guide_text(roster: dict) -> str:
                 lines.append(f"  Q{q}: label {labels}")
             if "particles" in a:
                 lines.append(f"  Q{q}: draw {_particle_words(a['particles'])}, spread evenly")
+            if "sketch" in a:
+                lines.append(f"  Q{q}: draw {a.get('describe', 'the diagram')}")
         lines.append("")
     return "\n".join(lines)
+
+
+def guide_pdf(title: str, text: str, path: Path) -> Path:
+    """The fill-in guide on Letter paper, to keep beside the copies while filling them in."""
+    from reportlab.lib.utils import simpleSplit
+    from reportlab.pdfgen import canvas
+
+    from .render import printable
+
+    path = Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    c = canvas.Canvas(str(path), pagesize=(612, 792))
+    c.setTitle(title)
+    y = 740
+    c.setFont("Helvetica-Bold", 15)
+    c.drawString(54, y, printable(title))
+    y -= 26
+    for raw in text.splitlines():
+        indent = 72 if raw.startswith("  ") else 54
+        bold = raw.startswith("Copy ")
+        font, size = ("Helvetica-Bold", 11.5) if bold else ("Helvetica", 10.5)
+        if bold:
+            y -= 4
+        for line in simpleSplit(printable(raw.strip()), font, size, 558 - indent) or [""]:
+            if y < 54:
+                c.showPage()
+                y = 740
+            c.setFont(font, size)
+            c.drawString(indent, y, line)
+            y -= size + 4
+    c.save()
+    return path
 
 
 def guide_truth(roster: dict) -> dict:
     return {"assignment_id": roster.get("assignment_id"), "students": roster["students"]}
 
 
+_SUPERSCRIPTS = str.maketrans("¹²³", "123")
+
+
 def _words(text: str) -> list[str]:
     text = re.sub(r"~~[^~]+~~", " ", text)  # truth: struck-through words aren't part of the answer
     text = re.sub(r"\[crossed out:[^\]]*\]", " ", text, flags=re.I)  # model's notation for the same
-    return re.findall(r"[a-z0-9/]+", text.lower())
+    # "40g" and "40 g", "cm³" and "cm3" are the same answer written two ways.
+    text = re.sub(r"(?<=\d)(?=[a-z])", " ", text.lower().translate(_SUPERSCRIPTS))
+    return re.findall(r"[a-z0-9/]+", text)
 
 
 def _truth_text(answer: dict) -> str | None:

@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import csv
 import json
 import shutil
 from pathlib import Path
@@ -62,19 +63,50 @@ def simulate(assignment: Path = typer.Argument(..., help="Assignment folder from
 @app.command()
 def ingest(scans: list[Path] = typer.Argument(..., help="Scanned class-set PDF(s), in any page order."),
            assignment: Path = typer.Option(..., help="Assignment folder from `make`."),
-           work: Path = typer.Option(None, help="Work folder. Default: runs/<first scan's name>.")) -> None:
-    """Split, deskew, and route each scanned page by its QR code and ID bubbles."""
+           work: Path = typer.Option(None, help="Work folder. Default: runs/<first scan's name>."),
+           model: str = typer.Option(mark_mod.DEFAULT_MODEL, help="Model that reads handwritten IDs, if used."),
+           mock: bool = typer.Option(False, help="No API calls; handwritten IDs go to review."),
+           roster: Path = typer.Option(None, help="CSV of valid student IDs (an 'id' column, or the first one).")) -> None:
+    """Split, deskew, and route each scanned page by its QR code and student ID."""
     work = work or Path("runs") / scans[0].stem
-    _ingest(scans, assignment, work)
+    _ingest(scans, assignment, work, model, mock, roster)
 
 
-def _ingest(scans: list[Path], assignment: Path, work: Path) -> IngestResult:
+def _load_roster(path: Path | None) -> set[str] | None:
+    if path is None:
+        return None
+    with path.open(newline="") as f:
+        rows = list(csv.reader(f))
+    if not rows:
+        _fail(f"{path} is empty")
+    header = [h.strip().lower() for h in rows[0]]
+    column = header.index("id") if "id" in header else 0
+    body = rows[1:] if not rows[0][column].strip().isdigit() else rows
+    return {r[column].strip() for r in body if r and r[column].strip()}
+
+
+def _ingest(scans: list[Path], assignment: Path, work: Path, model: str = mark_mod.DEFAULT_MODEL,
+            mock: bool = False, roster: Path | None = None) -> IngestResult:
     for scan in scans:
         if not scan.exists():
             _fail(f"No scan at {scan}")
-    result = ingest_mod.ingest(scans, assignment, work)
-    layout, _ = load_assignment(assignment)
+    layout, key = load_assignment(assignment)
+    reader = None
+    if not mock and any(p.id_boxes for p in layout.pages):
+        # Handwritten IDs: the model sees the ID boxes alone, in requests that carry no answers.
+        try:
+            reader = mark_mod.ClaudeMarker(key, model=model, effort="low").read_id
+        except anthropic.AnthropicError as e:
+            typer.secho(f"No model to read handwritten IDs ({e}); those pages go to review.", fg="yellow")
+    try:
+        result = ingest_mod.ingest(scans, assignment, work, id_reader=reader, roster=_load_roster(roster))
+    except TypeError as e:  # raised by the SDK when it finds no credentials at all
+        if "auth" not in str(e).lower():
+            raise
+        _fail("No Anthropic API key found to read handwritten IDs. Add it to .env, or use --mock.")
     typer.echo(ingest_mod.page_map(result, len(layout.pages)))
+    if result.id_usage.cost_usd:
+        typer.echo(f"Reading handwritten IDs cost ${result.id_usage.cost_usd:.4f}")
     return result
 
 
@@ -140,8 +172,9 @@ def _render(work: Path, grade: str, force: bool, duplex: bool = True) -> None:
         result = render_mod.render(work, grade=grade, force=force, duplex=duplex)
     except render_mod.RenderBlocked as e:
         _fail(str(e))
+    sides = "double-sided" if result["double_sided"] else "single-sided"
     typer.echo(f"Wrote {result['returned']}: {result['students']} students, {result['pages']} pages. "
-               "Print double-sided and hand back.")
+               f"Print {sides} and hand back.")
     if "grades" in result:
         typer.echo(f"Grades: {result['grades']}")
     if "review_pile" in result:
@@ -158,11 +191,12 @@ def run(scans: list[Path] = typer.Argument(..., help="Scanned class-set PDF(s), 
         mock: bool = typer.Option(False, help="Use a stand-in marker; no API calls."),
         threshold: float = typer.Option(mark_mod.DEFAULT_THRESHOLD, help="Flag answers below this confidence."),
         grade: str = typer.Option("off", help="off, back (score on the last page), or csv."),
-        accept_all: bool = typer.Option(False, help="Skip interactive review and accept every flag.")) -> None:
+        accept_all: bool = typer.Option(False, help="Skip interactive review and accept every flag."),
+        roster: Path = typer.Option(None, help="CSV of valid student IDs (an 'id' column, or the first one).")) -> None:
     """Scan in, marked PDF out: ingest, mark, review, render."""
     work = work or Path("runs") / scans[0].stem
     typer.secho("1/4 Reading the scan", bold=True)
-    _ingest(scans, assignment, work)
+    _ingest(scans, assignment, work, model, mock, roster)
     typer.secho("2/4 Marking", bold=True)
     _mark(work, model, effort, mock, threshold, workers=4)
     typer.secho("3/4 Review", bold=True)
@@ -177,11 +211,16 @@ def run(scans: list[Path] = typer.Argument(..., help="Scanned class-set PDF(s), 
 @app.command("fill-guide")
 def fill_guide(assignment: Path = typer.Argument(..., help="Assignment folder from `make`."),
                students: Path = typer.Option(None, help="Students file. Default: examples/<id>.students.json."),
-               truth: Path = typer.Option(None, help="Also write the matching truth JSON for `score`.")) -> None:
+               truth: Path = typer.Option(None, help="Also write the matching truth JSON for `score`."),
+               pdf: Path = typer.Option(None, help="Also write the guide as a printable PDF.")) -> None:
     """Print what to write, circle, label, and draw on each test copy."""
     layout, _ = load_assignment(assignment)
     roster = load_students(layout.assignment_id, students)
-    typer.echo(score_mod.guide_text(roster))
+    text = score_mod.guide_text(roster, written_id=any(p.id_boxes for p in layout.pages))
+    typer.echo(text)
+    if pdf:
+        score_mod.guide_pdf(f"Fill-in guide: {layout.title}", text, pdf)
+        typer.echo(f"Wrote {pdf}")
     if truth:
         truth.parent.mkdir(parents=True, exist_ok=True)
         truth.write_text(json.dumps(score_mod.guide_truth(roster), indent=2) + "\n")
