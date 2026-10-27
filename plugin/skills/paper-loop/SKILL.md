@@ -1,6 +1,6 @@
 ---
 name: paper-loop
-description: Turns the school copier into a feedback machine for any subject, grades 2-12. Makes printable worksheets (reading passages, short and rubric-scored written answers and multi-page essays, multiple choice, fill-in-the-blank, matching, tables, show-your-work math, labeled diagrams, maps, graphs and bar charts, drawings, code listings, chemical equations, music on a staff) that can be marked from a scan, and marks scanned class sets of them - reads every answer, writes a short comment beside it, and returns one PDF of marked pages to print and hand back. Use when a teacher wants a worksheet made for Paper Loop, or has a scan of completed Paper Loop worksheets to mark, grade, or give feedback on.
+description: Turns the school copier into a feedback machine for any subject, grades 2-12. Plans lessons - a lesson plan (Word), PowerPoint slides to teach it, a deck that goes over each worksheet problem, and an answer key. Makes printable worksheets (reading passages, short and rubric-scored written answers and multi-page essays, multiple choice, fill-in-the-blank, matching, tables, show-your-work math, labeled diagrams, maps, graphs and bar charts, drawings, code listings, chemical equations, music on a staff) that can be marked from a scan, and marks scanned class sets of them - reads every answer, writes a short comment beside it, returns one PDF of marked pages to print and hand back, and makes a go-over deck from what the class missed. Use when a teacher wants a lesson plan, slides, or a worksheet, or has a scan of completed Paper Loop worksheets to mark, grade, or give feedback on.
 ---
 
 # Paper Loop
@@ -11,8 +11,8 @@ and hands them back. The scripts handle the paper: lining up pages, cropping ans
 letters, and laying out the PDF. You do the reading and judging.
 
 Run the scripts as `python3 <this skill's folder>/scripts/paper_loop.py <command>`, written `PL` below.
-They need numpy, scipy, Pillow, pypdfium2, and reportlab, which Claude's sandboxes include. If an import
-fails, `pip install` the missing one.
+They need numpy, scipy, Pillow, pypdfium2, and reportlab, and python-pptx for slides, which Claude's
+sandboxes include. If an import fails, `pip install` the missing one.
 
 ## Privacy: always
 
@@ -51,6 +51,26 @@ fails, `pip install` the missing one.
    look like what they're meant to be, and that label boxes and leader lines point at the right things.
 5. Give the teacher `<folder>/<assignment_id>/worksheet.pdf` to print, along with anything `make` printed as
    notes for them. Keep the folder: marking needs `layout.json` and `key.json` from it.
+
+## Planning a lesson
+
+When the teacher wants a lesson plan or slides, make the worksheet first (above), then the lesson around
+it. A lesson without a worksheet works too; offer one, since it's what Paper Loop marks.
+
+1. Find out the class length and anything the teacher wants included (a standard, a text, an activity, a
+   warm-up routine). Ask only for what they haven't said.
+2. Read `references/lesson-format.md`, then the example lesson in `references/examples/` closest in grade
+   and subject. Write the lesson as JSON: a timed sequence of phases with their slides, and a walkthrough
+   for every worksheet question (the idea it tests, the steps, the likely mistakes). Put what the teacher
+   says in each slide's `say`, and keep the slides to a few words.
+3. Save it as `<folder>/<lesson_id>.json` beside the worksheet's JSON and run
+   `PL lesson "<folder>/<lesson_id>.json" --out "<folder>/<lesson_id>"`. Fix every `Check:` line it prints.
+4. Look at the slides: `PL preview "<folder>/<lesson_id>/slides.pdf" --sheet` (nine slides to an image),
+   then `go-over.pdf` the same way. Check that text fits, pictures are readable, and each answer is
+   written in the right box. Change the JSON and run `lesson` again to fix anything.
+5. Give the teacher `lesson-plan.docx`, `slides.pptx`, `go-over.pptx`, and `answer-key.pdf`, with the
+   worksheet. The .pptx files open in PowerPoint, Keynote, or Google Slides; the .pdf copies are the same
+   slides, for presenting from any computer.
 
 ## Marking a scan
 
@@ -114,6 +134,13 @@ double quotes. If you lose track at any point, `PL status "<work>"` says what's 
    `<work>/out/returned.pdf` and say whether to print it single- or double-sided. If there's a
    `review_pile.pdf`, say which pages are in it and why. Those are usually a smudged or missing ID, which
    the teacher can sort by hand.
+
+8. **Go-over deck** (when the teacher wants one, or offer it): run `PL goover "<work>"`, adding
+   `--lesson "<lesson file>"` if there's a lesson for this worksheet and `--most N` to fit the time (about
+   2 minutes a question). Then write `<work>/goover.json` with what you saw on each question it goes over
+   (`<work>/out/go-over-todo.md` lists the answers that missed, if you didn't mark this scan yourself), and
+   run it again. Give the teacher `<work>/out/go-over.pptx`: most-missed questions first, each with how
+   the class answered and its answer worked through. Details: the end of `references/lesson-format.md`.
 
 The printed page shows each comment beside its question, a check or cross on each box the student wrote in
 and on each math answer box, the drawing checklist and (from grade 6) rubric scores under the comment, and

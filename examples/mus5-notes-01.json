@@ -92,15 +92,15 @@
       "prompt": "Draw It: Draw a whole note on F (the first space) and a whole note on C (the third space).",
       "diagram": {
         "width": 330,
-        "height": 80,
+        "height": 100,
         "description": "An empty treble staff with a treble clef.",
         "shapes": [
           {
             "shape": "staff",
             "x": 10,
-            "y": 22,
+            "y": 24,
             "w": 310,
-            "h": 36,
+            "h": 52,
             "clef": "treble"
           }
         ]
@@ -123,27 +123,27 @@
     {
       "type": "choice",
       "q": 3,
-      "prompt": "Which word can you spell using only line notes (E, G, B, D, F)?",
-      "answer": "B",
+      "prompt": "Which word can you spell using only line notes?",
+      "answer": "2",
       "columns": 2,
       "options": [
         {
-          "letter": "A",
+          "letter": "1",
           "text": "FACE",
           "why": "FACE uses the space notes."
         },
         {
-          "letter": "B",
+          "letter": "2",
           "text": "BED",
           "why": "Yes: B, E, and D are all line notes."
         },
         {
-          "letter": "C",
+          "letter": "3",
           "text": "CAFE",
           "why": "C and A sit in spaces."
         },
         {
-          "letter": "D",
+          "letter": "4",
           "text": "ACE",
           "why": "A and C sit in spaces."
         }

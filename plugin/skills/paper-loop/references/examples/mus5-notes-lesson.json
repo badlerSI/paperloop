@@ -1,0 +1,503 @@
+{
+  "lesson_id": "mus5-notes-lesson",
+  "title": "Reading Notes on the Treble Staff",
+  "subject": "Music",
+  "grade_band": "5th grade general music",
+  "minutes": 45,
+  "worksheet": "mus5-notes-01",
+  "objectives": [
+    "Students will be able to name the line notes (E, G, B, D, F) and space notes (F, A, C, E) of the treble staff.",
+    "Students will be able to tell how many beats whole, half, and quarter notes get in 4/4 time."
+  ],
+  "targets": [
+    "I can name notes on the treble staff.",
+    "I can count beats for whole, half, and quarter notes."
+  ],
+  "materials": [
+    "Hand staff: students hold up a hand sideways, five fingers as five lines",
+    "Rhythm sticks or desks to tap"
+  ],
+  "vocabulary": [
+    {
+      "term": "staff",
+      "meaning": "Five lines and four spaces where notes are written."
+    },
+    {
+      "term": "treble clef",
+      "meaning": "The G clef: its curl circles the G line, which names the other notes."
+    },
+    {
+      "term": "line note",
+      "meaning": "A note with a line through its middle."
+    },
+    {
+      "term": "space note",
+      "meaning": "A note sitting between two lines."
+    }
+  ],
+  "sequence": [
+    {
+      "phase": "Warm-up",
+      "minutes": 5,
+      "teacher": "Play or sing a low note and a high note. Ask where each would sit on the staff.",
+      "students": "Show low or high with their hands, then turn and talk.",
+      "slides": [
+        {
+          "type": "question",
+          "title": "Warm-up",
+          "mode": "Turn and talk",
+          "minutes": 2,
+          "prompt": "Musicians write a high sound higher on the page. Why might that help someone read music?",
+          "say": "Listen for: you can see the tune go up and down."
+        }
+      ]
+    },
+    {
+      "phase": "Mini-lesson",
+      "minutes": 15,
+      "teacher": "Teach the staff, then the line notes and space notes with their sayings. Use the hand staff.",
+      "students": "Point to lines and spaces on their hand staff; say the sayings together.",
+      "slides": [
+        {
+          "type": "vocab",
+          "say": "Hold up a hand sideways: five fingers are five lines, and the gaps are the four spaces."
+        },
+        {
+          "type": "points",
+          "title": "Line notes",
+          "points": [
+            "Five lines, bottom to top",
+            "**E G B D F**"
+          ],
+          "diagram": {
+            "width": 320,
+            "height": 100,
+            "description": "A treble staff with whole notes on each line, E, G, B, D, F, named under the staff.",
+            "shapes": [
+              {
+                "shape": "staff",
+                "x": 10,
+                "y": 34,
+                "w": 300,
+                "h": 40,
+                "clef": "treble",
+                "notes": [
+                  {
+                    "pitch": "E4",
+                    "x": 110,
+                    "duration": "whole"
+                  },
+                  {
+                    "pitch": "G4",
+                    "x": 150,
+                    "duration": "whole"
+                  },
+                  {
+                    "pitch": "B4",
+                    "x": 190,
+                    "duration": "whole"
+                  },
+                  {
+                    "pitch": "D5",
+                    "x": 230,
+                    "duration": "whole"
+                  },
+                  {
+                    "pitch": "F5",
+                    "x": 270,
+                    "duration": "whole"
+                  }
+                ]
+              },
+              {
+                "shape": "text",
+                "x": 110,
+                "y": 8,
+                "text": "E",
+                "size": 14,
+                "bold": true,
+                "align": "center"
+              },
+              {
+                "shape": "text",
+                "x": 150,
+                "y": 8,
+                "text": "G",
+                "size": 14,
+                "bold": true,
+                "align": "center"
+              },
+              {
+                "shape": "text",
+                "x": 190,
+                "y": 8,
+                "text": "B",
+                "size": 14,
+                "bold": true,
+                "align": "center"
+              },
+              {
+                "shape": "text",
+                "x": 230,
+                "y": 8,
+                "text": "D",
+                "size": 14,
+                "bold": true,
+                "align": "center"
+              },
+              {
+                "shape": "text",
+                "x": 270,
+                "y": 8,
+                "text": "F",
+                "size": 14,
+                "bold": true,
+                "align": "center"
+              }
+            ]
+          },
+          "callout": "**E**very **G**ood **B**urger **D**eserves **F**ries",
+          "say": "Have students make up their own saying for E G B D F; the silliest ones stick best."
+        },
+        {
+          "type": "points",
+          "title": "Space notes",
+          "points": [
+            "Four spaces, bottom to top",
+            "**F A C E**"
+          ],
+          "diagram": {
+            "width": 320,
+            "height": 100,
+            "description": "A treble staff with whole notes in each space, F, A, C, E, named under the staff.",
+            "shapes": [
+              {
+                "shape": "staff",
+                "x": 10,
+                "y": 34,
+                "w": 300,
+                "h": 40,
+                "clef": "treble",
+                "notes": [
+                  {
+                    "pitch": "F4",
+                    "x": 120,
+                    "duration": "whole"
+                  },
+                  {
+                    "pitch": "A4",
+                    "x": 170,
+                    "duration": "whole"
+                  },
+                  {
+                    "pitch": "C5",
+                    "x": 220,
+                    "duration": "whole"
+                  },
+                  {
+                    "pitch": "E5",
+                    "x": 270,
+                    "duration": "whole"
+                  }
+                ]
+              },
+              {
+                "shape": "text",
+                "x": 120,
+                "y": 8,
+                "text": "F",
+                "size": 14,
+                "bold": true,
+                "align": "center"
+              },
+              {
+                "shape": "text",
+                "x": 170,
+                "y": 8,
+                "text": "A",
+                "size": 14,
+                "bold": true,
+                "align": "center"
+              },
+              {
+                "shape": "text",
+                "x": 220,
+                "y": 8,
+                "text": "C",
+                "size": 14,
+                "bold": true,
+                "align": "center"
+              },
+              {
+                "shape": "text",
+                "x": 270,
+                "y": 8,
+                "text": "E",
+                "size": 14,
+                "bold": true,
+                "align": "center"
+              }
+            ]
+          },
+          "callout": "The spaces spell **FACE**.",
+          "say": "Point out that F shows up twice (the bottom space and the top line) and E too (the bottom line and the top space). Sing the line notes, then the space notes, on a scale."
+        },
+        {
+          "type": "question",
+          "title": "Name it",
+          "mode": "Hold up fingers",
+          "prompt": "What is this note?",
+          "diagram": {
+            "width": 200,
+            "height": 80,
+            "description": "A treble staff with one whole note on the second line (G).",
+            "shapes": [
+              {
+                "shape": "staff",
+                "x": 10,
+                "y": 20,
+                "w": 180,
+                "h": 40,
+                "clef": "treble",
+                "notes": [
+                  {
+                    "pitch": "G4",
+                    "x": 130,
+                    "duration": "whole"
+                  }
+                ]
+              }
+            ]
+          },
+          "choices": [
+            "E",
+            "G",
+            "B",
+            "D"
+          ],
+          "answer": "2",
+          "why": "It's on the second line: E, then **G**.",
+          "say": "Students hold up 1 to 4 fingers.",
+          "choice_labels": "numbers"
+        }
+      ]
+    },
+    {
+      "phase": "Beats",
+      "minutes": 7,
+      "teacher": "Tap each note value while counting 1-2-3-4 aloud.",
+      "students": "Tap along on desks.",
+      "slides": [
+        {
+          "type": "points",
+          "title": "How long does it last?",
+          "points": [
+            "Whole note: **4** beats",
+            "Half note: **2** beats",
+            "Quarter note: **1** beat"
+          ],
+          "diagram": {
+            "width": 320,
+            "height": 90,
+            "description": "A one-line rhythm staff in 4/4 with a whole note, then a half note and two quarter notes, beat counts under each.",
+            "shapes": [
+              {
+                "shape": "staff",
+                "x": 10,
+                "y": 40,
+                "w": 300,
+                "h": 30,
+                "clef": "none",
+                "lines": 1,
+                "time": "4/4",
+                "bars": [
+                  170
+                ],
+                "final_bar": true,
+                "notes": [
+                  {
+                    "x": 90,
+                    "duration": "whole"
+                  },
+                  {
+                    "x": 200,
+                    "duration": "half"
+                  },
+                  {
+                    "x": 250,
+                    "duration": "quarter"
+                  },
+                  {
+                    "x": 285,
+                    "duration": "quarter"
+                  }
+                ]
+              },
+              {
+                "shape": "text",
+                "x": 90,
+                "y": 6,
+                "text": "4 beats",
+                "size": 14,
+                "bold": true,
+                "align": "center"
+              },
+              {
+                "shape": "text",
+                "x": 200,
+                "y": 6,
+                "text": "2",
+                "size": 14,
+                "bold": true,
+                "align": "center"
+              },
+              {
+                "shape": "text",
+                "x": 250,
+                "y": 6,
+                "text": "1",
+                "size": 14,
+                "bold": true,
+                "align": "center"
+              },
+              {
+                "shape": "text",
+                "x": 285,
+                "y": 6,
+                "text": "1",
+                "size": 14,
+                "bold": true,
+                "align": "center"
+              }
+            ]
+          },
+          "callout": "Two quarter notes last as long as one half note.",
+          "say": "Tap and count 1-2-3-4 aloud for the whole note; then half, quarter, quarter. Have the class tap it back."
+        }
+      ]
+    },
+    {
+      "phase": "Worksheet",
+      "minutes": 11,
+      "worksheet": true,
+      "then": "Done? On the back, write a word using only space notes.",
+      "teacher": "Students may use their hand staff. Read Q4 aloud for anyone who wants it. Collect every sheet when time's up.",
+      "students": "Work on their own."
+    },
+    {
+      "phase": "Exit ticket",
+      "minutes": 5,
+      "teacher": "Hand out sticky notes; students work on their own.",
+      "students": "Draw and write on a sticky note.",
+      "slides": [
+        {
+          "type": "question",
+          "title": "Exit ticket",
+          "prompt": "On your sticky note: draw a half note, and write how many beats it gets in 4/4.",
+          "answer": "An open note with a stem; 2 beats",
+          "say": "Notes with a filled-in head drew a quarter note: start there tomorrow."
+        }
+      ]
+    }
+  ],
+  "checks": [
+    "Is that note on a line or in a space?",
+    "Which line is G on?",
+    "How many beats does a half note get?"
+  ],
+  "misconceptions": [
+    {
+      "misconception": "Counting lines and spaces together (calling the first space the second note).",
+      "response": "Use the hand staff: name only fingers for line notes, only gaps for space notes."
+    },
+    {
+      "misconception": "Thinking a note above the staff is in the top space.",
+      "response": "Draw the five lines first and check which gap the note sits in."
+    }
+  ],
+  "differentiation": {
+    "support": [
+      "Give a staff card with E G B D F and F A C E written beside the lines and spaces.",
+      "Let students use the hand staff during the worksheet."
+    ],
+    "extension": [
+      "Write a three-note word on the staff for a partner to read.",
+      "Name the note on the ledger line below the staff (middle C)."
+    ],
+    "language": [
+      "Point and say each letter name together.",
+      "Show the beats with taps, not only words."
+    ]
+  },
+  "walkthrough": [
+    {
+      "q": 1,
+      "think": "Is each note on a line or in a space?",
+      "idea": "Line notes from the bottom: E, G, B, D, F. Space notes: F, A, C, E.",
+      "steps": [
+        "Note 1 sits on the bottom line: E.",
+        "Count up the lines: G, then B.",
+        "Note 4 is in the top space: E."
+      ],
+      "mistakes": [
+        "Counting lines and spaces together."
+      ]
+    },
+    {
+      "q": 2,
+      "think": "Which space is first? Count from the bottom.",
+      "idea": "The spaces spell FACE from the bottom up.",
+      "steps": [
+        "F is the first space from the bottom.",
+        "C is the third space.",
+        "Whole notes are open ovals with no stem."
+      ],
+      "mistakes": [
+        "Drawing the note on a line instead of in the space.",
+        "Adding a stem."
+      ],
+      "draw": [
+        {
+          "shape": "circle",
+          "x": 130,
+          "y": 30.5,
+          "r": 6,
+          "width": 1.8
+        },
+        {
+          "shape": "circle",
+          "x": 230,
+          "y": 56.5,
+          "r": 6,
+          "width": 1.8
+        }
+      ]
+    },
+    {
+      "q": 3,
+      "think": "Which letters are line notes?",
+      "idea": "Line notes are E, G, B, D, F, so BED is the only word spelled with them.",
+      "steps": [
+        "FACE, CAFE, and ACE all use A or C, which are space notes.",
+        "B, E, and D are all line notes."
+      ],
+      "mistakes": [
+        "Picking FACE, the space-note word."
+      ]
+    },
+    {
+      "q": 4,
+      "think": "Tap it: how long do you hold a half note?",
+      "idea": "In 4/4 time a whole note gets 4 beats, a half note 2, and a quarter note 1.",
+      "steps": [
+        "A half note gets 2 beats.",
+        "A whole note gets 4 beats.",
+        "Two quarter notes (1 + 1) last as long as one half note."
+      ],
+      "mistakes": [
+        "Swapping half and whole: a half note is half as long as a whole note."
+      ]
+    }
+  ],
+  "assessment": "A student who has it names any line or space note on the treble staff, draws a note in a named space, and says how many beats whole, half, and quarter notes get."
+}

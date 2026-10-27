@@ -23,13 +23,13 @@ BASE = dict(id=None, x=0.0, y=0.0, w=0.0, h=0.0, r=0.0, points=[], text="", size
             fill=None, stroke=0.0, width=1.0, wrap=0.0)
 HELPERS = {
     "axes": dict(xmin=-5.0, xmax=5.0, ymin=-5.0, ymax=5.0, xstep=1.0, ystep=1.0, grid=True, label_every=1,
-                 xlabel="", ylabel=""),
-    "number_line": dict(min=0.0, max=10.0, step=1.0, label_every=1, labels="decimal", arrows=True, minor=0),
+                 xlabel="", ylabel="", size=7.0),
+    "number_line": dict(min=0.0, max=10.0, step=1.0, label_every=1, labels="decimal", arrows=True, minor=0, size=8.0),
     "fraction": dict(kind="bar", parts=4, shaded=0),
     "clock": dict(hour=None, minute=None, numbers=True),
-    "timeline": dict(start=0, end=10, step=1, label_every=1, events=[]),
+    "timeline": dict(start=0, end=10, step=1, label_every=1, events=[], size=7.5, levels=2),
     "image": dict(path="", faint=False),
-    "bar_chart": dict(categories=[], values=[], ymax=10.0, ystep=1.0, label_every=1, ylabel="", bar_fill=0.7),
+    "bar_chart": dict(categories=[], values=[], ymax=10.0, ystep=1.0, label_every=1, ylabel="", bar_fill=0.7, size=8.0),
     "staff": dict(clef="treble", notes=[], lines=5, time="", bars=[], final_bar=False),
 }
 SHAPES = {"rect", "circle", "line", "arrow", "polyline", "polygon", "text", *HELPERS}
@@ -90,18 +90,19 @@ def _axes(c: canvas.Canvas, s: dict, ox: float, oy: float, f: Fonts) -> None:
     c.line(px(ay), y0, px(ay), y0 + h)
     _arrowhead(c, x0 + w - 6, py(ax), x0 + w + 2, py(ax), 5)
     _arrowhead(c, px(ay), y0 + h - 6, px(ay), y0 + h + 2, 5)
-    c.setFont(f.regular, 7)
+    size = float(s["size"])  # the labels; 7 on a worksheet, bigger on a slide
+    c.setFont(f.regular, size)
     every = max(1, int(s["label_every"]))
     for i, v in enumerate(xs):
         if i % every == 0 and v != ay:
-            c.drawCentredString(px(v), py(ax) - 9, f.text(_fmt(v)))
+            c.drawCentredString(px(v), py(ax) - 2 - size, f.text(_fmt(v)))
     for i, v in enumerate(ys):
         if i % every == 0 and v != ax:
-            c.drawRightString(px(ay) - 3, py(v) - 2.5, f.text(_fmt(v)))
+            c.drawRightString(px(ay) - 3, py(v) - size * 0.36, f.text(_fmt(v)))
     if s["xlabel"]:
         c.drawRightString(x0 + w, py(ax) + 4, f.text(s["xlabel"]))
     if s["ylabel"]:
-        c.drawString(px(ay) + 5, y0 + h - 7, f.text(s["ylabel"]))
+        c.drawString(px(ay) + 5, y0 + h - size, f.text(s["ylabel"]))
 
 
 def _number_line(c: canvas.Canvas, s: dict, ox: float, oy: float, f: Fonts) -> None:
@@ -122,12 +123,13 @@ def _number_line(c: canvas.Canvas, s: dict, ox: float, oy: float, f: Fonts) -> N
         for v in _steps(s["min"], s["max"], s["step"] / (minor + 1)):
             c.line(px(v), y - 3, px(v), y + 3)
     c.setLineWidth(1)
-    c.setFont(f.regular, 8)
+    size = float(s["size"])
+    c.setFont(f.regular, size)
     every = max(1, int(s["label_every"]))
     for i, v in enumerate(_steps(s["min"], s["max"], s["step"])):
         c.line(px(v), y - 6, px(v), y + 6)
         if s["labels"] != "none" and i % every == 0:
-            c.drawCentredString(px(v), y - 16, f.text(_frac(v) if s["labels"] == "fraction" else _fmt(v)))
+            c.drawCentredString(px(v), y - 8 - size, f.text(_frac(v) if s["labels"] == "fraction" else _fmt(v)))
 
 
 def _fraction(c: canvas.Canvas, s: dict, ox: float, oy: float) -> None:
@@ -182,19 +184,20 @@ def _timeline(c: canvas.Canvas, s: dict, ox: float, oy: float, f: Fonts) -> None
     c.setLineWidth(1.6)
     c.line(x0, y, x0 + w, y)
     c.setLineWidth(1)
-    c.setFont(f.regular, 8)
+    size = float(s["size"])  # the events' labels; the years are a little bigger
+    c.setFont(f.regular, size + 0.5)
     every = max(1, int(s["label_every"]))
     for i, v in enumerate(_steps(float(s["start"]), float(s["end"]), float(s["step"]))):
         c.line(px(v), y - 5, px(v), y + 5)
         if i % every == 0:
-            c.drawCentredString(px(v), y - 15, _fmt(v))
+            c.drawCentredString(px(v), y - 8 - size, _fmt(v))
     for k, event in enumerate(s["events"]):
         x = px(event["at"])
-        lift = 12 + 13 * (k % 2)  # alternate heights so neighbors don't collide
+        lift = 12 + (size + 5.5) * (k % max(1, int(s["levels"])))  # staggered so neighbors don't collide
         c.circle(x, y, 2.4, stroke=0, fill=1)
         c.setLineWidth(0.6)
         c.line(x, y, x, y + lift - 3)
-        c.setFont(f.regular, 7.5)
+        c.setFont(f.regular, size)
         c.drawCentredString(x, y + lift, f.text(event.get("text", "")))
 
 
@@ -217,17 +220,17 @@ def _bar_chart(c: canvas.Canvas, s: dict, ox: float, oy: float, f: Fonts) -> Non
             c.setLineWidth(0.8)
             c.rect(x0 + k * slot + slot * 0.2, y0, slot * 0.6, value * sy, stroke=1, fill=1)
         c.setFillGray(0)
-        c.setFont(f.regular, 8)
-        c.drawCentredString(x0 + (k + 0.5) * slot, y0 - 11, f.text(str(cat)))
+        c.setFont(f.regular, float(s["size"]))
+        c.drawCentredString(x0 + (k + 0.5) * slot, y0 - 3 - float(s["size"]), f.text(str(cat)))
     c.setStrokeGray(0)
     c.setLineWidth(1.2)
     c.line(x0, y0, x0 + w, y0)
     c.line(x0, y0, x0, y0 + h)
-    c.setFont(f.regular, 7)
+    c.setFont(f.regular, float(s["size"]) - 1)
     every = max(1, int(s["label_every"]))
     for i, v in enumerate(_steps(0, s["ymax"], s["ystep"])):
         if i % every == 0:
-            c.drawRightString(x0 - 3, y0 + v * sy - 2.5, _fmt(v))
+            c.drawRightString(x0 - 3, y0 + v * sy - (float(s["size"]) - 1) * 0.36, _fmt(v))
     if s["ylabel"]:
         c.drawString(x0 + 4, y0 + h + 3, f.text(s["ylabel"]))
 

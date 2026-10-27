@@ -1,0 +1,438 @@
+{
+  "lesson_id": "math6-ratios-lesson",
+  "title": "Equivalent Ratios at the Smoothie Stand",
+  "subject": "Math",
+  "grade_band": "6th grade",
+  "minutes": 50,
+  "worksheet": "math6-ratios-01",
+  "objectives": [
+    "Students will be able to make equivalent ratios by multiplying or dividing both quantities by the same number.",
+    "Students will be able to find a unit rate and use it to solve a price problem."
+  ],
+  "standards": [
+    "CCSS 6.RP.A.3a: make tables of equivalent ratios and plot the pairs on the coordinate plane",
+    "CCSS 6.RP.A.3b: solve unit rate problems"
+  ],
+  "materials": [
+    "Mini whiteboards and markers",
+    "A measuring cup (optional, for the warm-up)"
+  ],
+  "vocabulary": [
+    {
+      "term": "ratio",
+      "meaning": "A comparison of two quantities, like 2 cups of mango to 3 cups of yogurt.",
+      "example": "2 : 3"
+    },
+    {
+      "term": "equivalent ratios",
+      "meaning": "Ratios that make the same mix: both parts are multiplied by the same number.",
+      "example": "2 : 3 = 4 : 6"
+    },
+    {
+      "term": "unit rate",
+      "meaning": "How much for one: the amount per 1 of the other quantity.",
+      "example": "$1.50 per juice box"
+    }
+  ],
+  "sequence": [
+    {
+      "phase": "Warm-up",
+      "minutes": 5,
+      "teacher": "Show the warm-up. Students answer on whiteboards; ask two students how they got it.",
+      "students": "Solve on whiteboards, then hold them up.",
+      "slides": [
+        {
+          "type": "question",
+          "title": "Warm-up",
+          "mode": "Whiteboards",
+          "minutes": 3,
+          "prompt": "Lemonade uses 1 scoop of mix for every 4 cups of water. How much water for 3 scoops?",
+          "answer": "12 cups of water",
+          "why": "Three scoops is 3 times the mix, so it needs 3 times the water: 3 × 4 = 12.",
+          "say": "Listen for students who add (1 + 2 = 3, 4 + 2 = 6). That's the mistake today's lesson fixes."
+        }
+      ]
+    },
+    {
+      "phase": "Mini-lesson",
+      "minutes": 14,
+      "teacher": "Teach equivalent ratios with the tape diagram, show a ratio on a graph, then model a unit price problem.",
+      "students": "Take notes; answer the turn-and-talk.",
+      "slides": [
+        {
+          "type": "vocab",
+          "say": "Read each word aloud and have students repeat it."
+        },
+        {
+          "type": "points",
+          "title": "A ratio is a recipe",
+          "points": [
+            "2 cups mango for every 3 cups yogurt: **2 : 3**",
+            "A double batch doubles **both**: 4 : 6",
+            "Same taste = same ratio"
+          ],
+          "diagram": {
+            "width": 240,
+            "height": 120,
+            "description": "Tape diagram: 2 mango boxes above 3 yogurt boxes, equal-size boxes.",
+            "shapes": [
+              {
+                "shape": "text",
+                "x": 0,
+                "y": 88,
+                "text": "Mango",
+                "size": 12,
+                "bold": true
+              },
+              {
+                "shape": "rect",
+                "x": 70,
+                "y": 78,
+                "w": 40,
+                "h": 30,
+                "fill": 0.85
+              },
+              {
+                "shape": "rect",
+                "x": 110,
+                "y": 78,
+                "w": 40,
+                "h": 30,
+                "fill": 0.85
+              },
+              {
+                "shape": "text",
+                "x": 0,
+                "y": 28,
+                "text": "Yogurt",
+                "size": 12,
+                "bold": true
+              },
+              {
+                "shape": "rect",
+                "x": 70,
+                "y": 18,
+                "w": 40,
+                "h": 30,
+                "fill": 0.97
+              },
+              {
+                "shape": "rect",
+                "x": 110,
+                "y": 18,
+                "w": 40,
+                "h": 30,
+                "fill": 0.97
+              },
+              {
+                "shape": "rect",
+                "x": 150,
+                "y": 18,
+                "w": 40,
+                "h": 30,
+                "fill": 0.97
+              }
+            ]
+          },
+          "callout": "**Multiply both parts by the same number.** Adding the same amount changes the taste.",
+          "say": "Point to each box: one box is one cup. A double batch draws every box twice."
+        },
+        {
+          "type": "example",
+          "title": "Is 4 : 6 the same mix as 2 : 3?",
+          "reveal": true,
+          "problem": "Mia uses 4 cups of mango and 6 cups of yogurt. Does her smoothie taste the same as 2 : 3?",
+          "steps": [
+            "Find what 2 was multiplied by to get 4: **× 2**.",
+            "Multiply the 3 by the same number: 3 × 2 = **6**.",
+            "Mia's 6 cups of yogurt matches, so the ratios are equivalent."
+          ],
+          "answer": "Yes. 4 : 6 is 2 : 3 doubled.",
+          "say": "Pause before each step and ask the class what comes next."
+        },
+        {
+          "type": "points",
+          "title": "Ratios on a graph",
+          "points": [
+            "Each table row is a point: (scoops, cups)",
+            "Go **across** first, then **up**",
+            "Equivalent ratios line up through (0, 0)"
+          ],
+          "diagram": {
+            "width": 250,
+            "height": 210,
+            "description": "A grid, scoops 0-5 across and cups 0-10 up, with points (1, 2), (2, 4), (3, 6) joined by a line from (0, 0).",
+            "shapes": [
+              {
+                "shape": "axes",
+                "x": 30,
+                "y": 30,
+                "w": 200,
+                "h": 160,
+                "xmin": 0,
+                "xmax": 5,
+                "ymin": 0,
+                "ymax": 10,
+                "xstep": 1,
+                "ystep": 2,
+                "xlabel": "scoops",
+                "ylabel": "cups",
+                "size": 13
+              },
+              {
+                "shape": "line",
+                "points": [
+                  [
+                    30,
+                    30
+                  ],
+                  [
+                    190,
+                    158
+                  ]
+                ],
+                "width": 2
+              },
+              {
+                "shape": "circle",
+                "x": 70,
+                "y": 62,
+                "r": 4,
+                "fill": 0
+              },
+              {
+                "shape": "circle",
+                "x": 110,
+                "y": 94,
+                "r": 4,
+                "fill": 0
+              },
+              {
+                "shape": "circle",
+                "x": 150,
+                "y": 126,
+                "r": 4,
+                "fill": 0
+              }
+            ]
+          },
+          "say": "Lemonade: 1 scoop makes 2 cups. Plot (1, 2) together: across 1, up 2. Have students say where (2, 4) goes before you point."
+        },
+        {
+          "type": "example",
+          "title": "How much for one?",
+          "problem": "4 juice boxes cost $6. How much does 1 juice box cost?",
+          "steps": [
+            "One box is a quarter of 4 boxes, so divide both by 4.",
+            "$6 ÷ 4 = **$1.50**."
+          ],
+          "answer": "$1.50 per juice box. That's the unit rate.",
+          "say": "Connect to the warm-up: dividing both parts keeps the ratio the same, just like multiplying."
+        },
+        {
+          "type": "compare",
+          "title": "Multiply, don't add",
+          "left": {
+            "heading": "Same taste",
+            "points": [
+              "2 : 3",
+              "× 2 → 4 : 6",
+              "× 3 → 6 : 9"
+            ]
+          },
+          "right": {
+            "heading": "Different taste",
+            "points": [
+              "2 : 3",
+              "+ 2 → 4 : 5",
+              "+ 3 → 5 : 6"
+            ]
+          },
+          "callout": "Turn and talk: why does adding change the taste?",
+          "say": "Give 1 minute to talk. Listen for: adding gives the yogurt fewer extra cups than it needs."
+        }
+      ]
+    },
+    {
+      "phase": "Guided practice",
+      "minutes": 8,
+      "teacher": "One item for each kind of worksheet question. Whiteboards; reveal after everyone shows.",
+      "students": "Answer on whiteboards.",
+      "slides": [
+        {
+          "type": "question",
+          "title": "We do: fill the table",
+          "mode": "Whiteboards",
+          "prompt": "Paint: 3 cans of blue for every 1 can of white. How many cans of blue for 4 cans of white?",
+          "answer": "12 cans of blue",
+          "why": "4 cans of white is 4 times the recipe, so 3 × 4 = 12 cans of blue.",
+          "say": "This is the worksheet's table move: multiply both parts by the same number."
+        },
+        {
+          "type": "question",
+          "title": "We do: how much for one?",
+          "mode": "Whiteboards",
+          "prompt": "5 notebooks cost $10. How much does 1 notebook cost?",
+          "answer": "$2",
+          "why": "Divide the cost by the number of notebooks: $10 ÷ 5 = $2.",
+          "say": "Ask: which number goes first? Dollars ÷ items gives dollars for one item."
+        },
+        {
+          "type": "question",
+          "title": "We do: same ratio?",
+          "mode": "Whiteboards",
+          "prompt": "Which ratio makes the same mix as 3 : 5?",
+          "choices": [
+            "6 : 8",
+            "6 : 10",
+            "4 : 6",
+            "9 : 12"
+          ],
+          "answer": "B",
+          "why": "3 : 5 times 2 is 6 : 10. The others add, or multiply only one part.",
+          "say": "Ask a student who picked A to explain, then show why it doesn't work."
+        }
+      ]
+    },
+    {
+      "phase": "Worksheet",
+      "minutes": 15,
+      "worksheet": true,
+      "then": "Finished early? On the back, write your own smoothie recipe and two batches that taste the same.",
+      "teacher": "Circulate. For students stuck on Q1, point to the 1-batch row and ask what changed. Collect every sheet when time's up.",
+      "students": "Complete the worksheet on their own."
+    },
+    {
+      "phase": "Exit ticket",
+      "minutes": 5,
+      "teacher": "Students answer on a sticky note and stick it on the door on the way out.",
+      "students": "Answer on a sticky note, on their own.",
+      "slides": [
+        {
+          "type": "question",
+          "title": "Exit ticket",
+          "prompt": "On a sticky note: 8 pencils cost $4. What does 1 pencil cost? Show how you know.",
+          "answer": "$0.50",
+          "why": "$4 ÷ 8 = $0.50.",
+          "say": "Sort the sticky notes: right, set up but wrong, and not started. That's tomorrow's grouping."
+        }
+      ]
+    }
+  ],
+  "checks": [
+    "What did we multiply by to get from 2 : 3 to 6 : 9?",
+    "Why isn't 4 : 5 the same as 2 : 3?",
+    "What does \"per\" mean in a unit rate?"
+  ],
+  "misconceptions": [
+    {
+      "misconception": "Adding the same number to both parts keeps the ratio (2 : 3 → 4 : 5).",
+      "response": "Draw the tape diagram for both and compare: the yogurt boxes don't match."
+    },
+    {
+      "misconception": "Dividing the number of items by the cost (6 ÷ 15) when the question asks for the cost of one.",
+      "response": "Ask: what are we finding one of? Put the dollars first: dollars ÷ items gives dollars for one item."
+    }
+  ],
+  "differentiation": {
+    "support": [
+      "Give a ratio table with the 1-batch row filled in.",
+      "Let students use the tape diagram on the worksheet."
+    ],
+    "extension": [
+      "Find the unit rate for yogurt per cup of mango (1.5).",
+      "Write a ratio that is NOT equivalent and explain why."
+    ],
+    "language": [
+      "Post the sentence frame: \"For every __ cups of mango, there are __ cups of yogurt.\"",
+      "Say ratio and razón (Spanish) together when you show the vocabulary slide."
+    ]
+  },
+  "homework": "Find a recipe at home and write it as a ratio. Then write a double batch.",
+  "walkthrough": [
+    {
+      "q": 1,
+      "think": "What happens to the mango and yogurt from 1 batch to 2 batches?",
+      "idea": "Every row multiplies both parts of 2 : 3 by the number of batches.",
+      "steps": [
+        "2 batches: 2 × 2 = 4 cups mango.",
+        "4 batches: 4 × 3 = 12 cups yogurt.",
+        "5 batches: 5 × 2 = 10 and 5 × 3 = 15."
+      ],
+      "mistakes": [
+        "Adding 2 to each row instead of multiplying."
+      ]
+    },
+    {
+      "q": 2,
+      "think": "What do you divide to find the cost of one?",
+      "idea": "Divide the cost by the number of smoothies.",
+      "steps": [
+        "$15 ÷ 6 = $2.50.",
+        "Check: 6 × $2.50 = $15."
+      ],
+      "mistakes": [
+        "Dividing 6 by 15: that's smoothies per dollar, not dollars per smoothie."
+      ]
+    },
+    {
+      "q": 3,
+      "think": "Which number in each pair goes across, and which goes up?",
+      "idea": "Each table row is a point: mango across, yogurt up.",
+      "steps": [
+        "Start at 0, go across 2 and up 3. Dot.",
+        "Across 4, up 6. Across 8, up 12.",
+        "Connect with a ruler: equivalent ratios make a straight line."
+      ],
+      "mistakes": [
+        "Going up first, then across."
+      ],
+      "draw": [
+        {
+          "shape": "plot",
+          "points": [
+            [
+              2,
+              3
+            ],
+            [
+              4,
+              6
+            ],
+            [
+              8,
+              12
+            ]
+          ]
+        },
+        {
+          "shape": "plot",
+          "points": [
+            [
+              2,
+              3
+            ],
+            [
+              8,
+              12
+            ]
+          ],
+          "extend": true
+        }
+      ]
+    },
+    {
+      "q": 4,
+      "think": "Can you get from 2 : 3 to the choice by multiplying both parts by one number?",
+      "idea": "6 : 9 is 2 : 3 times 3.",
+      "steps": [
+        "2 × 3 = 6 and 3 × 3 = 9, so B works.",
+        "A, C, and D can't be made by multiplying both parts by the same number."
+      ],
+      "mistakes": [
+        "Picking C, which adds 2 to each part."
+      ]
+    }
+  ],
+  "assessment": "A student who has it fills a ratio table by multiplying both parts, finds a unit price by dividing the cost by the number of items, and can say why adding the same amount to both parts changes the ratio."
+}

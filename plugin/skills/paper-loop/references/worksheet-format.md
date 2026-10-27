@@ -139,7 +139,8 @@ for the work, and 1 per box, label, blank, cell, item, or checklist item (set `p
 ```
 
 - `{1}`, `{2}` mark the blanks. `\n` starts a new line, so one block can hold several short items
-  ("6 + 7 = {1}\n8 + 5 = {2}").
+  ("6 + 7 = {1}\n8 + 5 = {2}"). Runs of spaces print as one space; `\t` starts the next item halfway
+  across the line, for two short items side by side ("a. 3/4 {1} 5/8\tb. 2/5 {2} 1/2").
 - Each answer can have `accept` (other right answers), `points` (default 1), and `width` (default 80pt; 100
   for grades 2-3). `box_height` makes every box in the question taller (default 22pt; 20 compact; 32 for
   grades 2-3).
@@ -190,7 +191,8 @@ for the work, and 1 per box, label, blank, cell, item, or checklist item (set `p
 
 - `answer`: the final answer. Equal values in other forms count (0.5 for 1/2; "1 1/10", written with a space,
   for 11/10), and a script double-checks the numbers, so `accept` is for other ways of writing the answer,
-  such as "x = 17" for "17". An answer that differs only by rounding (0.4995 for 0.500) counts unless the
+  such as "x = 17" for "17". An answer can be a word ("Maya", for "who ran farther?"); then the number
+  check is skipped and `accept` lists the other ways to say it. An answer that differs only by rounding (0.4995 for 0.500) counts unless the
   key or `notes` ask for significant figures or decimal places; say so there if they're graded.
 - `units` prints after the answer box, so students don't have to write them. To make students write the
   units, leave `units` empty and put them in `answer` ("3.60 mol"): an answer without them is then wrong.
@@ -212,7 +214,8 @@ for the work, and 1 per box, label, blank, cell, item, or checklist item (set `p
 ```
 
 - `box`: x, y, width, height of the label box inside the diagram. `points_to` (optional) draws a leader line
-  to that point.
+  to that point. Handwriting needs room: about 9pt of width a letter for grades 4-12 (110-120pt for
+  "mitochondrion"), 12pt for grades 2-3, and a box at least 24pt tall.
 - `description`: plain words for what's printed, before any student touches it. Marking reads it.
 - A label question can also show a picture and ask for one answer, such as a clock and "what time is it?"
   with a single box.
@@ -251,12 +254,12 @@ points wide.
 | `circle` | `x`, `y` (center), `r` |
 | `line`, `arrow`, `polyline`, `polygon` | `points`: [[x, y], ...]. An arrow gets a head at its last point. |
 | `text` | `x`, `y` (the baseline of the first line), `text`, `size` (default 9), `bold`, `align` (left, center, right), `wrap` (a width, to wrap long text) |
-| `axes` | `x`, `y`, `w`, `h`, `xmin`, `xmax`, `ymin`, `ymax`, `xstep`, `ystep`, `label_every`, `grid` (default true), `xlabel`, `ylabel`: a coordinate grid |
-| `number_line` | `x`, `y`, `w`, `min`, `max`, `step`, `label_every`, `labels` ("decimal", "fraction", or "none"), `minor` (ticks between steps), `arrows` |
+| `axes` | `x`, `y`, `w`, `h`, `xmin`, `xmax`, `ymin`, `ymax`, `xstep`, `ystep`, `label_every`, `grid` (default true), `xlabel`, `ylabel`, `size` (labels, default 7): a coordinate grid |
+| `number_line` | `x`, `y`, `w`, `min`, `max`, `step`, `label_every`, `labels` ("decimal", "fraction", or "none"), `minor` (ticks between steps), `arrows`, `size` (labels, default 8) |
 | `fraction` | `kind` ("bar" with `x`, `y` (bottom-left), `w`, `h`; or "circle" with `x`, `y` (center), `r`), `parts`, `shaded` (how many parts, from the left or from 12 o'clock, are filled light gray) |
 | `clock` | `x`, `y` (center), `r`, `hour` and `minute` for hands (leave them out for "draw the hands") |
-| `timeline` | `x`, `y`, `w`, `start`, `end`, `step`, `label_every`, `events`: [{"at": 1776, "text": "..."}] (leave events out for "place the events") |
-| `bar_chart` | `x`, `y` (where the axes meet), `w`, `h`, `categories`, `values` (one per category; leave it empty, or use null for a bar, for "draw the bars"), `ymax`, `ystep`, `label_every`, `ylabel`, `bar_fill` (default 0.7). Category names print under the axis, so leave about 14 points below `y`. |
+| `timeline` | `x`, `y`, `w`, `start`, `end`, `step`, `label_every`, `events`: [{"at": 1776, "text": "..."}] (leave events out for "place the events"); `size` (event labels, default 7.5; bigger on a slide), `levels` (how many heights labels stagger across, default 2; 3 when events are close together) |
+| `bar_chart` | `x`, `y` (where the axes meet), `w`, `h`, `categories`, `values` (one per category; leave it empty, or use null for a bar, for "draw the bars"), `ymax`, `ystep`, `label_every`, `ylabel`, `bar_fill` (default 0.7), `size` (labels, default 8). Category names print under the axis, so leave about 14 points below `y`. |
 | `staff` | `x`, `y` (the bottom line), `w`, `h` (bottom line to top line, default 32), `clef` ("treble", "bass", or "none"), `lines` (5, or 1 for a rhythm line), `time` ("4/4"), `bars` (x of each bar line), `final_bar` (a double bar at the right end), `notes`. A note is `{"pitch": "G4", "x": 60, "duration": "half", "dot": true}`: `x` is in the diagram's coordinates like every other shape, `duration` is "whole", "half", "quarter" (the default), or "eighth", and a pitch like "F#4" or "Bb3" gets a sharp or flat. A rest is `{"rest": "quarter", "x": 90}`. On a rhythm line, notes need no pitch. See "Music" below. |
 | `image` | `x`, `y`, `w`, `h`, `path` (a PNG or JPG beside the worksheet JSON, such as a map). It prints in gray; `faint: true` lightens it so pencil on top stays readable (the default in draw questions). |
 

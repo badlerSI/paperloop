@@ -11,12 +11,40 @@
       "type": "table",
       "q": 1,
       "prompt": "Recipe Ratio: A smoothie uses 2 cups of mango for every 3 cups of yogurt. Fill in the table.",
-      "columns": ["Batches", "Mango (cups)", "Yogurt (cups)"],
+      "columns": [
+        "Batches",
+        "Mango (cups)",
+        "Yogurt (cups)"
+      ],
       "rows": [
-        ["1", "2", "3"],
-        ["2", {"answer": "4"}, "6"],
-        ["4", "8", {"answer": "12"}],
-        ["5", {"answer": "10"}, {"answer": "15"}]
+        [
+          "1",
+          "2",
+          "3"
+        ],
+        [
+          "2",
+          {
+            "answer": "4"
+          },
+          "6"
+        ],
+        [
+          "4",
+          "8",
+          {
+            "answer": "12"
+          }
+        ],
+        [
+          "5",
+          {
+            "answer": "10"
+          },
+          {
+            "answer": "15"
+          }
+        ]
       ]
     },
     {
@@ -24,27 +52,58 @@
       "q": 2,
       "prompt": "Unit Price: 6 smoothies cost $15. How much does 1 smoothie cost?",
       "answer": "$2.50",
-      "accept": ["2.5", "2.50", "$2.5"],
+      "accept": [
+        "2.5",
+        "2.50",
+        "$2.5"
+      ],
       "key": "Divides 15 by 6 (or finds the cost of 2 then halves, or a tape diagram) to get 2.50 dollars per smoothie.",
       "work_height": 60
     },
     {
       "type": "draw",
       "q": 3,
-      "prompt": "Plot It: Plot the points from the table, (2, 3), (4, 6), and (6, 9), as mango and yogurt cups. Connect them with a line.",
+      "prompt": "Plot It: Plot three points from the table, (2, 3), (4, 6), and (8, 12), as mango and yogurt cups. Connect them with a line.",
       "diagram": {
         "width": 200,
         "height": 150,
         "description": "A coordinate grid, first quadrant, x from 0 to 10 (mango, cups) and y from 0 to 12 (yogurt, cups), grid lines every 1 unit, labels every 2.",
         "shapes": [
-          {"shape": "axes", "x": 16, "y": 14, "w": 176, "h": 128, "xmin": 0, "xmax": 10, "ymin": 0, "ymax": 12, "xstep": 1, "ystep": 1, "label_every": 2, "xlabel": "mango", "ylabel": "yogurt"}
+          {
+            "shape": "axes",
+            "x": 16,
+            "y": 14,
+            "w": 176,
+            "h": 128,
+            "xmin": 0,
+            "xmax": 10,
+            "ymin": 0,
+            "ymax": 12,
+            "xstep": 1,
+            "ystep": 1,
+            "label_every": 2,
+            "xlabel": "mango",
+            "ylabel": "yogurt"
+          }
         ]
       },
       "checklist": [
-        {"item": "A point at (2, 3).", "short": "(2, 3)"},
-        {"item": "A point at (4, 6).", "short": "(4, 6)"},
-        {"item": "A point at (6, 9).", "short": "(6, 9)"},
-        {"item": "A straight line connects the points (and may extend through the origin).", "short": "Line"}
+        {
+          "item": "A point at (2, 3).",
+          "short": "(2, 3)"
+        },
+        {
+          "item": "A point at (4, 6).",
+          "short": "(4, 6)"
+        },
+        {
+          "item": "A point at (8, 12).",
+          "short": "(8, 12)"
+        },
+        {
+          "item": "A straight line connects the points (and may extend through the origin).",
+          "short": "Line"
+        }
       ]
     },
     {
@@ -54,10 +113,26 @@
       "answer": "B",
       "columns": 2,
       "options": [
-        {"letter": "A", "text": "3 mango : 4 yogurt", "why": "3:4 isn't 2:3. Try scaling 2:3 up."},
-        {"letter": "B", "text": "6 mango : 9 yogurt", "why": "Yes: 2:3 times 3 is 6:9."},
-        {"letter": "C", "text": "4 mango : 5 yogurt", "why": "Adding the same amount changes the ratio."},
-        {"letter": "D", "text": "1 mango : 2 yogurt", "why": "1:2 has more yogurt for each cup of mango."}
+        {
+          "letter": "A",
+          "text": "3 mango : 4 yogurt",
+          "why": "3:4 isn't 2:3. Try scaling 2:3 up."
+        },
+        {
+          "letter": "B",
+          "text": "6 mango : 9 yogurt",
+          "why": "Yes: 2:3 times 3 is 6:9."
+        },
+        {
+          "letter": "C",
+          "text": "4 mango : 5 yogurt",
+          "why": "Adding the same amount changes the ratio."
+        },
+        {
+          "letter": "D",
+          "text": "1 mango : 2 yogurt",
+          "why": "1:2 has more yogurt for each cup of mango."
+        }
       ]
     }
   ]

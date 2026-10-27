@@ -1,0 +1,387 @@
+{
+  "lesson_id": "sci3-plants-lesson",
+  "title": "Plant Parts and Their Jobs",
+  "subject": "Science",
+  "grade_band": "3rd grade",
+  "minutes": 40,
+  "worksheet": "sci3-plants-01",
+  "objectives": [
+    "Students will be able to name and point to the roots, stem, leaves, and flower of a plant.",
+    "Students will be able to tell what roots and leaves do for a plant."
+  ],
+  "targets": [
+    "I can name the parts of a plant.",
+    "I can tell what roots and leaves do."
+  ],
+  "materials": [
+    "A real flowering plant (non-toxic, such as a geranium), and a weed pulled up with its roots",
+    "Wipes or the sink: hands get washed after touching soil",
+    "Sticky notes for the exit ticket"
+  ],
+  "vocabulary": [
+    {
+      "term": "roots",
+      "meaning": "Grow under the ground. They soak up water and hold the plant still."
+    },
+    {
+      "term": "stem",
+      "meaning": "Holds the plant up and carries water to the leaves."
+    },
+    {
+      "term": "leaf",
+      "meaning": "Uses light, air, and water to make food for the plant."
+    },
+    {
+      "term": "flower",
+      "meaning": "Makes seeds so new plants can grow."
+    }
+  ],
+  "sequence": [
+    {
+      "phase": "Warm-up",
+      "minutes": 4,
+      "teacher": "Hold up the real plant. Ask the warm-up question; take three answers.",
+      "students": "Turn and talk, then share.",
+      "slides": [
+        {
+          "type": "question",
+          "title": "Warm-up",
+          "mode": "Turn and talk",
+          "minutes": 2,
+          "prompt": "What does a plant need to grow?",
+          "say": "Write their answers on the board: water, sun, soil, air. We'll come back to them."
+        }
+      ]
+    },
+    {
+      "phase": "Mini-lesson",
+      "minutes": 12,
+      "teacher": "Name each part on the real plant as you show the labeled picture. Students point to the part on the real plant.",
+      "students": "Point, repeat each word, and act out each job.",
+      "slides": [
+        {
+          "type": "points",
+          "title": "Every part has a job",
+          "points": [
+            "**Roots** drink water",
+            "**Stem** holds it up",
+            "**Leaves** make food",
+            "**Flower** makes seeds"
+          ],
+          "diagram": {
+            "width": 240,
+            "height": 170,
+            "description": "A simple plant with its parts labeled: flower, leaf, stem, roots.",
+            "shapes": [
+              {
+                "shape": "line",
+                "points": [
+                  [
+                    20,
+                    40
+                  ],
+                  [
+                    200,
+                    40
+                  ]
+                ],
+                "width": 1.5
+              },
+              {
+                "shape": "line",
+                "points": [
+                  [
+                    110,
+                    40
+                  ],
+                  [
+                    110,
+                    130
+                  ]
+                ],
+                "width": 3
+              },
+              {
+                "shape": "circle",
+                "x": 110,
+                "y": 145,
+                "r": 16,
+                "fill": 0.85
+              },
+              {
+                "shape": "circle",
+                "x": 110,
+                "y": 145,
+                "r": 6,
+                "fill": 0.55
+              },
+              {
+                "shape": "polygon",
+                "points": [
+                  [
+                    110,
+                    85
+                  ],
+                  [
+                    70,
+                    100
+                  ],
+                  [
+                    60,
+                    88
+                  ],
+                  [
+                    110,
+                    80
+                  ]
+                ],
+                "fill": 0.8
+              },
+              {
+                "shape": "polygon",
+                "points": [
+                  [
+                    110,
+                    100
+                  ],
+                  [
+                    150,
+                    115
+                  ],
+                  [
+                    160,
+                    103
+                  ],
+                  [
+                    110,
+                    95
+                  ]
+                ],
+                "fill": 0.8
+              },
+              {
+                "shape": "polyline",
+                "points": [
+                  [
+                    110,
+                    40
+                  ],
+                  [
+                    100,
+                    20
+                  ],
+                  [
+                    90,
+                    8
+                  ]
+                ],
+                "width": 1.5
+              },
+              {
+                "shape": "polyline",
+                "points": [
+                  [
+                    110,
+                    40
+                  ],
+                  [
+                    118,
+                    18
+                  ],
+                  [
+                    130,
+                    6
+                  ]
+                ],
+                "width": 1.5
+              },
+              {
+                "shape": "polyline",
+                "points": [
+                  [
+                    110,
+                    40
+                  ],
+                  [
+                    110,
+                    15
+                  ]
+                ],
+                "width": 1.5
+              },
+              {
+                "shape": "text",
+                "x": 132,
+                "y": 158,
+                "text": "flower",
+                "size": 14,
+                "bold": true
+              },
+              {
+                "shape": "text",
+                "x": 164,
+                "y": 104,
+                "text": "leaf",
+                "size": 14,
+                "bold": true
+              },
+              {
+                "shape": "text",
+                "x": 118,
+                "y": 58,
+                "text": "stem",
+                "size": 14,
+                "bold": true
+              },
+              {
+                "shape": "text",
+                "x": 138,
+                "y": 12,
+                "text": "roots",
+                "size": 14,
+                "bold": true
+              }
+            ]
+          },
+          "say": "Point to each part on the real plant as you say it. Act it out: wiggle fingers down for roots, stand tall for the stem, arms out for leaves, hands in a cup for the flower. Leaves make food from light, air, and water."
+        },
+        {
+          "type": "vocab",
+          "title": "Plant words",
+          "say": "Read each word together. Point to it on the real plant."
+        },
+        {
+          "type": "question",
+          "title": "Quick check",
+          "mode": "Hold up fingers",
+          "prompt": "Which part soaks up water?",
+          "choices": [
+            "roots",
+            "flower",
+            "leaf"
+          ],
+          "answer": "A",
+          "why": "Roots grow in the soil, where the water is.",
+          "say": "One finger for A, two for B, three for C."
+        }
+      ]
+    },
+    {
+      "phase": "Guided practice",
+      "minutes": 5,
+      "teacher": "Ask what roots do and what leaves do before showing the slide; take answers, then show it. Ask: what would happen if a plant had no roots?",
+      "students": "Say each job before it's shown.",
+      "slides": [
+        {
+          "type": "compare",
+          "title": "Two big jobs",
+          "left": {
+            "heading": "Roots",
+            "points": [
+              "Soak up water",
+              "Hold the plant in the ground"
+            ]
+          },
+          "right": {
+            "heading": "Leaves",
+            "points": [
+              "Catch sunlight",
+              "Make food"
+            ]
+          },
+          "callout": "No roots? The plant falls over and dries up.",
+          "say": "Point back to the warm-up list: water and sun are what roots and leaves need."
+        }
+      ]
+    },
+    {
+      "phase": "Worksheet",
+      "minutes": 12,
+      "worksheet": true,
+      "then": "Done? Draw a plant on the back and label it.",
+      "teacher": "Read each question aloud. Help with spelling only if asked; spelling doesn't count. Collect every sheet when time's up.",
+      "students": "Work on their own."
+    },
+    {
+      "phase": "Exit ticket",
+      "minutes": 5,
+      "teacher": "Hand out sticky notes. Students draw and write on their own, then stick the note on the door.",
+      "students": "Draw and write on a sticky note.",
+      "slides": [
+        {
+          "type": "question",
+          "title": "Exit ticket",
+          "prompt": "On your sticky note: draw a leaf. Write one thing it needs to make food.",
+          "answer": "light (or sunlight), water, or air",
+          "say": "Notes that say soil or dirt: start there tomorrow. Soil gives water, but the leaves make the food."
+        }
+      ]
+    }
+  ],
+  "checks": [
+    "Where are the roots?",
+    "What would happen to a plant with no leaves?",
+    "Which part makes seeds?"
+  ],
+  "misconceptions": [
+    {
+      "misconception": "Plants get their food from the soil.",
+      "response": "Soil gives water. The leaves make food from light, air, and water."
+    },
+    {
+      "misconception": "The stem and the roots are the same part.",
+      "response": "Show the ground line: the stem is above it, the roots are below it."
+    }
+  ],
+  "differentiation": {
+    "support": [
+      "Let students use the word bank and point instead of write.",
+      "Pair students to read the questions together."
+    ],
+    "extension": [
+      "Write what the stem does.",
+      "Find a part of a plant we eat (carrot: root, lettuce: leaf)."
+    ],
+    "language": [
+      "Point to each part on the labeled picture and say its name together.",
+      "Accept answers drawn or said in the student's first language, then name the English word together."
+    ]
+  },
+  "walkthrough": [
+    {
+      "q": 1,
+      "think": "Which part grows under the ground?",
+      "idea": "Each part has its place: the flower on top, the roots under the ground.",
+      "steps": [
+        "Top: the flower. Under the ground: the roots.",
+        "The leaves grow out of the stem."
+      ],
+      "mistakes": [
+        "Mixing up the stem and the roots."
+      ]
+    },
+    {
+      "q": 2,
+      "think": "Where do the roots grow, and what's there?",
+      "idea": "Roots soak up water and hold the plant in the ground.",
+      "model": "The roots soak up water from the soil. They hold the plant in the ground.",
+      "mistakes": [
+        "Saying roots make food. The leaves do that."
+      ]
+    },
+    {
+      "q": 3,
+      "think": "Where does a plant make its food, and what does that part need?",
+      "idea": "Leaves use light, with air and water, to make food.",
+      "steps": [
+        "Plants make food in their leaves.",
+        "Leaves need light to do it."
+      ],
+      "mistakes": [
+        "Picking soil: soil gives water, but the leaves make the food."
+      ]
+    }
+  ],
+  "standards": [],
+  "assessment": "A student who has it names and points to all four parts and says what roots and leaves do: roots take in water and hold the plant, leaves make food using light."
+}

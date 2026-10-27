@@ -8,7 +8,7 @@
   "plugins": [
     {
       "name": "paper-loop",
-      "description": "Make worksheets Claude can mark from a copier scan, then mark scanned class sets with a comment beside every answer and print the marked pages to hand back.",
+      "description": "Plan lessons with a lesson plan and PowerPoint slides, make worksheets Claude can mark from a copier scan, mark scanned class sets with a comment beside every answer, and go over what the class missed.",
       "source": "./plugin",
       "category": "education"
     }

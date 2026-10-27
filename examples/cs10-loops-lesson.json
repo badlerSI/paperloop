@@ -1,0 +1,259 @@
+{
+  "lesson_id": "cs10-loops-lesson",
+  "title": "Tracing a Loop",
+  "subject": "Computer Science",
+  "grade_band": "10th grade",
+  "minutes": 50,
+  "worksheet": "cs10-loops-01",
+  "objectives": [
+    "Students will be able to trace a for loop over range() and record each variable after every pass.",
+    "Students will be able to use n % 2 to tell even numbers from odd ones in a loop."
+  ],
+  "targets": [
+    "I can trace a loop pass by pass.",
+    "I can use % 2 to pick out even or odd numbers."
+  ],
+  "materials": [
+    "Mini whiteboards",
+    "A projector with a Python shell, to check traces after the worksheet"
+  ],
+  "vocabulary": [
+    {
+      "term": "trace",
+      "meaning": "Run the code by hand, writing down each variable's value as it changes.",
+      "example": "a trace table"
+    },
+    {
+      "term": "range(a, b)",
+      "meaning": "The numbers from a up to b, not including b.",
+      "example": "range(1, 5) is 1, 2, 3, 4"
+    },
+    {
+      "term": "%",
+      "meaning": "The remainder after dividing.",
+      "example": "7 % 2 is 1, so 7 is odd"
+    }
+  ],
+  "sequence": [
+    {
+      "phase": "Warm-up",
+      "minutes": 5,
+      "teacher": "Students predict on whiteboards before anyone runs it.",
+      "students": "Write a prediction, then show it.",
+      "slides": [
+        {
+          "type": "code",
+          "title": "Warm-up: predict it",
+          "text": "x = 3\nx = x + 2\nx = x * 2\nprint(x)",
+          "focus": "What prints? Write each value of x as it changes.",
+          "focus_label": "Predict",
+          "say": "Answer: 10. Ask a student to say each value of x out loud: 3, 5, 10. That's tracing."
+        }
+      ]
+    },
+    {
+      "phase": "Mini-lesson",
+      "minutes": 14,
+      "teacher": "Model a trace pass by pass on real code, then add an if inside the loop.",
+      "students": "Copy the trace table and predict each row before it appears.",
+      "slides": [
+        {
+          "type": "vocab",
+          "say": "Spend the most time on range: the stop number is never included."
+        },
+        {
+          "type": "code",
+          "title": "A loop to trace",
+          "text": "total = 0\nfor n in range(1, 4):\n    total = total + n\nprint(total)",
+          "focus": "How many times does the loop run? What is n each time?",
+          "say": "Three passes: n is 1, 2, 3. Point out that 4 is the stop and never happens."
+        },
+        {
+          "type": "example",
+          "title": "Trace it pass by pass",
+          "reveal": true,
+          "problem": "total = 0\nfor n in range(1, 4):\n    total = total + n\nprint(total)",
+          "steps": [
+            "Pass 1: n = 1, total = 0 + 1 = **1**",
+            "Pass 2: n = 2, total = 1 + 2 = **3**",
+            "Pass 3: n = 3, total = 3 + 3 = **6**"
+          ],
+          "answer": "It prints 6.",
+          "say": "Before each step, ask: what is n now? What was total before this pass?",
+          "code": true
+        },
+        {
+          "type": "compare",
+          "title": "Even or odd?",
+          "left": {
+            "heading": "n % 2 == 0",
+            "points": [
+              "Remainder 0",
+              "Even: 2, 4, 6"
+            ]
+          },
+          "right": {
+            "heading": "n % 2 == 1",
+            "points": [
+              "Remainder 1",
+              "Odd: 1, 3, 5"
+            ]
+          },
+          "callout": "An if inside the loop runs its check on every pass.",
+          "say": "Have students say the remainder for 7, 8, and 9 out loud."
+        }
+      ]
+    },
+    {
+      "phase": "Guided practice",
+      "minutes": 9,
+      "teacher": "Trace a loop with an if/else together (we do), then check range on whiteboards.",
+      "students": "Answer on whiteboards.",
+      "slides": [
+        {
+          "type": "example",
+          "title": "We do: a loop with an if",
+          "reveal": true,
+          "code": true,
+          "problem": "count = 0\nfor n in range(1, 4):\n    if n > 1:\n        count = count + 2\n    else:\n        count = count - 1\nprint(count)",
+          "steps": [
+            "n = 1: 1 > 1 is False, so the else runs: count = 0 - 1 = **-1**",
+            "n = 2: True, so count = -1 + 2 = **1**",
+            "n = 3: True, so count = 1 + 2 = **3**"
+          ],
+          "answer": "It prints 3.",
+          "say": "Students write each row on whiteboards before you reveal it: n, which branch runs, and count after the pass."
+        },
+        {
+          "type": "question",
+          "title": "Check: range",
+          "mode": "Whiteboards",
+          "prompt": "Which values does n take in for n in range(2, 6)?",
+          "choices": [
+            "2, 3, 4, 5, 6",
+            "2, 3, 4, 5",
+            "3, 4, 5, 6",
+            "0, 1, 2, 3, 4, 5"
+          ],
+          "answer": "B",
+          "why": "range stops before its second number, so 6 never happens.",
+          "say": "A is the most common mistake: it includes the stop."
+        }
+      ]
+    },
+    {
+      "phase": "Worksheet",
+      "minutes": 14,
+      "worksheet": true,
+      "then": "Done? Change Program A so it adds the odd numbers instead, and trace it.",
+      "teacher": "No computers until the go-over: the point is tracing by hand. Collect every sheet when time's up.",
+      "students": "Trace Program A, then fix Program B."
+    },
+    {
+      "phase": "Go over it",
+      "minutes": 4,
+      "walkthrough": [
+        1
+      ],
+      "teacher": "Collect the worksheets, then go over the trace for Program A and run it in the shell to confirm.",
+      "students": "Say what they got for each pass before it's shown."
+    },
+    {
+      "phase": "Exit ticket",
+      "minutes": 3,
+      "teacher": "Students answer on sticky notes, on their own.",
+      "students": "Answer on a sticky note.",
+      "slides": [
+        {
+          "type": "question",
+          "title": "Exit ticket",
+          "prompt": "How many times does for n in range(3, 9): run?",
+          "answer": "6 times (n = 3, 4, 5, 6, 7, 8)",
+          "say": "Answers of 7 mean the stop is still being counted: start tomorrow there."
+        }
+      ]
+    }
+  ],
+  "checks": [
+    "What is n on the last pass of range(1, 5)?",
+    "What was total before this pass?",
+    "What is 9 % 2, and what does it tell you?"
+  ],
+  "misconceptions": [
+    {
+      "misconception": "range(1, 5) includes 5.",
+      "response": "Write out the values and count them: 4 passes, the stop is never reached."
+    },
+    {
+      "misconception": "total = total + n replaces total with n.",
+      "response": "Trace one pass on the board: the right side uses the old total first."
+    }
+  ],
+  "differentiation": {
+    "support": [
+      "Give a trace table with the n column filled in.",
+      "Let students run one line at a time in the shell after tracing."
+    ],
+    "extension": [
+      "Rewrite Program B with range(1, 10, 2) and no if.",
+      "Predict what Program A prints if lines 5-6 (the else and its line) are deleted. (It prints 6.)"
+    ],
+    "language": [
+      "Post the vocabulary with examples.",
+      "Let students explain a trace by pointing at the table instead of in writing."
+    ]
+  },
+  "walkthrough": [
+    {
+      "q": 1,
+      "think": "On pass 1, is n even? Which line runs?",
+      "idea": "Each pass checks n, then changes total: odd subtracts 1, even adds n.",
+      "steps": [
+        "n = 1 is odd: total = 0 - 1 = -1.",
+        "n = 2 is even: total = -1 + 2 = 1.",
+        "n = 3 is odd: total = 1 - 1 = 0. n = 4 is even: 0 + 4 = 4."
+      ],
+      "mistakes": [
+        "Adding n on every pass and ignoring the else.",
+        "Starting each pass from 0 instead of the last total."
+      ]
+    },
+    {
+      "q": 2,
+      "think": "Where does total end up after the last pass?",
+      "idea": "The print runs once, after the loop: it shows the final total.",
+      "model": "It prints 4, because total is 4 after the last pass (n = 4 adds 4 to 0).",
+      "mistakes": [
+        "Answering 4 without saying why.",
+        "Thinking print runs on every pass."
+      ]
+    },
+    {
+      "q": 3,
+      "think": "What should n stop before, so 9 is included?",
+      "idea": "range stops before its second number, and odd numbers leave remainder 1.",
+      "steps": [
+        "To include 9, the stop must be 10 (11 works too: 10 is even, so it's skipped).",
+        "Odd numbers have n % 2 == 1."
+      ],
+      "mistakes": [
+        "Writing 9 as the stop, which leaves 9 out.",
+        "Writing 0, which picks the even numbers."
+      ]
+    },
+    {
+      "q": 4,
+      "think": "Which numbers does the fixed program add?",
+      "idea": "Fixed, Program B adds 1 + 3 + 5 + 7 + 9.",
+      "steps": [
+        "The odd numbers from 1 to 9 are 1, 3, 5, 7, 9.",
+        "Their sum is 25."
+      ],
+      "mistakes": [
+        "Picking 45, the sum of every number from 1 to 9."
+      ]
+    }
+  ],
+  "standards": [],
+  "assessment": "A student who has it fills a trace table for a loop with an if/else inside, pass by pass, and can say what range(a, b) produces and which numbers % 2 picks out."
+}

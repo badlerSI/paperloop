@@ -11,7 +11,12 @@ Status: v0.1. [SPEC.md](SPEC.md) is the plan, [NOTES.md](NOTES.md) is where thin
 Paper Loop is also a plugin for Claude Cowork. Claude does the marking itself, so there's no API key and nothing to install on your computer. Cowork works in the Claude desktop app and in a web browser, including on a Chromebook. US K-12 teachers can get it free through [Claude for Teachers](https://www.anthropic.com/news/claude-for-teachers).
 
 1. In Claude, open Cowork, then **Customize → Plugins**, and add the marketplace `Badlerz/paperloop`. Install **Paper Loop**. You can also zip the `plugin/` folder and upload it there.
-2. **Make a worksheet**, in any subject from grade 2 to grade 12: "Make me a one-page Paper Loop worksheet on the water cycle for 6th grade: two multiple choice, a short answer, a diagram to label, and one to draw." Print the PDF it gives you. A worksheet can have:
+2. **Plan a lesson**, if you want one: "Plan a 50-minute 6th grade lesson on equivalent ratios, with slides and a one-page Paper Loop worksheet." You get:
+   - `lesson-plan.docx`: objectives, materials, vocabulary, a timed sequence with slide numbers, checks for understanding, misconceptions, differentiation, and every worksheet answer worked through;
+   - `slides.pptx`: the lesson, with what to say in the speaker notes. It opens in PowerPoint, Keynote, or Google Slides, and `slides.pdf` is the same deck;
+   - `go-over.pptx`: each worksheet question as printed, then its answer written in and explained;
+   - `answer-key.pdf`, and the worksheet itself.
+3. **Make a worksheet**, in any subject from grade 2 to grade 12: "Make me a one-page Paper Loop worksheet on the water cycle for 6th grade: two multiple choice, a short answer, a diagram to label, and one to draw." Print the PDF it gives you. A worksheet can have:
    - reading passages with line numbers, and code listings;
    - short answers, paragraphs scored on a rubric, and essays that run onto more pages;
    - multiple choice, fill-in-the-blank, matching, ordering, and tables to fill;
@@ -19,13 +24,14 @@ Paper Loop is also a plugin for Claude Cowork. Claude does the marking itself, s
    - diagrams to label, maps (your own image), coordinate grids, number lines, fraction models, clocks, timelines, bar charts, music on a staff or a rhythm line, and drawings judged on a checklist.
 
    Grades 2-3 get big print, primary-ruled lines, and 2-digit class numbers. Math symbols, chemical formulas, and accents print as written.
-3. Students write their class ID number in the boxes, never their name.
-4. Scan the stack on the copier (to Google Drive, email, or USB), in any order and orientation. Give Claude the PDF: "Mark this scan of Water's Wild Ride."
-5. Claude reads every answer, asks you about anything it isn't sure of, and gives you one PDF to print and hand back.
+4. Students write their class ID number in the boxes, never their name.
+5. Scan the stack on the copier (to Google Drive, email, or USB), in any order and orientation. Give Claude the PDF: "Mark this scan of Water's Wild Ride."
+6. Claude reads every answer, asks you about anything it isn't sure of, and gives you one PDF to print and hand back.
+7. **Go over it**: "Make slides to go over what they missed." The deck starts with how the class did on each question, then takes the most-missed questions first: how the class answered (a chart of the letters chosen, the wrong answers two or more students gave), then the answer worked through. Nothing on it identifies a student.
 
 Privacy: Claude only looks at the cropped answers and the ID boxes, never the whole page, and never sees names. On your own Claude for Teachers account, keep student work de-identified (class ID numbers, no names) unless your school or district has authorized Claude for student records. See [Anthropic's terms for teachers](https://support.claude.com/en/articles/15926041-claude-for-teachers-your-data-and-our-terms).
 
-The plugin is in [`plugin/`](plugin/). Its scripts use only numpy, scipy, Pillow, pypdfium2, and reportlab, which Claude's sandboxes ship with. The skill's instructions are [`plugin/skills/paper-loop/SKILL.md`](plugin/skills/paper-loop/SKILL.md).
+The plugin is in [`plugin/`](plugin/). Its scripts use only numpy, scipy, Pillow, pypdfium2, reportlab, and python-pptx, which Claude's sandboxes ship with. The skill's instructions are [`plugin/skills/paper-loop/SKILL.md`](plugin/skills/paper-loop/SKILL.md).
 
 ## Setup (the command-line version, for testing and development)
 

@@ -7,13 +7,20 @@
     ids WORK [--roster ids.csv]          route pages using Claude's ID reads (WORK/ids.json)
     todo WORK                            write one marking work order per question (WORK/todo/)
     zoom IMAGE [--region l,t,r,b]        an enlarged, darkened copy of a crop, for faint or small details
-    preview PDF                          each page as a PNG you can look at (a worksheet, or returned.pdf)
+    preview PDF [--sheet]                each page as a PNG you can look at (a worksheet, returned.pdf, or
+                                         slides); --sheet puts nine slides on one image. A .docx (the
+                                         lesson plan) prints its text instead
+    lesson LESSON.json --out DIR         a lesson plan (.docx), its slides (.pptx and .pdf), a go-over deck,
+                                         and an answer key, from Claude's lesson file and a made worksheet
+    goover WORK [--lesson LESSON.json] [--most N] [--out DIR]
+                                         after marking: a go-over deck, most-missed questions first, with
+                                         how the class answered (WORK/out/go-over.pptx and .pdf)
     check WORK                           check Claude's marks and summaries, list flags
     render WORK [--grade off|back|csv] [--accept-flags]
                                          the marked PDF to print (WORK/out/returned.pdf)
     status WORK                          where a marking run stands, and what to do next
 
-Needs only numpy, scipy, Pillow, pypdfium2, and reportlab.
+Needs only numpy, scipy, Pillow, pypdfium2, and reportlab; slides also need python-pptx.
 """
 
 from __future__ import annotations
@@ -141,21 +148,118 @@ def cmd_todo(args) -> int:
     return 0
 
 
+def _docx_text(path: Path) -> str:
+    """A Word file's text, a paragraph a line, table cells separated by " | "."""
+    import re
+    import zipfile
+    from xml.sax.saxutils import unescape
+    xml = zipfile.ZipFile(path).read("word/document.xml").decode()
+    out = []
+    for para in re.findall(r"<w:p[ >].*?</w:p>|<w:p/>", xml, flags=re.S):
+        text = "".join(unescape(t) for t in re.findall(r"<w:t[^>]*>(.*?)</w:t>", para, flags=re.S))
+        style = re.search(r'<w:pStyle w:val="(\w+)"', para)
+        lead = {"Title": "# ", "Heading1": "## ", "Heading2": "### ", "ListParagraph": "- "}.get(
+            style.group(1) if style else "", "")
+        out.append(lead + text)
+    return "\n".join(line for line in out if line.strip())
+
+
 def cmd_preview(args) -> int:
     import pypdfium2 as pdfium
+    from PIL import Image
     pdf = Path(args.pdf)
+    if pdf.suffix.lower() == ".docx":  # a lesson plan: its text, to read through
+        print(_docx_text(pdf))
+        return 0
     out = pdf.parent / "preview"
     out.mkdir(exist_ok=True)
     doc = pdfium.PdfDocument(str(pdf))
     try:
+        pages = []
         for i in range(len(doc)):
             if args.page and i + 1 != args.page:
                 continue
-            path = out / f"{pdf.stem}-p{i + 1}.png"
-            doc[i].render(scale=1.5).to_pil().convert("L").save(path)
-            print(path)
+            img = doc[i].render(scale=1.5 if not args.sheet else 0.62).to_pil()
+            pages.append((i + 1, img.convert("RGB")))
+        if not args.sheet:
+            for n, img in pages:
+                path = out / f"{pdf.stem}-p{n}.png"
+                img.save(path)
+                print(path)
+            return 0
+        for start in range(0, len(pages), 9):  # nine to a sheet, numbered, for a first look at a deck
+            group = pages[start:start + 9]
+            cw, ch = group[0][1].size
+            cols = min(3, len(group))
+            sheet = Image.new("RGB", (cols * (cw + 12) + 12, -(-len(group) // 3) * (ch + 34) + 12), "white")
+            from PIL import ImageDraw
+            draw = ImageDraw.Draw(sheet)
+            for k, (n, img) in enumerate(group):
+                x, y = 12 + (k % 3) * (cw + 12), 12 + (k // 3) * (ch + 34)
+                sheet.paste(img.convert("RGB"), (x, y + 22))
+                draw.rectangle((x - 1, y + 21, x + cw, y + 22 + ch), outline=(150, 150, 150))
+                draw.text((x, y + 4), f"{n}", fill=(0, 0, 0))
+            path = out / f"{pdf.stem}-sheet{start // 9 + 1}.png"
+            sheet.save(path)
+            print(f"{path} (pages {group[0][0]}-{group[-1][0]})")
     finally:
         doc.close()
+    return 0
+
+
+def cmd_goover(args) -> int:
+    try:
+        from paper_loop_core import goover as G
+        report = G.build(args.work, args.lesson, args.out, args.most)
+    except ModuleNotFoundError as e:
+        print(f"Can't make the slides: {e.name} isn't installed. Run `pip install python-pptx` and try again.")
+        return 1
+    except (ValueError, OSError) as e:
+        print(f"Can't make the go-over deck: {e}")
+        return 1
+    except (KeyError, TypeError, IndexError, AttributeError) as e:
+        print(f"Can't make the go-over deck: a field is missing or the wrong type ({type(e).__name__}: {e}). "
+              "Check goover.json against references/lesson-format.md.")
+        return 1
+    out = report["out"]
+    print(f"Wrote {out / 'go-over.pptx'} ({report['slides']} slides) and go-over.pdf, from "
+          f"{report['students']} students. About 2 minutes a question.")
+    for q in report["go_over"]:
+        print(f"  Q{q}: {report['share'][q]:.0%} full credit, gone over")
+    for q in report["left_out"]:
+        print(f"  Q{q}: {report['share'][q]:.0%} full credit, left out (--most)")
+    for q in report["got_it"]:
+        print(f"  Q{q}: {report['share'][q]:.0%} full credit, on the \"got these\" slide")
+    for warning in report["warnings"]:
+        print(f"  Check: {warning}.")
+    return 0
+
+
+def cmd_lesson(args) -> int:
+    try:
+        from paper_loop_core import lesson as LS
+        report = LS.build(args.lesson, args.out)
+    except ModuleNotFoundError as e:
+        print(f"Can't make the slides: {e.name} isn't installed. Run `pip install python-pptx` and try again.")
+        return 1
+    except (ValueError, OSError) as e:
+        print(f"Can't make the lesson: {e}")
+        return 1
+    except (KeyError, TypeError, IndexError, AttributeError) as e:
+        print(f"Can't make the lesson: a field is missing or the wrong type ({type(e).__name__}: {e}). "
+              "Check it against references/lesson-format.md.")
+        return 1
+    out = Path(args.out)
+    made = f"lesson-plan.docx, slides.pptx ({report['slides']} slides) and slides.pdf"
+    if "go_over" in report:
+        made += (f", go-over.pptx ({report['go_over']} slides) and go-over.pdf, answer-key.pdf, and a copy of "
+                 "worksheet.pdf to print (marking uses the worksheet's own folder)")
+    print(f"Wrote {out}: {made}.")
+    spans = [f"{name} {r[0]}" + (f"-{r[1]}" if r[1] != r[0] else "") for name, r in zip(report["phases"], report["ranges"]) if r]
+    if spans:
+        print(f"  Slides by phase: {', '.join(spans)}.")
+    for warning in report["warnings"]:
+        print(f"  Check: {warning}.")
     return 0
 
 
@@ -286,7 +390,7 @@ def cmd_status(args) -> int:
         print("Next: read the ID strips into ids.json, then run `ids`.")
         return 0
     todo = sorted((work / "todo").glob("q*.md")) if (work / "todo").exists() else []
-    if not (work / "todo").exists():
+    if not (work / "todo").exists() and not any((work / "marks").glob("q*.json")):
         print("Next: run `todo`.")
         return 0
     missing = [t for t in todo if not (work / "marks" / f"{t.stem}.json").exists()]
@@ -325,7 +429,18 @@ def main() -> int:
     p = sub.add_parser("preview")
     p.add_argument("pdf", type=Path)
     p.add_argument("--page", type=int, help="only this page")
+    p.add_argument("--sheet", action="store_true", help="nine pages to an image, for a first look at slides")
     p.set_defaults(func=cmd_preview)
+    p = sub.add_parser("lesson")
+    p.add_argument("lesson", type=Path)
+    p.add_argument("--out", type=Path, required=True)
+    p.set_defaults(func=cmd_lesson)
+    p = sub.add_parser("goover")
+    p.add_argument("work", type=Path)
+    p.add_argument("--lesson", type=Path)
+    p.add_argument("--out", type=Path, help="where the deck goes (default: WORK/out)")
+    p.add_argument("--most", type=int, help="go over only this many questions, the most missed")
+    p.set_defaults(func=cmd_goover)
     p = sub.add_parser("zoom")
     p.add_argument("image", type=Path)
     p.add_argument("--region", help="left,top,right,bottom as fractions of the image, e.g. 0.5,0,1,0.5")

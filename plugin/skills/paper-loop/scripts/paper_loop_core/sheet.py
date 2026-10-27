@@ -525,10 +525,12 @@ class Layout:
                 indent = len(piece) - len(piece.lstrip(" "))
                 if indent:  # code keeps its indentation
                     tokens.append(("indent", indent, False))
-            for part in re.split(r"(\s+)", piece):
+            for part in re.split(r"(\t|[^\S\t]+)", piece):
                 if not part:
                     continue
-                if part.isspace():
+                if part == "\t":  # the next item starts at the middle of the line
+                    tokens.append(("tab", None, False))
+                elif part.isspace():
                     tokens.append(("space", part, False))
                 else:
                     tokens.append(("word", self.f.text(part), bool(tokens) and tokens[-1][0] == "space"))
@@ -544,8 +546,17 @@ class Layout:
             if kind == "indent":
                 x = value * gap
                 continue
+            if kind == "tab":
+                stop = width / 2
+                if x + gap > stop and lines[-1]:
+                    lines.append([])
+                    x = 0.0
+                else:
+                    x = stop if lines[-1] else 0.0
+                continue
             w = widths[value] if kind == "blank" else self._width(value, font, size)
-            g = gap if spaced and lines[-1] else (2.0 if kind == "blank" and lines[-1] else 0.0)
+            after_tab = bool(lines[-1]) and x == width / 2 and lines[-1][-1][2] + lines[-1][-1][3] < x
+            g = 0.0 if after_tab else gap if spaced and lines[-1] else (2.0 if kind == "blank" and lines[-1] else 0.0)
             if x + g + w > width and lines[-1]:
                 lines.append([])
                 x, g = 0.0, 0.0
@@ -1294,11 +1305,16 @@ def make_worksheet(defn: dict, out_dir: Path, base: Path | None = None) -> dict:
         _draw_code(c, code)
         _draw_header(c, L, page_no, len(pages), boxes_id)
         _draw_footer(c, L, page_no, len(pages))
-        boxes, y = [], CONTENT_TOP
+        boxes, passages, y = [], [], CONTENT_TOP
         for i, part in pieces:
             b = defn["questions"][i]
             if b["type"] == "passage":
                 _draw_passage(c, L, b, part[0], part[1], y)
+                title_h = L.st["passage_size"] + 10 if part[0] == 0 and b["title"] else 0.0
+                passages.append({"id": b["id"], "title": b["title"],  # where it printed, for slides
+                                 "rect": (LEFT - 20, y - L.piece_height(i, part) - 2, GUTTER_RIGHT + 6, y + 6),
+                                 "body_rect": (LEFT - 20, y - L.piece_height(i, part) - 2, GUTTER_RIGHT + 6,
+                                               y - 4 - title_h)})
             else:
                 seen[i] = seen.get(i, 0) + 1
                 boxes.append(_draw_question(c, L, b, y, part, seen[i], parts[i]))
@@ -1306,7 +1322,7 @@ def make_worksheet(defn: dict, out_dir: Path, base: Path | None = None) -> dict:
         # "qr" and "qr_rect" keep the layout readable by the Paper Loop CLI.
         page_layouts.append({"page": page_no, "code": code, "qr": f"{defn['assignment_id']}|p{page_no}",
                              "qr_rect": CODE_AREA, "id_grid": None, "id_boxes": boxes_id,
-                             "summary_rect": L.summary, "boxes": boxes})
+                             "summary_rect": L.summary, "boxes": boxes, "passages": passages})
         c.showPage()
     c.save()
 

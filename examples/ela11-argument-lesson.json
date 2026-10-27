@@ -1,0 +1,237 @@
+{
+  "lesson_id": "ela11-argument-lesson",
+  "title": "Answering the Other Side",
+  "subtitle": "Evaluating how an argument handles a counterargument",
+  "subject": "English language arts",
+  "grade_band": "11th grade",
+  "minutes": 55,
+  "worksheet": "ela11-argument-01",
+  "objectives": [
+    "Students will be able to identify an author's claim and the counterargument the author answers.",
+    "Students will be able to evaluate how well a rebuttal answers a counterargument, citing specific lines."
+  ],
+  "targets": [
+    "I can find a writer's claim and the other side they answer.",
+    "I can judge how well a writer answers the other side, with evidence."
+  ],
+  "standards": [
+    "CCSS RI.11-12.1: cite strong and thorough textual evidence to support analysis",
+    "CCSS RI.11-12.6: determine an author's point of view or purpose in a text",
+    "CCSS W.11-12.1b: develop claims and counterclaims fairly"
+  ],
+  "materials": [
+    "Highlighters in two colors"
+  ],
+  "vocabulary": [
+    {
+      "term": "claim",
+      "meaning": "The position the writer argues for.",
+      "example": "\"Schools should start later.\""
+    },
+    {
+      "term": "counterclaim",
+      "meaning": "The other side: a reason someone would disagree. Also called a counterargument.",
+      "example": "\"Later starts wreck bus routes.\""
+    },
+    {
+      "term": "concession",
+      "meaning": "Admitting the other side has a point.",
+      "example": "\"Those are real costs.\""
+    },
+    {
+      "term": "rebuttal",
+      "meaning": "The writer's answer to the counterclaim.",
+      "example": "\"Logistics can be solved.\""
+    }
+  ],
+  "sequence": [
+    {
+      "phase": "Do now",
+      "minutes": 5,
+      "teacher": "Pose the question; take two or three answers and write the strongest on the board.",
+      "students": "Turn and talk, then share.",
+      "slides": [
+        {
+          "type": "question",
+          "title": "Do now",
+          "mode": "Turn and talk",
+          "minutes": 3,
+          "prompt": "Someone disagrees with you. Is it stronger to ignore their point, or to admit it and answer it? Why?",
+          "say": "Steer toward: admitting a real point makes you more believable, if your answer holds up."
+        }
+      ]
+    },
+    {
+      "phase": "Mini-lesson",
+      "minutes": 12,
+      "teacher": "Teach the three moves for the other side and what makes a rebuttal strong, then model an evaluation on a different argument (phones in class).",
+      "students": "Take notes; predict each step of the model.",
+      "slides": [
+        {
+          "type": "vocab",
+          "say": "Counterclaim is the word on state tests; counterargument means the same thing."
+        },
+        {
+          "type": "points",
+          "title": "Three moves for the other side",
+          "points": [
+            "**Name it** fairly: what would a critic say?",
+            "**Concede** what's true about it.",
+            "**Rebut**: show why your claim still holds, with evidence."
+          ],
+          "callout": "A rebuttal is only as strong as the evidence behind it.",
+          "say": "These are the writer's moves. Next: how a reader judges them."
+        },
+        {
+          "type": "compare",
+          "title": "Strong or thin?",
+          "left": {
+            "heading": "Strong rebuttal",
+            "points": [
+              "Answers the critic's actual point",
+              "Gives evidence or an example",
+              "Explains why the claim survives"
+            ]
+          },
+          "right": {
+            "heading": "Thin rebuttal",
+            "points": [
+              "Waves the point away",
+              "Asserts without proof",
+              "Changes the subject"
+            ]
+          },
+          "say": "Either verdict can be right: what matters is the evidence for it."
+        },
+        {
+          "type": "passage",
+          "title": "A different argument",
+          "line_numbers": true,
+          "text": "Our school should ban phones during class. Some parents worry they won't\nreach their kids in an emergency. That's a fair worry. But the front office\nphone works fine, and phones in class cost students hours of focus a week.",
+          "focus": "Name the counterclaim, the concession, and the rebuttal.",
+          "say": "Counterclaim: parents can't reach kids (lines 1-2). Concession: 'That's a fair worry.' Rebuttal: the office phone works (line 3)."
+        },
+        {
+          "type": "example",
+          "title": "Judging a rebuttal",
+          "reveal": true,
+          "problem": "How well does the principal answer the parents' worry about emergencies?",
+          "steps": [
+            "**Take a position:** \"The rebuttal is thin.\"",
+            "**Cite:** \"the front office phone works fine\" (line 3).",
+            "**Explain:** it doesn't say how a parent reaches a child in a lockdown, when the office is busiest."
+          ],
+          "say": "Pause before each step: ask what position the class would take, which words they'd cite, and what those words show."
+        }
+      ]
+    },
+    {
+      "phase": "Guided practice",
+      "minutes": 6,
+      "teacher": "Students find each move in a new short argument on whiteboards, then judge the rebuttal with a partner.",
+      "students": "Answer on whiteboards, then talk with a partner.",
+      "slides": [
+        {
+          "type": "question",
+          "title": "We do: find the concession",
+          "mode": "Whiteboards",
+          "prompt": "\"Homework takes family time. That's true. But practice builds skill.\" Which is the concession?",
+          "choices": [
+            "Homework takes family time.",
+            "That's true.",
+            "But practice builds skill.",
+            "There isn't one."
+          ],
+          "answer": "B",
+          "why": "\"That's true\" admits the other side's point; the next sentence rebuts it.",
+          "answer_say": "Then ask pairs: is this rebuttal strong or thin, and what would make it stronger?"
+        }
+      ]
+    },
+    {
+      "phase": "Read",
+      "minutes": 6,
+      "teacher": "Hand out the worksheet. Students read the op-ed and highlight the claim in one color and the counterclaim in the other; no questions yet.",
+      "students": "Read and highlight.",
+      "slides": []
+    },
+    {
+      "phase": "Worksheet",
+      "minutes": 20,
+      "worksheet": true,
+      "then": "Done? Write one sentence the author could add to make the rebuttal stronger.",
+      "teacher": "Conference with two or three students on their position sentence. Collect every sheet when time's up.",
+      "students": "Answer both questions on their own."
+    },
+    {
+      "phase": "Exit ticket",
+      "minutes": 3,
+      "teacher": "Collect on index cards.",
+      "students": "Answer on an index card, on their own.",
+      "slides": [
+        {
+          "type": "question",
+          "title": "Exit ticket",
+          "prompt": "\"Uniforms save families money, though some say they limit self-expression.\" What is the counterclaim?",
+          "answer": "That uniforms limit self-expression.",
+          "say": "Cards that name 'saving money' have the claim and the counterclaim switched: start there tomorrow."
+        }
+      ]
+    }
+  ],
+  "checks": [
+    "What is the author's claim, in one sentence?",
+    "Which line concedes a point to critics?",
+    "Does the Seattle study answer the critics' worry?"
+  ],
+  "misconceptions": [
+    {
+      "misconception": "Agreeing with the author means the rebuttal is strong.",
+      "response": "Separate the two: you can agree with the claim and still find the answer to critics thin."
+    },
+    {
+      "misconception": "Summarizing the op-ed counts as evaluating it.",
+      "response": "Ask for a judgment word: strong, partial, thin, convincing, and then why."
+    }
+  ],
+  "differentiation": {
+    "support": [
+      "Give the sentence frame: \"The author answers the critics ___ because ___ (line __).\"",
+      "Pre-highlight lines 7-8."
+    ],
+    "extension": [
+      "Write the strongest version of the critics' argument, then answer it yourself."
+    ],
+    "language": [
+      "Pair claim, concession, and rebuttal with icons on the vocabulary slide.",
+      "Allow a first draft in the student's first language before writing in English."
+    ]
+  },
+  "walkthrough": [
+    {
+      "q": 1,
+      "think": "Which choice could every paragraph of the op-ed be supporting?",
+      "idea": "A claim is what the whole piece argues for, not one detail in it.",
+      "steps": [
+        "A is a fix the author rejects (\"the problem isn't willpower\").",
+        "C and D are pieces of the argument: a counterclaim and evidence.",
+        "B is what every paragraph builds toward."
+      ],
+      "mistakes": [
+        "Picking D: Seattle's grades are evidence for the claim, not the claim."
+      ]
+    },
+    {
+      "q": 2,
+      "think": "Does the author show that sports and buses can be fixed, or just say so?",
+      "idea": "Judge the rebuttal by its evidence: this one asserts more than it shows.",
+      "model": "The author answers the critics only partly. The op-ed concedes that later start times have \"real costs\" (line 7) but calls them \"problems of logistics\" that \"can be solved\" (lines 7-8) without showing how. The Seattle results (lines 5-6) show that students slept more, not that buses and sports adjusted. The rebuttal would be convincing with one example of a district that solved the scheduling problems.",
+      "mistakes": [
+        "Summarizing the op-ed instead of judging the rebuttal.",
+        "Quoting without explaining what the quote shows."
+      ],
+      "say": "A paragraph that argues the rebuttal is strong earns full credit too, if it cites two lines and explains them."
+    }
+  ],
+  "assessment": "A student who has it names the author's claim and the counterclaim, takes a clear position on how well the author answers it, and backs that position with at least two accurate citations and an explanation of what they show. A well-argued \"strong\" verdict earns full credit as much as a \"thin\" one."
+}

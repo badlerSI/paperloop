@@ -1,10 +1,20 @@
 {
   "name": "paper-loop",
-  "description": "Turn the school copier into a feedback machine: make worksheets Claude can mark from a scan, then mark scanned class sets with a comment beside every answer and print the marked pages to hand back.",
-  "version": "0.1.0",
+  "description": "Turn the school copier into a feedback machine: plan lessons with a lesson plan and PowerPoint slides, make worksheets Claude can mark from a scan, mark scanned class sets with a comment beside every answer, and go over what the class missed with slides.",
+  "version": "0.2.0",
   "author": {
     "name": "Ben Adler"
   },
   "license": "Apache-2.0",
-  "keywords": ["education", "k-12", "teachers", "worksheets", "feedback", "grading", "scanning"]
+  "keywords": [
+    "education",
+    "k-12",
+    "teachers",
+    "lesson plans",
+    "slides",
+    "worksheets",
+    "feedback",
+    "grading",
+    "scanning"
+  ]
 }
