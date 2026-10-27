@@ -1,0 +1,187 @@
+{
+  "assignment_id": "mus5-notes-01",
+  "title": "Notes on the Staff",
+  "subject": "music",
+  "grade": 5,
+  "grade_band": "5th grade general music",
+  "instructions": "Write your ID number in the boxes. Circle one letter for multiple choice.",
+  "questions": [
+    {
+      "type": "label",
+      "q": 1,
+      "prompt": "Name That Note: Write the letter name of each note on the treble staff.",
+      "diagram": {
+        "width": 330,
+        "height": 110,
+        "description": "A treble staff with a treble clef and four quarter notes: E on the bottom line, G on the second line, B on the middle line, and E in the top space. A label box under each note.",
+        "shapes": [
+          {
+            "shape": "staff",
+            "x": 10,
+            "y": 50,
+            "w": 310,
+            "h": 36,
+            "clef": "treble",
+            "notes": [
+              {
+                "pitch": "E4",
+                "x": 70
+              },
+              {
+                "pitch": "G4",
+                "x": 140
+              },
+              {
+                "pitch": "B4",
+                "x": 210
+              },
+              {
+                "pitch": "E5",
+                "x": 280
+              }
+            ]
+          }
+        ]
+      },
+      "labels": [
+        {
+          "n": 1,
+          "box": [
+            50,
+            2,
+            40,
+            28
+          ],
+          "answer": "E"
+        },
+        {
+          "n": 2,
+          "box": [
+            120,
+            2,
+            40,
+            28
+          ],
+          "answer": "G"
+        },
+        {
+          "n": 3,
+          "box": [
+            190,
+            2,
+            40,
+            28
+          ],
+          "answer": "B"
+        },
+        {
+          "n": 4,
+          "box": [
+            260,
+            2,
+            40,
+            28
+          ],
+          "answer": "E"
+        }
+      ]
+    },
+    {
+      "type": "draw",
+      "q": 2,
+      "prompt": "Draw It: Draw a whole note on F (the first space) and a whole note on C (the third space).",
+      "diagram": {
+        "width": 330,
+        "height": 80,
+        "description": "An empty treble staff with a treble clef.",
+        "shapes": [
+          {
+            "shape": "staff",
+            "x": 10,
+            "y": 22,
+            "w": 310,
+            "h": 36,
+            "clef": "treble"
+          }
+        ]
+      },
+      "checklist": [
+        {
+          "item": "A note sits in the first space from the bottom (F).",
+          "short": "F, first space"
+        },
+        {
+          "item": "A note sits in the third space from the bottom (C).",
+          "short": "C, third space"
+        },
+        {
+          "item": "Both notes are whole notes: open ovals with no stems.",
+          "short": "Whole notes"
+        }
+      ]
+    },
+    {
+      "type": "choice",
+      "q": 3,
+      "prompt": "Which word can you spell using only line notes (E, G, B, D, F)?",
+      "answer": "B",
+      "columns": 2,
+      "options": [
+        {
+          "letter": "A",
+          "text": "FACE",
+          "why": "FACE uses the space notes."
+        },
+        {
+          "letter": "B",
+          "text": "BED",
+          "why": "Yes: B, E, and D are all line notes."
+        },
+        {
+          "letter": "C",
+          "text": "CAFE",
+          "why": "C and A sit in spaces."
+        },
+        {
+          "letter": "D",
+          "text": "ACE",
+          "why": "A and C sit in spaces."
+        }
+      ]
+    },
+    {
+      "type": "blanks",
+      "q": 4,
+      "prompt": "Beats: Fill in each blank with a number or a word from the box.",
+      "word_bank": [
+        "half",
+        "whole",
+        "quarter"
+      ],
+      "text": "In 4/4 time, a half note gets {1} beats and a whole note gets {2} beats. Two quarter notes last as long as one {3} note.",
+      "answers": [
+        {
+          "n": 1,
+          "answer": "2",
+          "accept": [
+            "two"
+          ],
+          "width": 40
+        },
+        {
+          "n": 2,
+          "answer": "4",
+          "accept": [
+            "four"
+          ],
+          "width": 40
+        },
+        {
+          "n": 3,
+          "answer": "half",
+          "width": 70
+        }
+      ]
+    }
+  ]
+}

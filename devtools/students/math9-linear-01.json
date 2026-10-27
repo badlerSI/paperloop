@@ -1,0 +1,237 @@
+{
+ "students": [
+  {
+   "id": "1204",
+   "style": "clean",
+   "answers": {
+    "1": {
+     "work": [
+      "3x - 12 = 2x + 5",
+      "x - 12 = 5",
+      "x = 17"
+     ],
+     "answer": "x = 17",
+     "expected_answer": "correct",
+     "expected_work": "correct"
+    },
+    "2": {
+     "work": [
+      "-2x <= 8",
+      "divide by -2, flip",
+      "x >= -4"
+     ],
+     "answer": "x >= -4",
+     "expected_answer": "correct",
+     "expected_work": "correct"
+    },
+    "3": {
+     "sketch": [
+      {
+       "shape": "line",
+       "points": [
+        [
+         63,
+         10
+        ],
+        [
+         148,
+         160
+        ]
+       ]
+      },
+      {
+       "shape": "dot",
+       "x": 97,
+       "y": 70
+      },
+      {
+       "shape": "dot",
+       "x": 114,
+       "y": 100
+      }
+     ],
+     "expected_items": {
+      "1": "yes",
+      "2": "yes",
+      "3": "yes"
+     }
+    },
+    "4": {
+     "boxes": {
+      "1": "1",
+      "2": "-3",
+      "3": "6"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "correct",
+      "3": "correct"
+     }
+    },
+    "5": {
+     "circle": [
+      "B"
+     ],
+     "expected": "correct"
+    }
+   }
+  },
+  {
+   "id": "3381",
+   "style": "messy",
+   "answers": {
+    "1": {
+     "work": [
+      "3x - 4 = 2x + 5",
+      "x = 9"
+     ],
+     "answer": "9",
+     "expected_answer": "incorrect",
+     "expected_work": "partial"
+    },
+    "2": {
+     "work": [
+      "-2x <= 8",
+      "x <= -4"
+     ],
+     "answer": "x <= -4",
+     "expected_answer": "incorrect",
+     "expected_work": "partial"
+    },
+    "3": {
+     "sketch": [
+      {
+       "shape": "line",
+       "points": [
+        [
+         29,
+         40
+        ],
+        [
+         182,
+         107.5
+        ]
+       ]
+      },
+      {
+       "shape": "dot",
+       "x": 97,
+       "y": 70
+      },
+      {
+       "shape": "dot",
+       "x": 131,
+       "y": 85
+      }
+     ],
+     "expected_items": {
+      "1": "yes",
+      "2": "no",
+      "3": "yes"
+     }
+    },
+    "4": {
+     "boxes": {
+      "1": "-7",
+      "2": "-3",
+      "3": "6"
+     },
+     "expected": {
+      "1": "incorrect",
+      "2": "correct",
+      "3": "correct"
+     }
+    },
+    "5": {
+     "circle": [
+      "A"
+     ],
+     "expected": "incorrect"
+    }
+   }
+  },
+  {
+   "id": "5072",
+   "style": "neat",
+   "answers": {
+    "1": {
+     "work": [
+      "3x - 12 = 2x + 5",
+      "x = 5 + 12",
+      "x = 17"
+     ],
+     "answer": "17",
+     "expected_answer": "correct",
+     "expected_work": "correct"
+    },
+    "2": {
+     "work": [
+      "-2x <= 8",
+      "x >= -4"
+     ],
+     "answer": "x >= -4",
+     "expected_answer": "correct",
+     "expected_work": "correct"
+    },
+    "3": {
+     "sketch": [
+      {
+       "shape": "line",
+       "points": [
+        [
+         63,
+         10
+        ],
+        [
+         148,
+         160
+        ]
+       ]
+      }
+     ],
+     "expected_items": {
+      "1": "yes",
+      "2": "yes",
+      "3": "no"
+     }
+    },
+    "4": {
+     "boxes": {
+      "1": "1",
+      "2": "3",
+      "3": "6"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "incorrect",
+      "3": "correct"
+     }
+    },
+    "5": {
+     "circle": [
+      "~~C~~",
+      "B"
+     ],
+     "expected": "correct"
+    }
+   }
+  },
+  {
+   "id": "7745",
+   "style": "kid",
+   "answers": {
+    "1": {
+     "answer": "17",
+     "expected_answer": "correct",
+     "expected_work": "blank"
+    },
+    "5": {
+     "circle": [
+      "D"
+     ],
+     "expected": "incorrect"
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,72 @@
+{
+  "assignment_id": "math9-linear-01",
+  "title": "Lines and Inequalities",
+  "subject": "algebra",
+  "grade": 9,
+  "grade_band": "9th grade",
+  "compact": true,
+  "instructions": "Show your steps. Write your ID number, not your name.",
+  "questions": [
+    {
+      "type": "math",
+      "q": 1,
+      "prompt": "Solve for x:  3(x − 4) = 2x + 5",
+      "answer": "17",
+      "accept": ["x = 17", "x=17"],
+      "key": "Distributes to 3x − 12 = 2x + 5, collects x terms (x − 12 = 5), and adds 12 to get x = 17. A correct check by substitution also earns the work point.",
+      "work_height": 84
+    },
+    {
+      "type": "math",
+      "q": 2,
+      "prompt": "Solve and write the answer as an inequality:  −2x + 7 ≤ 15",
+      "answer": "x ≥ −4",
+      "accept": ["x >= -4", "-4 ≤ x", "x≥-4"],
+      "key": "Subtracts 7 (−2x ≤ 8), then divides by −2 and flips the inequality sign to get x ≥ −4. Not flipping the sign is the key mistake to name.",
+      "work_height": 70
+    },
+    {
+      "type": "draw",
+      "q": 3,
+      "prompt": "Graph y = 2x − 1 on the grid. Mark at least two points you used.",
+      "diagram": {
+        "width": 190,
+        "height": 170,
+        "description": "A coordinate grid from −5 to 5 on both axes, grid lines every 1, labels every 1.",
+        "shapes": [
+          {"shape": "axes", "x": 12, "y": 10, "w": 170, "h": 150, "xmin": -5, "xmax": 5, "ymin": -5, "ymax": 5, "label_every": 1, "xlabel": "x", "ylabel": "y"}
+        ]
+      },
+      "checklist": [
+        {"item": "The line crosses the y-axis at (0, −1).", "short": "y-intercept −1"},
+        {"item": "The line rises 2 for every 1 to the right (passes through points like (1, 1) and (2, 3)).", "short": "Slope 2"},
+        {"item": "At least two points are marked on the line.", "short": "Points marked"}
+      ]
+    },
+    {
+      "type": "table",
+      "q": 4,
+      "prompt": "Complete the table for y = x² − 3.",
+      "columns": ["x", "y = x² − 3"],
+      "col_widths": [120, 224],
+      "rows": [
+        ["−2", {"answer": "1"}],
+        ["0", {"answer": "-3", "accept": ["−3"]}],
+        ["3", {"answer": "6"}]
+      ]
+    },
+    {
+      "type": "choice",
+      "q": 5,
+      "prompt": "Which is equal to √49 + √9?",
+      "answer": "B",
+      "columns": 4,
+      "options": [
+        {"letter": "A", "text": "√58", "why": "Square roots don't add that way: find each root first."},
+        {"letter": "B", "text": "10", "why": "Yes: 7 + 3 = 10."},
+        {"letter": "C", "text": "16", "why": "Check √9 again."},
+        {"letter": "D", "text": "29", "why": "That adds 49 and 9, then halves. Take each root first."}
+      ]
+    }
+  ]
+}

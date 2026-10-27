@@ -1,0 +1,56 @@
+{
+  "assignment_id": "ela11-startlate-01",
+  "title": "Later Bells?",
+  "subject": "English",
+  "grade": 11,
+  "grade_band": "11th grade English",
+  "compact": true,
+  "instructions": "Read the source, then write your essay. It continues onto the next page. Write your ID number, not your name.",
+  "questions": [
+    {
+      "type": "passage",
+      "id": "memo",
+      "title": "From a district memo",
+      "line_numbers": true,
+      "text": "Our survey of 1,200 students found that 61 percent sleep fewer than seven hours on school nights. Pediatricians recommend eight to ten hours for teenagers. In the three districts nearby that moved the first bell from 7:30 to 8:30, attendance in first period rose by 6 percent within a year. Moving the bell would also push sports practices later, and 40 percent of families told us that a later end time would make it harder to get to work or to pick up younger children.",
+      "source": "An original memo written for this worksheet."
+    },
+    {
+      "type": "short",
+      "q": 1,
+      "passage": "memo",
+      "lines": 40,
+      "prompt": "Argument Essay: Should our high school move the first bell to 8:30? Take a side. Support it with at least two pieces of evidence from the memo, answer the strongest point on the other side, and end with a conclusion.",
+      "key": "Any side can earn full credit. A top essay states a clear position, uses at least two accurate facts from the memo (61 percent sleep under seven hours; 8-10 hours recommended; first-period attendance up 6 percent; 40 percent of families report a problem), explains how each supports the claim, and answers the strongest counterargument with a reason rather than just naming it.",
+      "rubric": [
+        {
+          "criterion": "Claim: takes a clear side on moving the first bell to 8:30.",
+          "short": "Claim",
+          "levels": [
+            "no clear side",
+            "a side, but vague or wavering",
+            "a clear, specific position"
+          ]
+        },
+        {
+          "criterion": "Evidence: uses accurate facts from the memo (quoted or paraphrased) and explains how they support the claim.",
+          "short": "Evidence",
+          "levels": [
+            "no evidence from the memo",
+            "one accurate fact, or facts with little explanation",
+            "two or more accurate facts, each explained"
+          ]
+        },
+        {
+          "criterion": "Counterclaim: names the strongest opposing point and answers it with a reason.",
+          "short": "Counterclaim",
+          "levels": [
+            "no counterclaim",
+            "names the other side but doesn't answer it",
+            "names it and answers it with a reason"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,146 @@
+{
+  "assignment_id": "math7-data-01",
+  "title": "Lunch Line Data",
+  "subject": "math (statistics)",
+  "grade": 7,
+  "grade_band": "7th grade",
+  "compact": true,
+  "instructions": "Use the graph. Write your ID number, not your name.",
+  "questions": [
+    {
+      "type": "label",
+      "q": 1,
+      "prompt": "Read It: How many students chose each lunch? Write the numbers in the boxes.",
+      "diagram": {
+        "width": 330,
+        "height": 160,
+        "description": "A bar chart of lunch choices: Pizza 8, Tacos 12, Salad 4, Pasta 6, with a y-axis from 0 to 14. A box under each bar's label.",
+        "shapes": [
+          {
+            "shape": "bar_chart",
+            "x": 30,
+            "y": 46,
+            "w": 280,
+            "h": 96,
+            "categories": [
+              "Pizza",
+              "Tacos",
+              "Salad",
+              "Pasta"
+            ],
+            "values": [
+              8,
+              12,
+              4,
+              6
+            ],
+            "ymax": 14,
+            "ystep": 2,
+            "ylabel": "students"
+          }
+        ]
+      },
+      "labels": [
+        {
+          "n": 1,
+          "box": [
+            45,
+            2,
+            40,
+            26
+          ],
+          "answer": "8"
+        },
+        {
+          "n": 2,
+          "box": [
+            115,
+            2,
+            40,
+            26
+          ],
+          "answer": "12"
+        },
+        {
+          "n": 3,
+          "box": [
+            185,
+            2,
+            40,
+            26
+          ],
+          "answer": "4"
+        },
+        {
+          "n": 4,
+          "box": [
+            255,
+            2,
+            40,
+            26
+          ],
+          "answer": "6"
+        }
+      ]
+    },
+    {
+      "type": "draw",
+      "q": 2,
+      "prompt": "Graph It: Friday's results were Pizza 10, Tacos 6, Salad 2, Pasta 8. Draw the bars.",
+      "diagram": {
+        "width": 330,
+        "height": 130,
+        "description": "Empty bar chart axes for Pizza, Tacos, Salad, Pasta, y-axis 0 to 14 with grid lines every 2.",
+        "shapes": [
+          {
+            "shape": "bar_chart",
+            "x": 30,
+            "y": 22,
+            "w": 280,
+            "h": 100,
+            "categories": [
+              "Pizza",
+              "Tacos",
+              "Salad",
+              "Pasta"
+            ],
+            "values": [],
+            "ymax": 14,
+            "ystep": 2
+          }
+        ]
+      },
+      "checklist": [
+        {
+          "item": "The Pizza bar's top is at 10.",
+          "short": "Pizza 10"
+        },
+        {
+          "item": "The Tacos bar's top is at 6.",
+          "short": "Tacos 6"
+        },
+        {
+          "item": "The Salad bar's top is at 2.",
+          "short": "Salad 2"
+        },
+        {
+          "item": "The Pasta bar's top is at 8.",
+          "short": "Pasta 8"
+        }
+      ]
+    },
+    {
+      "type": "math",
+      "q": 3,
+      "prompt": "Find It: What is the mean number of students per lunch choice on Friday?",
+      "answer": "6.5",
+      "accept": [
+        "6 1/2",
+        "13/2"
+      ],
+      "units": "students",
+      "key": "Adds 10 + 6 + 2 + 8 = 26 and divides by 4 to get 6.5. Dividing by the wrong count (26/3) is the mistake to look for.",
+      "work_height": 70
+    }
+  ]
+}

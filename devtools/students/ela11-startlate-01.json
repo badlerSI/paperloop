@@ -1,0 +1,57 @@
+{
+ "students": [
+  {
+   "id": "5001",
+   "style": "clean",
+   "answers": {
+    "1": {
+     "text": "Our high school should move the first bell to 8:30 because students are not getting enough sleep and it hurts their learning. The district memo says that 61 percent of students sleep fewer than seven hours on school nights, but pediatricians recommend eight to ten hours for teenagers. That means most of us are short at least an hour of sleep every night, which makes it hard to focus in class. The memo also says that in three nearby districts that moved the bell from 7:30 to 8:30, first period attendance rose by 6 percent within a year. This shows that a later start does not just sound good, it actually gets more students into class. If students are in class and awake, they will learn more and their grades will go up.",
+     "more": [
+      "Some people will say that a later bell causes problems for families, and the memo says 40 percent of families said a later end time would make it harder to get to work or pick up younger children. This is a real concern, but the school could offer a supervised study hall or buses at the old times so families can still drop off students early. Fixing a schedule problem is easier than fixing a sleep problem for most of the students. In conclusion, moving the first bell to 8:30 would help students sleep, attend, and learn, and the family problems can be solved with planning."
+     ],
+     "expected_levels": {
+      "1": 2,
+      "2": 2,
+      "3": 2
+     }
+    }
+   }
+  },
+  {
+   "id": "5002",
+   "style": "messy",
+   "answers": {
+    "1": {
+     "text": "I think maybe the bell should be later but it depends. Teenagers like to sleep in and nobody likes waking up early. Sports would be later too which some people would not like. It could go either way so the school should think about it more.",
+     "expected_levels": {
+      "1": 1,
+      "2": 0,
+      "3": 1
+     }
+    }
+   }
+  },
+  {
+   "id": "5003",
+   "style": "neat",
+   "answers": {
+    "1": {
+     "text": "The first bell should stay at 7:30. The memo says 40 percent of families said a later end time would make it harder to get to work or to pick up younger children. That is almost half of the families, so changing the bell would hurt a lot of people. Sports practices would also be pushed later, so athletes would get home late and have less time for homework.",
+     "more": [
+      "Some people say students need more sleep because 61 percent sleep less than seven hours. But students could just go to bed earlier instead of changing the whole school schedule. In conclusion the bell should stay the same."
+     ],
+     "expected_levels": {
+      "1": 2,
+      "2": 2,
+      "3": 2
+     }
+    }
+   }
+  },
+  {
+   "id": "5004",
+   "style": "kid",
+   "answers": {}
+  }
+ ]
+}

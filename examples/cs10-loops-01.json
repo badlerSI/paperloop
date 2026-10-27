@@ -1,0 +1,119 @@
+{
+  "assignment_id": "cs10-loops-01",
+  "title": "Trace the Loop",
+  "subject": "computer science",
+  "grade": 10,
+  "grade_band": "10th grade (Intro to Programming, Python)",
+  "compact": true,
+  "instructions": "Trace the code by hand. Write your ID number, not your name.",
+  "questions": [
+    {
+      "type": "passage",
+      "id": "code",
+      "title": "Program A",
+      "mono": true,
+      "line_numbers": true,
+      "text": "total = 0\nfor n in range(1, 5):\n    if n % 2 == 0:\n        total = total + n\n    else:\n        total = total - 1\nprint(total)"
+    },
+    {
+      "type": "table",
+      "q": 1,
+      "passage": "code",
+      "prompt": "Trace It: Fill in the value of total after each pass through the loop in Program A.",
+      "columns": [
+        "n",
+        "n % 2 == 0?",
+        "total after this pass"
+      ],
+      "rows": [
+        [
+          "1",
+          "False",
+          {
+            "answer": "-1"
+          }
+        ],
+        [
+          "2",
+          "True",
+          {
+            "answer": "1"
+          }
+        ],
+        [
+          "3",
+          "False",
+          {
+            "answer": "0"
+          }
+        ],
+        [
+          "4",
+          "True",
+          {
+            "answer": "4"
+          }
+        ]
+      ]
+    },
+    {
+      "type": "short",
+      "q": 2,
+      "passage": "code",
+      "lines": 2,
+      "prompt": "Predict: What does line 7 print, and why?",
+      "key": "It prints 4: total ends at 4 after the last pass (n = 4 adds 4 to 0). Full credit needs 4 and a reason tied to the trace; 4 alone is partial."
+    },
+    {
+      "type": "blanks",
+      "q": 3,
+      "mono": true,
+      "prompt": "Fix It: Complete Program B so it adds up only the odd numbers from 1 to 9.",
+      "text": "total = 0\nfor n in range(1, {1}):\n    if n % 2 == {2}:\n        total = total + n\nprint(total)",
+      "answers": [
+        {
+          "n": 1,
+          "answer": "10",
+          "width": 50,
+          "accept": [
+            "11"
+          ]
+        },
+        {
+          "n": 2,
+          "answer": "1",
+          "width": 40
+        }
+      ]
+    },
+    {
+      "type": "choice",
+      "q": 4,
+      "prompt": "What does Program B print once it's fixed?",
+      "answer": "C",
+      "columns": 4,
+      "options": [
+        {
+          "letter": "A",
+          "text": "20",
+          "why": "That's the even numbers 2 to 8."
+        },
+        {
+          "letter": "B",
+          "text": "45",
+          "why": "That adds every number from 1 to 9."
+        },
+        {
+          "letter": "C",
+          "text": "25",
+          "why": "Yes: 1 + 3 + 5 + 7 + 9."
+        },
+        {
+          "letter": "D",
+          "text": "9",
+          "why": "That's the last odd number, not the sum."
+        }
+      ]
+    }
+  ]
+}

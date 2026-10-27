@@ -1,0 +1,63 @@
+{
+  "assignment_id": "math2-time-01",
+  "title": "Clock and Number Fun",
+  "subject": "math",
+  "grade": 2,
+  "grade_band": "2nd grade",
+  "instructions": "Write your number in the boxes. Show your thinking.",
+  "questions": [
+    {
+      "type": "label",
+      "q": 1,
+      "prompt": "What time does the clock show?",
+      "diagram": {
+        "width": 300,
+        "height": 120,
+        "description": "A clock face with the hour hand just past 3 and the minute hand on the 6 (3:30). One answer box to its right.",
+        "shapes": [
+          {"shape": "clock", "x": 60, "y": 60, "r": 56, "hour": 3, "minute": 30}
+        ]
+      },
+      "labels": [
+        {"n": 1, "box": [150, 42, 120, 38], "answer": "3:30", "accept": ["half past 3", "three thirty", "3 30"]}
+      ]
+    },
+    {
+      "type": "math",
+      "q": 2,
+      "prompt": "Mia has 34 stickers. She gets 25 more. How many stickers does she have now?",
+      "answer": "59",
+      "units": "stickers",
+      "key": "Adds 34 + 25: tens (30 + 20 = 50) and ones (4 + 5 = 9), or counts on, or a drawing of tens and ones that shows 59.",
+      "work_height": 110
+    },
+    {
+      "type": "draw",
+      "q": 3,
+      "prompt": "Start at 20. Draw jumps of 5 to get to 35.",
+      "diagram": {
+        "width": 330,
+        "height": 70,
+        "description": "A number line from 20 to 40 with a tick at every whole number and labels every 5.",
+        "shapes": [
+          {"shape": "number_line", "x": 6, "y": 22, "w": 318, "min": 20, "max": 40, "step": 1, "label_every": 5}
+        ]
+      },
+      "checklist": [
+        {"item": "The jumps start at 20.", "short": "Starts at 20"},
+        {"item": "There are three jumps, each 5 long (20 to 25, 25 to 30, 30 to 35).", "short": "Three jumps of 5"},
+        {"item": "The last jump lands on 35.", "short": "Ends at 35"}
+      ]
+    },
+    {
+      "type": "blanks",
+      "q": 4,
+      "prompt": "Fill in the blanks.",
+      "text": "4 tens and 7 ones is {1}.\n60 + 8 = {2}",
+      "answers": [
+        {"n": 1, "answer": "47"},
+        {"n": 2, "answer": "68"}
+      ]
+    }
+  ]
+}

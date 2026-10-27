@@ -1,0 +1,78 @@
+{
+  "assignment_id": "ss7-founding-01",
+  "title": "A New Nation",
+  "subject": "social studies",
+  "grade": 7,
+  "grade_band": "7th grade",
+  "compact": true,
+  "instructions": "Read the source, then answer each question. Write your ID number, not your name.",
+  "questions": [
+    {
+      "type": "passage",
+      "id": "declaration",
+      "title": "From the Declaration of Independence (1776)",
+      "line_numbers": true,
+      "text": "We hold these truths to be self-evident, that all men are created equal, that they are endowed by their Creator with certain unalienable Rights, that among these are Life, Liberty and the pursuit of Happiness. That to secure these rights, Governments are instituted among Men, deriving their just powers from the consent of the governed. That whenever any Form of Government becomes destructive of these ends, it is the Right of the People to alter or to abolish it, and to institute new Government.",
+      "source": "Declaration of Independence, July 4, 1776 (public domain)."
+    },
+    {
+      "type": "short",
+      "q": 1,
+      "passage": "declaration",
+      "prompt": "Claim and Evidence: According to the Declaration, where does a government get its power? Quote or point to the line that shows it.",
+      "lines": 3,
+      "rubric": [
+        {"criterion": "Claim: government gets its power from the people (the consent of the governed).", "short": "Claim", "levels": ["missing or wrong", "partly right or vague", "clear and accurate"]},
+        {"criterion": "Evidence: quotes or points to 'deriving their just powers from the consent of the governed' (line 3).", "short": "Evidence", "levels": ["no evidence", "evidence that doesn't support the claim", "accurate quote or line reference"]}
+      ]
+    },
+    {
+      "type": "match",
+      "q": 2,
+      "prompt": "Put these events in order. Write 1 for the earliest and 4 for the latest.",
+      "items": [
+        {"text": "The Constitution is signed", "answer": "4"},
+        {"text": "The Boston Tea Party", "answer": "1"},
+        {"text": "The Declaration of Independence", "answer": "2"},
+        {"text": "The Treaty of Paris ends the war", "answer": "3"}
+      ]
+    },
+    {
+      "type": "label",
+      "q": 3,
+      "prompt": "Map Skills: Label the map. Write mountains, river, and town in boxes 1-3. Write the compass direction the river flows in box 4.",
+      "word_bank": ["mountains", "river", "town", "northeast", "southwest"],
+      "diagram": {
+        "width": 330,
+        "height": 150,
+        "description": "A map of an island with a range of three mountains in the northeast, a river running from the mountains southwest to the coast, a dot for a town on the west side, and a compass rose pointing north in the top-right corner. Box 1 points to the mountains, box 2 to the river, box 3 to the town dot, and box 4 asks which direction the river flows.",
+        "shapes": [
+          {"shape": "image", "x": 0, "y": 0, "w": 240, "h": 150, "path": "images/island-map.png"}
+        ]
+      },
+      "labels": [
+        {"n": 1, "box": [248, 118, 80, 22], "points_to": [160, 105], "answer": "mountains", "accept": ["mountain"]},
+        {"n": 2, "box": [248, 82, 80, 22], "points_to": [140, 60], "answer": "river"},
+        {"n": 3, "box": [248, 46, 80, 22], "points_to": [80, 70], "answer": "town", "accept": ["city", "village"]},
+        {"n": 4, "box": [248, 10, 80, 22], "answer": "southwest", "accept": ["SW", "south west"]}
+      ]
+    },
+    {
+      "type": "draw",
+      "q": 4,
+      "prompt": "Timeline: Mark 1776 and 1787 on the timeline with a dot, and write what happened in each year above its dot.",
+      "diagram": {
+        "width": 330,
+        "height": 70,
+        "description": "A timeline from 1770 to 1790 with a tick every year and labels every 5 years.",
+        "shapes": [
+          {"shape": "timeline", "x": 10, "y": 22, "w": 310, "start": 1770, "end": 1790, "step": 1, "label_every": 5}
+        ]
+      },
+      "checklist": [
+        {"item": "A dot or mark at 1776, labeled with the Declaration of Independence (any wording).", "short": "1776 Declaration"},
+        {"item": "A dot or mark at 1787, labeled with the Constitution (any wording).", "short": "1787 Constitution"}
+      ]
+    }
+  ]
+}

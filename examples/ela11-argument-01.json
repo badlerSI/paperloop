@@ -1,0 +1,44 @@
+{
+  "assignment_id": "ela11-argument-01",
+  "title": "Should School Start Later?",
+  "subject": "English language arts",
+  "grade": 11,
+  "grade_band": "11th grade",
+  "compact": true,
+  "instructions": "Read the op-ed, then answer. Write your ID number, not your name.",
+  "questions": [
+    {
+      "type": "passage",
+      "id": "oped",
+      "title": "Let Teenagers Sleep",
+      "line_numbers": true,
+      "text": "Every weekday at 6:15 a.m., thousands of teenagers in our district drag themselves out of bed for a 7:30 first bell. We tell them to try harder, go to bed earlier, put the phone away. But the problem isn't willpower. During puberty, the body's internal clock shifts later by as much as two hours, so a sixteen-year-old who falls asleep at 11 p.m. is doing what biology tells her to do.\n\nWhen a district in Seattle moved its high school start time from 7:50 to 8:45, students slept an average of 34 minutes more each night, and their grades in a required biology course rose. Attendance improved too. Critics say later start times wreck sports schedules and bus routes. Those are real costs. But they are problems of logistics, and logistics can be solved. Sleep cannot be made up on Saturday.",
+      "source": "An original op-ed written for this worksheet; the Seattle figures come from a 2018 University of Washington study."
+    },
+    {
+      "type": "choice",
+      "q": 1,
+      "prompt": "Which sentence best states the author's claim?",
+      "answer": "B",
+      "options": [
+        {"letter": "A", "text": "Teenagers should put their phones away at night.", "why": "The author rejects that as the fix: the problem isn't willpower."},
+        {"letter": "B", "text": "High schools should start later because teenagers' sleep needs are biological.", "why": "Yes: every paragraph builds toward a later start."},
+        {"letter": "C", "text": "Sports schedules matter more than sleep.", "why": "The author calls those real costs but solvable ones."},
+        {"letter": "D", "text": "Seattle has the best schools in the country.", "why": "Seattle is evidence, not the claim."}
+      ]
+    },
+    {
+      "type": "short",
+      "q": 2,
+      "passage": "oped",
+      "prompt": "Counterargument: The author admits later start times have 'real costs.' Write a paragraph that evaluates how well the author answers this counterargument. Cite at least one line.",
+      "lines": 9,
+      "rubric": [
+        {"criterion": "Claim: takes a clear position on how well the author answers the counterargument.", "short": "Claim", "levels": ["no position", "a vague position", "a clear position", "a clear, nuanced position"]},
+        {"criterion": "Evidence: quotes or cites specific lines (e.g. 'those are problems of logistics' or the Seattle results) accurately.", "short": "Evidence", "levels": ["none", "general reference to the text", "one accurate citation", "two or more well-chosen citations"]},
+        {"criterion": "Reasoning: explains how the evidence supports the position, not just restating it.", "short": "Reasoning", "levels": ["none", "restates evidence", "some explanation", "clear, logical explanation"]},
+        {"criterion": "Conventions: sentences are complete and readable; errors don't get in the way of meaning.", "short": "Conventions", "levels": ["errors block meaning", "frequent errors", "few errors"]}
+      ]
+    }
+  ]
+}

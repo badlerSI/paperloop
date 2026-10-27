@@ -17,7 +17,7 @@ from scipy import ndimage
 from . import sheet as S
 
 DARK = 160  # grayscale below this counts as ink; printed faint guides sit above it
-PRINTED = 200  # anything darker than this on the blank template is printed, including light fills
+PRINTED = 170  # darker than this on the blank template is printing that hides pencil; lighter fills don't
 PRINT_SLACK_PX = 4  # misalignment to forgive around printed ink
 MAX_REPROJECTION_PX = 6.0
 FLATTEN_TILE_PX = 160  # patches of printing, about 0.8in at 200 dpi, each measured for drift
@@ -26,12 +26,34 @@ FLATTEN_MIN_TILES = 8
 
 # --- Pixels in and out ------------------------------------------------------------
 
+IMAGE_TYPES = {".jpg", ".jpeg", ".png", ".tif", ".tiff", ".bmp", ".webp"}
+PHOTO_MAX_SIDE = 2400  # big phone photos are scaled down to about scan size before reading
+
+
 def render_pdf(path: Path, dpi: int = S.DPI) -> list[np.ndarray]:
     doc = pdfium.PdfDocument(str(path))
     try:
         return [np.array(doc[i].render(scale=dpi / 72).to_pil().convert("L")) for i in range(len(doc))]
     finally:
         doc.close()
+
+
+def load_pages(path: Path, dpi: int = S.DPI) -> list[np.ndarray]:
+    """Grayscale pages from a scanned PDF, or from photos and image files (each frame of a TIFF is a page)."""
+    path = Path(path)
+    if path.suffix.lower() not in IMAGE_TYPES:
+        return render_pdf(path, dpi)
+    from PIL import ImageOps, ImageSequence
+    pages = []
+    with Image.open(path) as img:
+        for frame in ImageSequence.Iterator(img):
+            page = ImageOps.exif_transpose(frame).convert("L")
+            longest = max(page.size)
+            if longest > PHOTO_MAX_SIDE:
+                page = page.resize((round(page.width * PHOTO_MAX_SIDE / longest),
+                                    round(page.height * PHOTO_MAX_SIDE / longest)), Image.LANCZOS)
+            pages.append(np.array(page))
+    return pages
 
 
 def save_png(img: np.ndarray, path: Path) -> None:
@@ -46,7 +68,8 @@ def load_png(path: Path) -> np.ndarray:
 def template(assignment_dir: Path, page: int) -> np.ndarray:
     """The blank page as printed, rendered once and kept beside the worksheet."""
     path = Path(assignment_dir) / f"template-p{page}.png"
-    if not path.exists():
+    pdf = Path(assignment_dir) / "worksheet.pdf"
+    if not path.exists() or (pdf.exists() and pdf.stat().st_mtime > path.stat().st_mtime):
         for n, img in enumerate(render_pdf(Path(assignment_dir) / "worksheet.pdf"), start=1):
             save_png(img, Path(assignment_dir) / f"template-p{n}.png")
     return load_png(path)
@@ -77,13 +100,33 @@ def _otsu(gray: np.ndarray) -> float:
     return float(np.argmax(between))
 
 
-def _square_corners(mask: np.ndarray, offset: tuple[int, int]) -> np.ndarray:
-    """Corners of a filled, roughly upright square: top-left, top-right, bottom-right, bottom-left (x, y)."""
-    ys, xs = np.nonzero(mask)
-    xs, ys = xs + offset[1], ys + offset[0]
-    s, d = xs + ys, xs - ys
-    picks = [np.argmin(s), np.argmax(d), np.argmax(s), np.argmin(d)]
-    return np.array([[xs[i], ys[i]] for i in picks], dtype=float)
+def _quad_corners(mask: np.ndarray, offset: tuple[int, int]) -> np.ndarray | None:
+    """Four corners of a filled quadrilateral at any angle or perspective, clockwise from the one nearest the
+    image's top-left: the farthest pair of outline points is one diagonal, and the points farthest from it
+    on either side are the other two corners."""
+    edge = mask & ~ndimage.binary_erosion(mask)
+    ys, xs = np.nonzero(edge)
+    if len(xs) < 8:
+        return None
+    pts = np.c_[xs + offset[1], ys + offset[0]].astype(float)
+    if len(pts) > 600:
+        pts = pts[:: len(pts) // 600 + 1]
+    d2 = ((pts[:, None, :] - pts[None, :, :]) ** 2).sum(-1)
+    i, j = np.unravel_index(np.argmax(d2), d2.shape)
+    a, b = pts[i], pts[j]
+    side = (b[0] - a[0]) * (pts[:, 1] - a[1]) - (b[1] - a[1]) * (pts[:, 0] - a[0])
+    if side.max() <= 0 or side.min() >= 0:
+        return None
+    quad = np.array([a, pts[np.argmax(side)], b, pts[np.argmin(side)]])
+    center = quad.mean(axis=0)
+    quad = quad[np.argsort(np.arctan2(quad[:, 1] - center[1], quad[:, 0] - center[0]))]  # clockwise on screen
+    start = int(np.argmin(quad.sum(axis=1)))
+    return np.roll(quad, -start, axis=0)
+
+
+def _polygon_area(quad: np.ndarray) -> float:
+    x, y = quad[:, 0], quad[:, 1]
+    return 0.5 * abs(np.dot(x, np.roll(y, -1)) - np.dot(y, np.roll(x, -1)))
 
 
 def _sample_grid(gray: np.ndarray, corners: np.ndarray, n: int = 6) -> np.ndarray:
@@ -101,24 +144,42 @@ def _sample_grid(gray: np.ndarray, corners: np.ndarray, n: int = 6) -> np.ndarra
 
 
 def find_markers(gray: np.ndarray, dpi: int = S.DPI) -> dict[int, np.ndarray]:
-    """Marker id -> its 4 corners in image pixels, in the marker's own TL, TR, BR, BL order."""
-    threshold = _otsu(gray)
-    dark = gray < threshold
+    """Marker id -> its 4 corners in image pixels, in the marker's own TL, TR, BR, BL order.
+
+    Works on flatbed scans and on phone photos: dark is judged against the neighbourhood (so a shadow
+    across the page doesn't swallow the markers), marker size relative to the image (so the page can fill
+    any part of the photo), and corners from the outline (so the page can sit at any angle)."""
+    h_img, w_img = gray.shape
+    window = max(31, int(min(h_img, w_img) * 0.13)) | 1
+    local = ndimage.uniform_filter(gray.astype(np.float32), size=window)
+    dark = (gray < local - 30) | (gray < 60)
     labels, _ = ndimage.label(dark, structure=np.ones((3, 3), bool))
-    side = S.MARKER_SIZE * S.scale(dpi)
+    # A marker is 32/612 of the page's width; the page spans 45-100% of the image's shorter side.
+    full = min(h_img, w_img) * S.MARKER_SIZE / S.PAGE_W
+    lo, hi = 0.38 * full, 1.35 * full
     patterns = {mid: np.array([[c == "1" for c in row] for row in bits]) for mid, bits in S.MARKER_BITS.items()}
     found: dict[int, tuple[float, np.ndarray]] = {}
     for n, sl in enumerate(ndimage.find_objects(labels), start=1):
         if sl is None:
             continue
         h, w = sl[0].stop - sl[0].start, sl[1].stop - sl[1].start
-        if not (0.6 * side < h < 1.5 * side and 0.6 * side < w < 1.5 * side) or abs(h - w) > 0.25 * max(h, w):
+        # A camera at an angle can stretch a square to 2:1; the bit pattern below is what rejects look-alikes.
+        if not (lo < h < hi * 1.45 and lo < w < hi * 1.45) or max(h, w) > 2.2 * min(h, w):
             continue
         filled = ndimage.binary_fill_holes(labels[sl] == n)
-        if filled.mean() < 0.8:
+        corners = _quad_corners(filled, (sl[0].start, sl[1].start))
+        if corners is None:
             continue
-        corners = _square_corners(filled, (sl[0].start, sl[1].start))
-        cells = _sample_grid(gray, corners) < threshold  # True = dark
+        sides = np.linalg.norm(corners - np.roll(corners, -1, axis=0), axis=1)
+        if not (lo < sides.mean() < hi) or sides.max() > 2.2 * sides.min():
+            continue
+        if filled.sum() < 0.85 * _polygon_area(corners):
+            continue
+        values = _sample_grid(gray, corners)
+        threshold = (values.min() + values.max()) / 2
+        if values.max() - values.min() < 40:
+            continue
+        cells = values < threshold  # True = dark
         border = np.concatenate([cells[0], cells[-1], cells[1:-1, 0], cells[1:-1, -1]])
         if border.mean() < 0.85:
             continue
@@ -160,6 +221,34 @@ def project(h: np.ndarray, pts: np.ndarray) -> np.ndarray:
     return p[:, :2] / p[:, 2:3]
 
 
+def looks_blank(gray: np.ndarray) -> bool:
+    """An empty sheet: next to no pen- or print-sized marks. Counting marks rather than dark pixels lets a
+    photo of an empty sheet, with a dark table around it, still count as empty."""
+    h, w = gray.shape
+    window = max(31, int(min(h, w) * 0.13)) | 1
+    local = ndimage.uniform_filter(gray.astype(np.float32), size=window)
+    marks = (gray < local - 40) & (gray < 170)
+    labels, n = ndimage.label(marks)
+    if n == 0:
+        return True
+    sizes = np.bincount(labels.ravel())[1:]
+    scale = min(h, w) / 1700  # mark sizes are judged against a 200-dpi letter page
+    small = ((sizes > 12 * scale * scale) & (sizes < 4000 * scale * scale)).sum()
+    return small < 25
+
+
+def even_light(img: np.ndarray) -> np.ndarray:
+    """Divide out uneven lighting (a shadow, a dim corner, a gray scan) so paper reads white and ink dark.
+    The paper's brightness is the local maximum over a window bigger than any printed or written mark."""
+    small = img[::4, ::4].astype(np.float32)
+    paper = ndimage.maximum_filter(small, size=41)
+    paper = ndimage.gaussian_filter(paper, 6)
+    paper = np.kron(paper, np.ones((4, 4), np.float32))[:img.shape[0], :img.shape[1]]
+    if paper.shape != img.shape:
+        paper = np.pad(paper, ((0, img.shape[0] - paper.shape[0]), (0, img.shape[1] - paper.shape[1])), mode="edge")
+    return np.clip(img.astype(np.float32) / np.maximum(paper, 40) * 250, 0, 255).astype(np.uint8)
+
+
 def register(gray: np.ndarray, markers: dict[int, np.ndarray], dpi: int = S.DPI) -> tuple[np.ndarray, float]:
     """Warp a scanned page onto the template. Returns (canonical image, mean reprojection error in px).
 
@@ -187,7 +276,7 @@ def register(gray: np.ndarray, markers: dict[int, np.ndarray], dpi: int = S.DPI)
     sx = (inv[0, 0] * xs + inv[0, 1] * ys + inv[0, 2]) / den
     sy = (inv[1, 0] * xs + inv[1, 1] * ys + inv[1, 2]) / den
     canonical = ndimage.map_coordinates(gray, [sy, sx], order=1, cval=255).astype(np.uint8)
-    return canonical, error
+    return even_light(canonical), error
 
 
 # --- Flattening ------------------------------------------------------------------------

@@ -1,0 +1,166 @@
+{
+ "students": [
+  {
+   "id": "9101",
+   "style": "clean",
+   "answers": {
+    "1": {
+     "boxes": {
+      "1": "como",
+      "2": "estudia",
+      "3": "vemos"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "correct",
+      "3": "correct"
+     }
+    },
+    "2": {
+     "boxes": {
+      "1": "B",
+      "2": "D",
+      "3": "A",
+      "4": "C"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "correct",
+      "3": "correct",
+      "4": "correct"
+     }
+    },
+    "3": {
+     "text": "Mi cuarto es pequeño. Hay una cama y una lámpara al lado de la ventana.",
+     "expected_levels": {
+      "1": 2,
+      "2": 2,
+      "3": 2
+     }
+    },
+    "4": {
+     "circle": [
+      "C"
+     ],
+     "expected": "correct"
+    }
+   }
+  },
+  {
+   "id": "9202",
+   "style": "messy",
+   "answers": {
+    "1": {
+     "boxes": {
+      "1": "como",
+      "2": "estúdia",
+      "3": "vemos"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "incorrect",
+      "3": "correct"
+     }
+    },
+    "2": {
+     "boxes": {
+      "1": "B",
+      "2": "A",
+      "3": "D",
+      "4": "C"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "incorrect",
+      "3": "incorrect",
+      "4": "correct"
+     }
+    },
+    "3": {
+     "text": "My room is big. Tengo una cama.",
+     "expected_levels": {
+      "1": 1,
+      "2": 2,
+      "3": 1
+     }
+    },
+    "4": {
+     "circle": [
+      "A"
+     ],
+     "expected": "incorrect"
+    }
+   }
+  },
+  {
+   "id": "9303",
+   "style": "neat",
+   "answers": {
+    "1": {
+     "boxes": {
+      "1": "comer",
+      "2": "estudia",
+      "3": "veemos"
+     },
+     "expected": {
+      "1": "incorrect",
+      "2": "correct",
+      "3": "incorrect"
+     }
+    },
+    "2": {
+     "boxes": {
+      "1": "b",
+      "2": "d",
+      "3": "a",
+      "4": "c"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "correct",
+      "3": "correct",
+      "4": "correct"
+     }
+    },
+    "3": {
+     "text": "Mi cuarto es grande y bonito. Tiene dos ventanas pequeño.",
+     "expected_levels": {
+      "1": 2,
+      "2": 1,
+      "3": 1
+     }
+    },
+    "4": {
+     "circle": [
+      "C"
+     ],
+     "expected": "correct"
+    }
+   }
+  },
+  {
+   "id": "9404",
+   "style": "kid",
+   "answers": {
+    "1": {
+     "boxes": {
+      "1": "como",
+      "2": "estudia",
+      "3": ""
+     },
+     "expected": {
+      "1": "correct",
+      "2": "correct",
+      "3": "blank"
+     }
+    },
+    "4": {
+     "circle": [
+      "D"
+     ],
+     "expected": "incorrect"
+    }
+   }
+  }
+ ]
+}

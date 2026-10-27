@@ -1,0 +1,265 @@
+{
+ "students": [
+  {
+   "id": "3001",
+   "style": "clean",
+   "answers": {
+    "1": {
+     "boxes": {
+      "1": "E",
+      "2": "G",
+      "3": "B",
+      "4": "E"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "correct",
+      "3": "correct",
+      "4": "correct"
+     }
+    },
+    "2": {
+     "sketch": [
+      {
+       "shape": "circle",
+       "x": 120,
+       "y": 26.5,
+       "r": 4.8
+      },
+      {
+       "shape": "circle",
+       "x": 200,
+       "y": 44.5,
+       "r": 4.8
+      }
+     ],
+     "expected_items": {
+      "1": "yes",
+      "2": "yes",
+      "3": "yes"
+     }
+    },
+    "3": {
+     "circle": [
+      "B"
+     ],
+     "expected": "correct"
+    },
+    "4": {
+     "boxes": {
+      "1": "2",
+      "2": "4",
+      "3": "half"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "correct",
+      "3": "correct"
+     }
+    }
+   }
+  },
+  {
+   "id": "3002",
+   "style": "messy",
+   "answers": {
+    "1": {
+     "boxes": {
+      "1": "F",
+      "2": "A",
+      "3": "C",
+      "4": "F"
+     },
+     "expected": {
+      "1": "incorrect",
+      "2": "incorrect",
+      "3": "incorrect",
+      "4": "incorrect"
+     }
+    },
+    "2": {
+     "sketch": [
+      {
+       "shape": "circle",
+       "x": 120,
+       "y": 31,
+       "r": 4.8
+      },
+      {
+       "shape": "circle",
+       "x": 200,
+       "y": 40,
+       "r": 4.8
+      }
+     ],
+     "expected_items": {
+      "1": "no",
+      "2": "no",
+      "3": "yes"
+     }
+    },
+    "3": {
+     "circle": [
+      "A"
+     ],
+     "expected": "incorrect"
+    },
+    "4": {
+     "boxes": {
+      "1": "4",
+      "2": "2",
+      "3": "half"
+     },
+     "expected": {
+      "1": "incorrect",
+      "2": "incorrect",
+      "3": "correct"
+     }
+    }
+   }
+  },
+  {
+   "id": "3003",
+   "style": "kid",
+   "answers": {
+    "1": {
+     "boxes": {
+      "1": "E",
+      "2": "G",
+      "3": "B",
+      "4": "D"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "correct",
+      "3": "correct",
+      "4": "incorrect"
+     }
+    },
+    "2": {
+     "sketch": [
+      {
+       "shape": "dot",
+       "x": 120,
+       "y": 26.5
+      },
+      {
+       "shape": "line",
+       "points": [
+        [
+         124,
+         26.5
+        ],
+        [
+         124,
+         54.5
+        ]
+       ]
+      },
+      {
+       "shape": "dot",
+       "x": 200,
+       "y": 44.5
+      },
+      {
+       "shape": "line",
+       "points": [
+        [
+         204,
+         44.5
+        ],
+        [
+         204,
+         72.5
+        ]
+       ]
+      }
+     ],
+     "expected_items": {
+      "1": "yes",
+      "2": "yes",
+      "3": "no"
+     }
+    },
+    "3": {
+     "circle": [
+      "B"
+     ],
+     "expected": "correct"
+    },
+    "4": {
+     "boxes": {
+      "1": "2",
+      "2": "4",
+      "3": "quarter"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "correct",
+      "3": "incorrect"
+     }
+    }
+   }
+  },
+  {
+   "id": "3004",
+   "style": "neat",
+   "answers": {
+    "1": {
+     "boxes": {
+      "1": "e",
+      "2": "g",
+      "3": "b",
+      "4": "e"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "correct",
+      "3": "correct",
+      "4": "correct"
+     }
+    },
+    "2": {
+     "sketch": [
+      {
+       "shape": "circle",
+       "x": 120,
+       "y": 26.5,
+       "r": 4.8
+      },
+      {
+       "shape": "circle",
+       "x": 200,
+       "y": 40,
+       "r": 4.8
+      }
+     ],
+     "expected_items": {
+      "1": "yes",
+      "2": "no",
+      "3": "yes"
+     }
+    },
+    "3": {
+     "circle": [
+      "~~C~~",
+      "B"
+     ],
+     "expected": "correct"
+    },
+    "4": {
+     "boxes": {
+      "1": "two",
+      "2": "four",
+      "3": "half"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "correct",
+      "3": "correct"
+     }
+    }
+   }
+  }
+ ]
+}

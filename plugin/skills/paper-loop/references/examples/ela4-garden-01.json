@@ -1,0 +1,69 @@
+{
+  "assignment_id": "ela4-garden-01",
+  "title": "The Rooftop Garden",
+  "subject": "English language arts",
+  "grade": 4,
+  "grade_band": "4th grade",
+  "instructions": "Read the story, then answer each question. Write your ID number, not your name.",
+  "questions": [
+    {
+      "type": "passage",
+      "id": "story",
+      "title": "The Rooftop Garden",
+      "line_numbers": true,
+      "text": "Every morning, Amara climbed the stairs to the roof of her apartment building. The roof was flat and gray, and the wind always smelled like bus exhaust. But Amara had a plan.\n\nShe started with one bucket of soil and three bean seeds from the library's seed swap. She watered them before school and again when she got home. For nine days, nothing happened. Her neighbor Mr. Ortiz told her that beans need warm soil, so she moved the bucket next to the warm air vent.\n\nOn the tenth day, a pale green hook pushed up through the dirt. Amara was so excited she almost dropped her backpack down the stairwell.\n\nBy June, the bean vines had climbed a string all the way up the railing. Mr. Ortiz brought two tomato plants. A girl from the fourth floor brought marigolds. The gray roof was turning green, one bucket at a time.",
+      "source": "An original story written for this worksheet."
+    },
+    {
+      "type": "choice",
+      "q": 1,
+      "prompt": "What is the main idea of the story?",
+      "answer": "C",
+      "options": [
+        {"letter": "A", "text": "Beans grow faster than tomatoes.", "why": "The story never compares them. Think about what changes on the roof."},
+        {"letter": "B", "text": "Amara does not like her apartment.", "why": "She works to make the roof better, not to leave it."},
+        {"letter": "C", "text": "Amara's patience starts a garden that brings neighbors together.", "why": "Yes: her waiting paid off, and others joined in."},
+        {"letter": "D", "text": "Mr. Ortiz is the best gardener in the building.", "why": "He helps, but the story is about what Amara starts."}
+      ]
+    },
+    {
+      "type": "blanks",
+      "q": 2,
+      "prompt": "Use words from the story to fill in the blanks.",
+      "word_bank": ["vent", "seed swap", "railing", "marigolds"],
+      "text": "Amara got her beans from the library's {1}. She moved the bucket next to the warm air {2}. By June, the vines had climbed up the {3}.",
+      "answers": [
+        {"n": 1, "answer": "seed swap"},
+        {"n": 2, "answer": "vent"},
+        {"n": 3, "answer": "railing"}
+      ]
+    },
+    {
+      "type": "short",
+      "q": 3,
+      "passage": "story",
+      "prompt": "Why did Amara move the bucket? Use a detail from the story to explain.",
+      "lines": 3,
+      "rubric": [
+        {"criterion": "Answers why: the beans needed warm soil to grow (sprout).", "short": "Answers why", "levels": ["no answer or wrong reason", "partly right or vague", "clearly says the soil needed to be warm"]},
+        {"criterion": "Uses a detail from the story as evidence (nothing grew for nine days, Mr. Ortiz said beans need warm soil, or the warm air vent).", "short": "Detail from the story", "levels": ["no detail", "a detail that's vague or not from the story", "a clear detail from the story"]}
+      ]
+    },
+    {
+      "type": "match",
+      "q": 4,
+      "prompt": "Match each word to what it means in the story. Write the letter in the box.",
+      "items": [
+        {"text": "exhaust (line 2)", "answer": "C"},
+        {"text": "pale (line 6)", "answer": "A"},
+        {"text": "swap (line 3)", "answer": "D"}
+      ],
+      "choices": [
+        {"letter": "A", "text": "light in color"},
+        {"letter": "B", "text": "very tall"},
+        {"letter": "C", "text": "smoky air from engines"},
+        {"letter": "D", "text": "a trade"}
+      ]
+    }
+  ]
+}

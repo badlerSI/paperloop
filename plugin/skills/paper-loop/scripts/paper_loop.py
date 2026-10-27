@@ -7,6 +7,7 @@
     ids WORK [--roster ids.csv]          route pages using Claude's ID reads (WORK/ids.json)
     todo WORK                            write one marking work order per question (WORK/todo/)
     zoom IMAGE [--region l,t,r,b]        an enlarged, darkened copy of a crop, for faint or small details
+    preview PDF                          each page as a PNG you can look at (a worksheet, or returned.pdf)
     check WORK                           check Claude's marks and summaries, list flags
     render WORK [--grade off|back|csv] [--accept-flags]
                                          the marked PDF to print (WORK/out/returned.pdf)
@@ -32,24 +33,53 @@ from paper_loop_core import sheet as S  # noqa: E402
 def cmd_make(args) -> int:
     try:
         defn = S.normalize(S.read_json(args.worksheet))
-        layout = S.make_worksheet(defn, args.out)
-    except (S.WorksheetError, ValueError) as e:
+        layout = S.make_worksheet(defn, args.out, base=Path(args.worksheet).resolve().parent)
+    except (S.WorksheetError, ValueError, OSError) as e:
         print(f"Can't make the worksheet: {e}")
         return 1
+    except (KeyError, TypeError, IndexError, AttributeError) as e:
+        print(f"Can't make the worksheet: a field is missing or the wrong type ({type(e).__name__}: {e}). "
+              "Check it against references/worksheet-format.md.")
+        return 1
     n = len(layout["pages"])
-    print(f"Wrote {Path(args.out) / 'worksheet.pdf'}: {n} page{'s' if n > 1 else ''}, "
-          f"{len(defn['questions'])} questions.")
-    for page in layout["pages"]:
-        print(f"  page {page['page']}: questions {', '.join(str(b['q']) for b in page['boxes'])}")
-    left = S.space_left(defn)
-    print(f"  {left:.0f}pt free at the bottom of the last page.")
-    if n > 1:
-        print("  More than one page: print double-sided. To fit one page, set \"compact\": true, "
-              "shorten prompts, use fewer lines, or smaller diagrams.")
+    questions = [b for b in defn["questions"] if b["type"] != "passage"]
+    print(f"Wrote {Path(args.out) / 'worksheet.pdf'}: {n} page{'s' if n > 1 else ''}, {len(questions)} question{'s' if len(questions) != 1 else ''}, "
+          f"{sum(q['points'] for q in questions):g} points. Style {defn['style']} (grade {defn['grade']}), "
+          f"{defn['id_digits']}-digit IDs.")
+    for page, free, blocks in zip(layout["pages"], layout["free_by_page"], layout["blocks_by_page"]):
+        print(f"  page {page['page']}: {', '.join(f'{name} {h:.0f}pt' for name, h in blocks)} ({free:.0f}pt free)")
+    for passage in layout["passages"]:
+        if passage["line_numbers"]:
+            print(f"  {passage['id']} line numbers, as printed (cite these in questions):")
+            for number, line in passage["lines"]:
+                if number or line.strip():  # a wrapped code line has text but no number
+                    print(f"    {number or '':>3}  {line}")
+    for problem in layout["citation_problems"]:
+        print(f"  Check: {problem}.")
+    if layout["teacher_notes"]:
+        print(f"  Notes for the teacher (not printed): {layout['teacher_notes']}")
+    if layout["unprintable"]:
+        print(f"  These characters will print as \"?\": {layout['unprintable']}. No Unicode font was found; "
+              "write them in words, or install DejaVu Sans (pip install matplotlib brings it).")
+    essay = any(b.get("parts", 1) > 1 for page in layout["pages"] for b in page["boxes"])
+    if n > 1 and essay:
+        print("  More than one page: print double-sided. The essay runs across pages, so the page count follows "
+              "its lines.")
+    elif n > 1:
+        st = S.STYLES[defn["style"]]
+        print(f"  More than one page: print double-sided. To fit on {n - 1} page{'s' if n > 2 else ''}, cut about "
+              f"{layout['shortfall']:.0f}pt: a writing line is {st['line_spacing']:g}pt, and the gap between "
+              f"questions is {st['block_gap']:g}pt. Shorter prompts, fewer lines, smaller diagrams or work areas"
+              + (", or \"compact\": true" if defn["style"] == "standard" else "") + " all help.")
     return 0
 
 
 def cmd_prepare(args) -> int:
+    work = Path(args.work)
+    if any((work / name).exists() for name in ("ids.json", "summaries.json")) or any((work / "marks").glob("q*.json")):
+        print(f"{work} already has IDs or marks from an earlier run. Use a new work folder, so the old marks "
+              "can't be mixed with a new scan.")
+        return 1
     manifest = P.prepare(args.scans, args.assignment, args.work)
     pages = manifest["pages"]
     ok = [p for p in pages if p["status"] == "ok"]
@@ -58,16 +88,22 @@ def cmd_prepare(args) -> int:
     for p in pages:
         if p["status"] == "review":
             print(f"  scan {p['scan_index']}: {p['reason']}")
+        elif p["status"] == "blank":
+            print(f"  scan {p['scan_index']}: an empty sheet (no worksheet on it); it's left out of the printout. "
+                  "Mention it to the teacher.")
     if ok:
-        print("\nNext: read the handwritten ID in each of these images, then write ids.json "
-              "(see SKILL.md, step 2):")
-        for p in ok:
-            print(f"  scan {p['scan_index']}: {Path(args.work) / p['id_image']}")
+        print("\nNext: read the handwritten IDs, then write ids.json (see SKILL.md, step 2). Each sheet shows "
+              "up to 20 ID strips, labeled with their scan numbers:")
+        for sheet in manifest["id_sheets"]:
+            print(f"  {Path(args.work) / sheet}")
+        print(f"If a strip is hard to read on the sheet, open it on its own: {Path(args.work) / 'ids'}/scan-NNN.png")
     return 0
 
 
 def cmd_ids(args) -> int:
-    roster = P.load_roster(args.roster)
+    pages = S.read_json(Path(args.work) / "manifest.json")["pages"]
+    digits = next((p["id_digits"] for p in pages if p.get("id_digits")), 4)
+    roster = P.load_roster(args.roster, digits)
     manifest = P.route(args.work, roster)
     pages = manifest["pages"]
     routed = [p for p in pages if p["status"] == "ok" and p["student_id"]]
@@ -89,11 +125,8 @@ def cmd_ids(args) -> int:
 def cmd_todo(args) -> int:
     paths = P.todo(args.work)
     manifest = S.read_json(Path(args.work) / "manifest.json")
-    settled = sum(a["status"] != "mark" for p in manifest["pages"] if p["status"] == "ok" and p["student_id"]
-                  for a in p["answers"].values())
-    for p in P.all_blank(manifest):
-        print(f"Scan {p['scan_index']} (ID {p['student_id']}) has every answer blank: tell the teacher, since the "
-              "student may have been absent or used another sheet.")
+    settled = P.settled_count(manifest)
+    _blank_notes(manifest)
     if not paths:
         print(f"Nothing for Claude to mark ({settled} answers settled from the scan). Run `check` next.")
         return 0
@@ -108,6 +141,39 @@ def cmd_todo(args) -> int:
     return 0
 
 
+def cmd_preview(args) -> int:
+    import pypdfium2 as pdfium
+    pdf = Path(args.pdf)
+    out = pdf.parent / "preview"
+    out.mkdir(exist_ok=True)
+    doc = pdfium.PdfDocument(str(pdf))
+    try:
+        for i in range(len(doc)):
+            if args.page and i + 1 != args.page:
+                continue
+            path = out / f"{pdf.stem}-p{i + 1}.png"
+            doc[i].render(scale=1.5).to_pil().convert("L").save(path)
+            print(path)
+    finally:
+        doc.close()
+    return 0
+
+
+def _blank_notes(manifest: dict) -> None:
+    if not P.all_blank(manifest) and not P.blank_pages(manifest):
+        print("No student left a whole page blank.")
+    absent = {}
+    for p in P.all_blank(manifest):
+        absent.setdefault(p["student_id"], []).append(str(p["scan_index"]))
+    for student, scans in absent.items():
+        print(f"ID {student} (scan{'s' if len(scans) > 1 else ''} {', '.join(scans)}): every answer the student "
+              "handed in is blank. Tell the teacher: the student may have been absent or used another sheet.")
+    for p in P.blank_pages(manifest):
+        print(f"Scan {p['scan_index']} (ID {p['student_id']}, page {p['page']}): every answer on this page is blank, "
+              "though the student answered elsewhere. Tell the teacher: they may have missed the back or run out "
+              "of time.")
+
+
 def cmd_zoom(args) -> int:
     from PIL import Image, ImageOps
     img = Image.open(args.image).convert("L")
@@ -118,7 +184,8 @@ def cmd_zoom(args) -> int:
     factor = max(1.0, min(4.0, 1400 / max(img.width, img.height)))
     img = ImageOps.autocontrast(img.resize((round(img.width * factor), round(img.height * factor)),
                                            Image.LANCZOS), cutoff=1)
-    out = Path(args.image).parent / "zoom" / f"{Path(args.image).stem}-{len(list(Path(args.image).parent.glob('zoom/*'))) + 1}.png"
+    stem = Path(args.image).stem
+    out = Path(args.image).parent / "zoom" / f"{stem}-zoom{len(list(Path(args.image).parent.glob(f'zoom/{stem}-zoom*'))) + 1}.png"
     out.parent.mkdir(exist_ok=True)
     img.save(out)
     print(f"{out} ({factor:.1f}x)")
@@ -140,9 +207,11 @@ def cmd_check(args) -> int:
         return 1
     boxes = sum(len(p["boxes"]) for p in result["pages"])
     print(f"Marks: all {boxes} answers on {len(result['pages'])} pages are marked.")
+    if result["warnings"]:
+        print("Shorten the comments above, then run `check` again before writing summaries.")
+        return 1
     manifest = S.read_json(Path(args.work) / "manifest.json")
-    for p in P.all_blank(manifest):
-        print(f"Scan {p['scan_index']} (ID {p['student_id']}) has every answer blank: tell the teacher.")
+    _blank_notes(manifest)
     if result["flagged"]:
         print(f"{len(result['flagged'])} flagged for the teacher (show each one: crop, reading, verdict, comment, "
               "and what changes if they decide the other way):")
@@ -198,6 +267,9 @@ def cmd_render(args) -> int:
         print(f"Grades: {out['grades']}")
     if "review_pile" in out:
         print(f"Review pile (pages that couldn't be read): {out['review_pile']}")
+    for sid, pages in out["missing"].items():
+        print(f"ID {sid} has no page {', '.join(map(str, pages))} in this scan (missing, or in the review pile): "
+              "tell the teacher. Scores are out of the whole worksheet.")
     return 0
 
 
@@ -214,7 +286,7 @@ def cmd_status(args) -> int:
         print("Next: read the ID strips into ids.json, then run `ids`.")
         return 0
     todo = sorted((work / "todo").glob("q*.md")) if (work / "todo").exists() else []
-    if not todo:
+    if not (work / "todo").exists():
         print("Next: run `todo`.")
         return 0
     missing = [t for t in todo if not (work / "marks" / f"{t.stem}.json").exists()]
@@ -223,6 +295,11 @@ def cmd_status(args) -> int:
         return 0
     if not (work / "summaries.json").exists():
         print("Next: run `check`, fix anything it reports, then write summaries.json.")
+        return 0
+    returned = work / "out" / "returned.pdf"
+    inputs = [*(work / "marks").glob("q*.json"), work / "summaries.json", work / "manifest.json"]
+    if returned.exists() and returned.stat().st_mtime >= max(f.stat().st_mtime for f in inputs):
+        print(f"Done: {returned} is ready to print. (Change a mark or a summary and render again to update it.)")
         return 0
     print("Next: run `check` until marks and summaries are clean, review flags with the teacher, then `render`.")
     return 0
@@ -245,6 +322,10 @@ def main() -> int:
     p.add_argument("work", type=Path)
     p.add_argument("--roster", type=Path)
     p.set_defaults(func=cmd_ids)
+    p = sub.add_parser("preview")
+    p.add_argument("pdf", type=Path)
+    p.add_argument("--page", type=int, help="only this page")
+    p.set_defaults(func=cmd_preview)
     p = sub.add_parser("zoom")
     p.add_argument("image", type=Path)
     p.add_argument("--region", help="left,top,right,bottom as fractions of the image, e.g. 0.5,0,1,0.5")

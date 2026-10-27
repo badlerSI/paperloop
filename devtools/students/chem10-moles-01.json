@@ -1,0 +1,197 @@
+{
+ "students": [
+  {
+   "id": "2001",
+   "style": "clean",
+   "answers": {
+    "1": {
+     "boxes": {
+      "1": "2",
+      "2": "1",
+      "3": "2"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "correct",
+      "3": "correct"
+     }
+    },
+    "2": {
+     "boxes": {
+      "1": "6",
+      "2": "12",
+      "3": "11",
+      "4": "18"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "correct",
+      "3": "correct",
+      "4": "correct"
+     }
+    },
+    "3": {
+     "work": [
+      "40.1 + 12.0 + 3(16.0)",
+      "= 100.1"
+     ],
+     "answer": "100.1",
+     "expected_answer": "correct",
+     "expected_work": "correct"
+    },
+    "4": {
+     "work": [
+      "50.0 / 100.1"
+     ],
+     "answer": "0.500",
+     "expected_answer": "correct",
+     "expected_work": "correct"
+    }
+   }
+  },
+  {
+   "id": "2002",
+   "style": "messy",
+   "answers": {
+    "1": {
+     "boxes": {
+      "1": "2",
+      "2": "2",
+      "3": "2"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "incorrect",
+      "3": "correct"
+     }
+    },
+    "2": {
+     "boxes": {
+      "1": "6",
+      "2": "23",
+      "3": "11",
+      "4": "17"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "incorrect",
+      "3": "correct",
+      "4": "incorrect"
+     }
+    },
+    "3": {
+     "work": [
+      "40.1 + 12.0 + 16.0"
+     ],
+     "answer": "68.1",
+     "expected_answer": "incorrect",
+     "expected_work": "partial"
+    },
+    "4": {
+     "work": [
+      "50.0 x 68.1"
+     ],
+     "answer": "3405",
+     "expected_answer": "incorrect",
+     "expected_work": "incorrect"
+    }
+   }
+  },
+  {
+   "id": "2003",
+   "style": "kid",
+   "answers": {
+    "1": {
+     "boxes": {
+      "1": "2",
+      "3": "2"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "blank",
+      "3": "correct"
+     }
+    },
+    "2": {
+     "boxes": {
+      "1": "6",
+      "2": "12",
+      "3": "11",
+      "4": "18"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "correct",
+      "3": "correct",
+      "4": "correct"
+     }
+    },
+    "3": {
+     "work": [
+      "40.1+12+48"
+     ],
+     "answer": "100",
+     "expected_answer": "correct",
+     "expected_work": "correct"
+    },
+    "4": {
+     "work": [
+      "50/100"
+     ],
+     "answer": "0.5",
+     "expected_answer": "correct",
+     "expected_work": "correct"
+    }
+   }
+  },
+  {
+   "id": "2004",
+   "style": "neat",
+   "answers": {
+    "1": {
+     "boxes": {
+      "1": "2",
+      "2": "1",
+      "3": "2"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "correct",
+      "3": "correct"
+     }
+    },
+    "2": {
+     "boxes": {
+      "1": "6",
+      "2": "12",
+      "3": "11",
+      "4": "16"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "correct",
+      "3": "correct",
+      "4": "incorrect"
+     }
+    },
+    "3": {
+     "work": [
+      "O: 16.0 x 3 = 48.0",
+      "40.1 + 12.0 + 48.0 = 100.1"
+     ],
+     "answer": "100.1",
+     "expected_answer": "correct",
+     "expected_work": "correct"
+    },
+    "4": {
+     "work": [
+      "50.0 g x 1 mol / 100.1 g"
+     ],
+     "answer": "0.4995",
+     "expected_answer": "correct",
+     "expected_work": "correct"
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,99 @@
+{
+  "assignment_id": "chem10-moles-01",
+  "title": "Counting Atoms",
+  "subject": "chemistry",
+  "grade": 10,
+  "grade_band": "10th grade chemistry",
+  "compact": true,
+  "instructions": "Show units. Write your ID number, not your name.",
+  "questions": [
+    {
+      "type": "blanks",
+      "q": 1,
+      "prompt": "Balance It: Write the coefficients that balance the equation (write 1 if none is needed).",
+      "text": "{1} H₂  +  {2} O₂  →  {3} H₂O",
+      "answers": [
+        {
+          "n": 1,
+          "answer": "2",
+          "width": 40
+        },
+        {
+          "n": 2,
+          "answer": "1",
+          "width": 40
+        },
+        {
+          "n": 3,
+          "answer": "2",
+          "width": 40
+        }
+      ]
+    },
+    {
+      "type": "table",
+      "q": 2,
+      "prompt": "Inside the Atom: Complete the table.",
+      "columns": [
+        "Particle",
+        "Protons",
+        "Neutrons",
+        "Electrons"
+      ],
+      "rows": [
+        [
+          "¹²C (carbon-12)",
+          "6",
+          {
+            "answer": "6"
+          },
+          "6"
+        ],
+        [
+          "²³Na (sodium-23)",
+          "11",
+          {
+            "answer": "12"
+          },
+          {
+            "answer": "11"
+          }
+        ],
+        [
+          "Cl⁻ (chloride-35)",
+          "17",
+          "18",
+          {
+            "answer": "18"
+          }
+        ]
+      ]
+    },
+    {
+      "type": "math",
+      "q": 3,
+      "prompt": "Molar Mass: What is the molar mass of CaCO₃? (Ca = 40.1, C = 12.0, O = 16.0 g/mol)",
+      "answer": "100.1",
+      "accept": [
+        "100",
+        "100.1 g/mol"
+      ],
+      "units": "g/mol",
+      "key": "Adds 40.1 + 12.0 + 3 × 16.0 = 100.1 g/mol. The mistake to look for: using one oxygen instead of three (68.1).",
+      "work_height": 80
+    },
+    {
+      "type": "math",
+      "q": 4,
+      "prompt": "Grams to Moles: How many moles are in 50.0 g of CaCO₃?",
+      "answer": "0.500",
+      "accept": [
+        "0.5",
+        "0.4995"
+      ],
+      "units": "mol",
+      "key": "Divides 50.0 g by 100.1 g/mol to get 0.500 mol. Multiplying instead of dividing (5005) is the mistake to name.",
+      "work_height": 80
+    }
+  ]
+}

@@ -24,7 +24,7 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-dev = ["pytest>=8", "scipy>=1.11"]  # scipy: the Cowork plugin's scripts (plugin/), tested from here
+dev = ["pytest>=8", "scipy>=1.11", "matplotlib>=3.8"]  # the Cowork plugin's scripts (plugin/) use these as Claude's sandbox ships them
 
 [project.scripts]
 paperloop = "paperloop.cli:app"

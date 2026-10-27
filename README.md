@@ -11,8 +11,15 @@ Status: v0.1. [SPEC.md](SPEC.md) is the plan, [NOTES.md](NOTES.md) is where thin
 Paper Loop is also a plugin for Claude Cowork. Claude does the marking itself, so there's no API key and nothing to install on your computer. Cowork works in the Claude desktop app and in a web browser, including on a Chromebook. US K-12 teachers can get it free through [Claude for Teachers](https://www.anthropic.com/news/claude-for-teachers).
 
 1. In Claude, open Cowork, then **Customize → Plugins**, and add the marketplace `Badlerz/paperloop`. Install **Paper Loop**. You can also zip the `plugin/` folder and upload it there.
-2. **Make a worksheet:** "Make me a one-page Paper Loop worksheet on the water cycle for 6th grade: two multiple choice, a short answer, a diagram to label, and one to draw." Print the PDF it gives you.
-3. Students write a 4-digit class ID number in the boxes, never their name.
+2. **Make a worksheet**, in any subject from grade 2 to grade 12: "Make me a one-page Paper Loop worksheet on the water cycle for 6th grade: two multiple choice, a short answer, a diagram to label, and one to draw." Print the PDF it gives you. A worksheet can have:
+   - reading passages with line numbers, and code listings;
+   - short answers, paragraphs scored on a rubric, and essays that run onto more pages;
+   - multiple choice, fill-in-the-blank, matching, ordering, and tables to fill;
+   - show-your-work math with a separate answer box;
+   - diagrams to label, maps (your own image), coordinate grids, number lines, fraction models, clocks, timelines, bar charts, music on a staff or a rhythm line, and drawings judged on a checklist.
+
+   Grades 2-3 get big print, primary-ruled lines, and 2-digit class numbers. Math symbols, chemical formulas, and accents print as written.
+3. Students write their class ID number in the boxes, never their name.
 4. Scan the stack on the copier (to Google Drive, email, or USB), in any order and orientation. Give Claude the PDF: "Mark this scan of Water's Wild Ride."
 5. Claude reads every answer, asks you about anything it isn't sure of, and gives you one PDF to print and hand back.
 

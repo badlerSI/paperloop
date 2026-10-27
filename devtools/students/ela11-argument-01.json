@@ -1,0 +1,79 @@
+{
+ "students": [
+  {
+   "id": "1101",
+   "style": "clean",
+   "answers": {
+    "1": {
+     "circle": [
+      "B"
+     ],
+     "expected": "correct"
+    },
+    "2": {
+     "text": "The author answers the counterargument well but too quickly. He admits sports and buses are real costs (line 7) and says they are problems of logistics that can be solved (lines 7-8). That works because he separates problems planning can fix from lost sleep, which cannot be made up on Saturday (line 8). But he never explains who pays for new bus routes, so a skeptical reader is left unconvinced.",
+     "expected_levels": {
+      "1": 3,
+      "2": 3,
+      "3": 3,
+      "4": 2
+     }
+    }
+   }
+  },
+  {
+   "id": "1102",
+   "style": "messy",
+   "answers": {
+    "1": {
+     "circle": [
+      "A"
+     ],
+     "expected": "incorrect"
+    },
+    "2": {
+     "text": "The author is right because kids need sleep. Sleep is important for teenagers and schools should start later.",
+     "expected_levels": {
+      "1": 1,
+      "2": 0,
+      "3": 1,
+      "4": 2
+     }
+    }
+   }
+  },
+  {
+   "id": "1103",
+   "style": "neat",
+   "answers": {
+    "1": {
+     "circle": [
+      "B"
+     ],
+     "expected": "correct"
+    },
+    "2": {
+     "text": "The author answers it pretty well. He says the costs are real but they can be solved. That makes sense because sleep matters more than bus schedules.",
+     "expected_levels": {
+      "1": 2,
+      "2": 1,
+      "3": 2,
+      "4": 2
+     }
+    }
+   }
+  },
+  {
+   "id": "1104",
+   "style": "kid",
+   "answers": {
+    "1": {
+     "circle": [
+      "A"
+     ],
+     "expected": "incorrect"
+    }
+   }
+  }
+ ]
+}

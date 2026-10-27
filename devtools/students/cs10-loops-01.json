@@ -1,0 +1,189 @@
+{
+ "students": [
+  {
+   "id": "1001",
+   "style": "clean",
+   "answers": {
+    "1": {
+     "boxes": {
+      "1": "-1",
+      "2": "1",
+      "3": "0",
+      "4": "4"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "correct",
+      "3": "correct",
+      "4": "correct"
+     }
+    },
+    "2": {
+     "text": "4, because total goes -1, 1, 0, 4 and the last pass adds 4",
+     "expected": "correct"
+    },
+    "3": {
+     "boxes": {
+      "1": "10",
+      "2": "1"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "correct"
+     }
+    },
+    "4": {
+     "circle": [
+      "C"
+     ],
+     "expected": "correct"
+    }
+   }
+  },
+  {
+   "id": "1002",
+   "style": "messy",
+   "answers": {
+    "1": {
+     "boxes": {
+      "1": "-1",
+      "2": "1",
+      "3": "0",
+      "4": "4"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "correct",
+      "3": "correct",
+      "4": "correct"
+     }
+    },
+    "2": {
+     "text": "9 because the loop adds 5 at the end too",
+     "expected": "incorrect"
+    },
+    "3": {
+     "boxes": {
+      "1": "9",
+      "2": "1"
+     },
+     "expected": {
+      "1": "incorrect",
+      "2": "correct"
+     }
+    },
+    "4": {
+     "circle": [
+      "B"
+     ],
+     "expected": "incorrect"
+    }
+   }
+  },
+  {
+   "id": "1003",
+   "style": "kid",
+   "answers": {
+    "1": {
+     "boxes": {
+      "1": "0",
+      "2": "2",
+      "3": "2",
+      "4": "6"
+     },
+     "expected": {
+      "1": "incorrect",
+      "2": "incorrect",
+      "3": "incorrect",
+      "4": "incorrect"
+     }
+    },
+    "2": {
+     "text": "6",
+     "expected": "incorrect"
+    },
+    "3": {
+     "boxes": {
+      "1": "10",
+      "2": "0"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "incorrect"
+     }
+    },
+    "4": {
+     "circle": [
+      "~~A~~",
+      "C"
+     ],
+     "expected": "correct"
+    }
+   }
+  },
+  {
+   "id": "1004",
+   "style": "neat",
+   "answers": {
+    "1": {
+     "boxes": {
+      "1": "-1",
+      "2": "1",
+      "3": "0",
+      "4": "4"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "correct",
+      "3": "correct",
+      "4": "correct"
+     }
+    },
+    "2": {
+     "text": "4",
+     "expected": "partial"
+    },
+    "3": {
+     "boxes": {
+      "1": "11",
+      "2": "1"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "correct"
+     }
+    },
+    "4": {
+     "circle": [
+      "C"
+     ],
+     "expected": "correct"
+    }
+   }
+  },
+  {
+   "id": "1005",
+   "style": "crossed",
+   "answers": {
+    "1": {
+     "boxes": {
+      "1": "-1",
+      "2": "1"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "correct",
+      "3": "blank",
+      "4": "blank"
+     }
+    },
+    "4": {
+     "circle": [
+      "D"
+     ],
+     "expected": "incorrect"
+    }
+   }
+  }
+ ]
+}
