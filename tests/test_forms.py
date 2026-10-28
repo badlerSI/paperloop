@@ -208,6 +208,18 @@ def test_practice_sheets_give_each_student_their_misses_and_scan_back_on_their_o
     manifest = P.prepare([tmp_path / "pscan" / "p.pdf"], tmp_path / "practice", tmp_path / "pwork")
     routed = {p["student_id"] for p in manifest["pages"] if p["status"] == "ok"}
     assert routed == {"0203", "0206"} and not manifest["id_sheets"]  # no handwriting to read
+    # Practice of the practice: new numbers again, from the worksheet it all began with.
+    again = tmp_path / "pwork2"
+    again.mkdir()
+    items = S.form_items(key, "p0203")
+    S.write_json(again / "manifest.json", {"assignment_dir": str(tmp_path / "practice"), "title": "Practice", "pages": []})
+    S.write_json(again / "results.json", {"pages": [{"scan_index": 1, "student_id": "0203", "page": 1, "form": "p0203",
+        "boxes": [{"q": q, "type": items[q]["type"], "verdict": "incorrect", "points_awarded": 0,
+                   "points_possible": items[q]["points"], "comment": "", "details": []} for q in (2, 3)]}]})
+    second = PR.build(again, tmp_path / "practice2")
+    key2 = S.read_json(tmp_path / "practice2" / "key.json")
+    assert S.form_items(key2, "p0203")[2]["prompt"] != items[2]["prompt"]  # not the same numbers a third time
+    assert not S.form_items(key2, "p0203")[2].get("retry")
 
 
 SAMPLES = ROOT / "plugin" / "skills" / "paper-loop" / "references" / "samples"

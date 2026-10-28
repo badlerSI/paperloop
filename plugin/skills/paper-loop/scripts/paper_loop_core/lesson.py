@@ -103,7 +103,7 @@ def normalize(lesson: dict) -> dict:
         if not isinstance(raw, dict):
             raise LessonError(f"{where}: each step of the sequence is an object with \"phase\" and \"minutes\"")
         p = {"teacher": "", "students": "", "slides": [], "worksheet": False, "walkthrough": False,
-             "divider": False, "then": "", "review": "", "most": None, **raw}
+             "divider": False, "then": "", "review": "", "most": None, "review_skip": [], **raw}
         _need(p, "phase", where)
         where = f"sequence {k} ({p['phase']})"
         try:
@@ -119,6 +119,9 @@ def normalize(lesson: dict) -> dict:
         if not isinstance(p["review"], str):
             raise LessonError(f"{where}: \"review\" is the marking folder of an earlier worksheet, as a path from "
                               "the lesson file")
+        if not isinstance(p["review_skip"], list) or any(x not in ("passages", "fix_it") for x in p["review_skip"]):
+            raise LessonError(f"{where}: \"review_skip\" lists what the review leaves out: \"passages\" (the reading "
+                              "slides) and \"fix_it\" (the slide for fixing mistakes on the marked copy)")
         if p["most"] is not None and (not isinstance(p["most"], int) or p["most"] < 1):
             raise LessonError(f"{where}: \"most\" is how many of the most-missed questions to go over, 1 or more")
         for n, s in enumerate(p["slides"], start=1):
@@ -320,7 +323,7 @@ def _build(L: dict, ws, warnings: list, measure, theme, out_dir: Path, images: P
         if p["review"]:
             from . import goover as G
             first_review = len(b.slides)
-            done = G.review(b, p["_review"], p["most"])
+            done = G.review(b, p["_review"], p["most"], skip=p["review_skip"])
             warnings += [f"review of {done['title']}: {w}" for w in done["warnings"]]
             if first_review < len(b.slides):
                 b.slides[first_review].notes = (f"Hand back the marked copies of {done['title']} now (returned.pdf "

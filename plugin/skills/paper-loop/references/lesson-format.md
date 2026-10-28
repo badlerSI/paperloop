@@ -128,6 +128,9 @@ Each phase: `{"phase": "Mini-lesson", "minutes": 15, "teacher": "...", "students
     answered, the common mistake, and the worked answer;
   - a "Fix it" slide, where students fix one mistake on their marked copy.
 
+  `"review_skip": ["passages", "fix_it"]` leaves out the reading slides before a passage's questions, or the
+  "Fix it" slide (when the marked copies aren't back yet), or both.
+
   Its explanations come from that marking's `goover.json`; write it first (see the end of this file). The
   plan reminds the teacher to bring the marked copies. Use it to open the next day's lesson: feedback
   matters most while the work is fresh.

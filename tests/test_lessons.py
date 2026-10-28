@@ -363,6 +363,16 @@ def test_the_next_lesson_opens_with_the_last_worksheet_gone_over(tmp_path):
     assert "Hand back the marked copies" in prs.slides[start].notes_slide.notes_text_frame.text
     plan = zipfile.ZipFile(tmp_path / "day2" / "lesson-plan.docx").read("word/document.xml").decode()
     assert "Bring the marked copies of" in plan
+    lesson["sequence"][0]["review_skip"] = ["fix_it"]  # the marked copies aren't back yet
+    S.write_json(tmp_path / "day2b.json", lesson)
+    LS.build(tmp_path / "day2b.json", tmp_path / "day2b")
+    titles = [s.shapes.title.text for s in pptx.Presentation(str(tmp_path / "day2b" / "slides.pptx")).slides]
+    assert "Fix it" not in titles and "How “Smoothie Stand Ratios” went" in titles
+    lesson["sequence"][0]["review_skip"] = ["slides"]
+    S.write_json(tmp_path / "bad.json", lesson)
+    with pytest.raises(DK.LessonError, match="review_skip"):
+        LS.build(tmp_path / "bad.json", tmp_path / "bad")
+    lesson["sequence"][0]["review_skip"] = []
     lesson["sequence"][0]["review"] = "nowhere"
     S.write_json(tmp_path / "bad.json", lesson)
     with pytest.raises(DK.LessonError, match="has no results.json"):

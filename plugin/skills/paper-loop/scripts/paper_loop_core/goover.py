@@ -145,13 +145,13 @@ def build(work: Path, lesson_path: Path | None = None, out: Path | None = None, 
         shutil.rmtree(images, ignore_errors=True)
 
 
-def _questions(b: DK.Builder, ctx: dict, go_over: list[int]) -> None:
+def _questions(b: DK.Builder, ctx: dict, go_over: list[int], passages: bool = True) -> None:
     """For each question gone over: the question as printed, with how the class answered, then its answer."""
     ws, st, walk = ctx["ws"], ctx["st"], ctx["walk"]
     shown = set()
     for q in go_over:
         pid = ws.items[q].get("passage")
-        if pid and (pid in ws.passages or ws.passage(pid)) and pid not in shown:
+        if passages and pid and (pid in ws.passages or ws.passage(pid)) and pid not in shown:
             b.walk_passage(ws, pid, [x for x in go_over if ws.items[x].get("passage") == pid])
             shown.add(pid)
         spec = walk.get(q, {})
@@ -197,14 +197,15 @@ def _build(ctx: dict, go_over: list[int], measure, theme, out: Path, images: Pat
             "share": ctx["share"], "students": max(st[q]["n"] for q in marked), "out": out}
 
 
-def review(b: DK.Builder, ctx: dict, most: int | None = None) -> dict:
+def review(b: DK.Builder, ctx: dict, most: int | None = None, skip: list[str] | tuple = ()) -> dict:
     """The go-over of an earlier worksheet, inside another deck (the next day's lesson): how it went, the
     most-missed questions with how the class answered, and a slide for fixing mistakes on the marked copy."""
     ws, st = ctx["ws"], ctx["st"]
     go_over = ctx["missed"][:most] if most else ctx["missed"]
     overview(b, ws, st, ctx["marked"], go_over, title=f"How \u201c{ws.title}\u201d went")
-    _questions(b, ctx, go_over)
-    fix_it(b)
+    _questions(b, ctx, go_over, passages="passages" not in skip)
+    if "fix_it" not in skip:
+        fix_it(b)
     todo = Path(ctx["work"]) / "out" / "go-over-todo.md"
     _todo(todo, ws, st, go_over, ctx["walk"], ctx["share"])
     return {"go_over": go_over, "got_it": ctx["got_it"], "left_out": ctx["missed"][len(go_over):],

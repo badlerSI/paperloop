@@ -89,8 +89,20 @@ def build(work: Path, out: Path | None = None, most: int = 3) -> dict:
     expanded = FM.expand(source, assignment)
     forms = {form["id"]: defn for form, defn in expanded}
     metas = {form["id"]: form for form, _ in expanded}
+    origin = source  # a practice of a practice: new numbers come from the worksheet it all began with
+    for _ in range(5):
+        if not origin.get("practice_of"):
+            break
+        first = Path(origin["practice_of"])
+        try:
+            origin = S.read_json(_assignment(first, S.read_json(first / "manifest.json")) / "source.json")
+        except (OSError, ValueError, LessonError):
+            origin = source
+            break
     raw_questions = {q["q"]: q for q in source["questions"] if q.get("type", "short") not in ("passage", "note")}
-    stretch = list(source.get("stretch") or [])
+    raw_questions.update({q["q"]: q for q in origin["questions"] if q.get("type", "short") not in ("passage", "note")
+                          and q.get("q") in raw_questions})
+    stretch = list(source.get("stretch") or origin.get("stretch") or [])
     for q in stretch:
         if not isinstance(q, dict) or q.get("q") in raw_questions or not q.get("q"):
             raise LessonError("each \"stretch\" question needs its own \"q\" number, not one the worksheet uses")
