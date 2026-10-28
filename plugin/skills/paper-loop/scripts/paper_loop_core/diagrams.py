@@ -231,8 +231,8 @@ def _bar_chart(c: canvas.Canvas, s: dict, ox: float, oy: float, f: Fonts) -> Non
     for i, v in enumerate(_steps(0, s["ymax"], s["ystep"])):
         if i % every == 0:
             c.drawRightString(x0 - 3, y0 + v * sy - (float(s["size"]) - 1) * 0.36, _fmt(v))
-    if s["ylabel"]:
-        c.drawString(x0 + 4, y0 + h + 3, f.text(s["ylabel"]))
+    if s["ylabel"]:  # above the top gridline, clear of it and of the top value's label
+        c.drawString(x0 + 4, y0 + h + 6, f.text(s["ylabel"]))
 
 
 _STEPS = {"C": 0, "D": 1, "E": 2, "F": 3, "G": 4, "A": 5, "B": 6}

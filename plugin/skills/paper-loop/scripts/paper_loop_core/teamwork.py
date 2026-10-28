@@ -25,6 +25,7 @@ from pathlib import Path
 
 from reportlab.pdfgen import canvas
 
+from . import diagrams as D
 from . import fonts as F
 from . import sheet as S
 from . import sources as SRC
@@ -99,7 +100,7 @@ STRUCTURES = {  # (name, why it works: what the evidence says, plainly)
 }
 SIZES = {"lab": (3, 5), "jigsaw": (3, 5), "reciprocal": (4, 4), "pairs": (2, 2), "heads": (3, 5)}
 FIELDS = ("title", "grade", "grade_band", "subject", "structure", "group_size", "minutes", "goal", "abilities",
-          "materials", "steps", "rounds", "rotate_every", "dice", "table", "data", "board", "tokens", "roles", "parts",
+          "materials", "launch", "steps", "rounds", "rotate_every", "dice", "table", "data", "board", "tokens", "roles", "parts",
           "cards",
           "worksheet", "class_size", "versions", "listen_for", "debrief", "sources")
 PATTERNS = ("solid", "dots", "stripes", "plain", "checks", "rings")
@@ -186,7 +187,7 @@ def _whole(data: dict, name: str, default: int, low: int, high: int, where: str 
 
 
 BOARDS = {"grid": ("cols", "rows"), "number_line": ("min", "max", "parts"), "rows": ("rows",), "ring": ("stations",),
-          "graph": ("xmin", "xmax", "xstep", "ymin", "ymax", "ystep")}
+          "graph": ("xmin", "xmax", "xstep", "ymin", "ymax", "ystep"), "diagram": ("width", "height", "shapes")}
 
 
 def _board(board):
@@ -199,6 +200,13 @@ def _board(board):
     missing = [f for f in BOARDS[kind] if f not in board]
     if missing:
         raise TeamworkError(f"board: a {kind} board needs {', '.join(missing)}")
+    if kind == "diagram":  # a picture drawn from the worksheet's diagram shapes: a track, a map, a food web
+        try:
+            d = S._diagram({k: v for k, v in board.items() if k in ("width", "height", "shapes", "description")},
+                           "board", faint_images=False)
+        except S.WorksheetError as e:
+            raise TeamworkError(str(e)) from None
+        return {**board, **d}
     if kind in ("rows", "ring"):
         names = board[BOARDS[kind][0]]
         if not isinstance(names, list) or not 2 <= len(names) <= 12 or not all(isinstance(n, str) and n for n in names):
@@ -268,7 +276,7 @@ def normalize(data: dict) -> dict:
            "goal": _text(data, "goal", W), "rounds": rounds,
            "rotate_every": _whole(data, "rotate_every", 1, 1, rounds), "class_size": _whole(data, "class_size", 0, 0, 200),
            "worksheet": _text(data, "worksheet", W)}
-    for name in ("materials", "abilities", "steps", "debrief", "listen_for", "sources"):
+    for name in ("materials", "launch", "abilities", "steps", "debrief", "listen_for", "sources"):
         out[name] = _texts(data, name, W)
     out["tokens"], out["cards"] = _list(data, "tokens", W), _list(data, "cards", W)
     if kind == "lab" and not out["steps"]:
@@ -318,7 +326,9 @@ def normalize(data: dict) -> dict:
                                 "row as long as the columns")
         out["data"].append({"title": _text(d, "title", f"data table {k}"), "columns": [str(c) for c in d["columns"]],
                             "rows": [[str(c) for c in r] for r in d["rows"]]})
-    out["board"] = _board(data.get("board"))
+    boards = data.get("board")
+    out["boards"] = [_board(b) for b in (boards if isinstance(boards, list) else [boards] if boards else [])]
+    out["board"] = out["boards"][0] if out["boards"] else None
     table = data.get("table")
     if table is not None:
         if not isinstance(table, dict) or not isinstance(table.get("columns"), list) or not 1 <= len(table["columns"]) <= 6:
@@ -493,8 +503,10 @@ def _header(pen: Pen, A: dict, what: str) -> float:
 def teacher_page(pen: Pen, A: dict, worksheet_note: str, pages: dict[str, str]) -> None:
     name, why = STRUCTURES[A["kind"]]
     y = _header(pen, A, A["title"])
+    exit_minutes = 10 if A.get("worksheet") else 0
     info = "  |  ".join(x for x in (name, f"grade {A['grade']}", A["subject"], f"groups of {A['group_size']}",
-                                    f"about {A['minutes']} minutes") if x)
+                                    f"about {A['minutes']} minutes" + (f", plus about {exit_minutes} for the exit "
+                                                                       "sheet" if exit_minutes else "")) if x)
     y = pen.para(info, MARGIN, y, PAGE_W - 2 * MARGIN, 11, gray=0.35) - 6
     if A["goal"]:
         y = pen.para(f"Goal: {A['goal']}", MARGIN, y, PAGE_W - 2 * MARGIN, 11.5, pen.f.bold) - 6
@@ -506,6 +518,7 @@ def teacher_page(pen: Pen, A: dict, worksheet_note: str, pages: dict[str, str]) 
         ("Each group needs: " + "; ".join(A["materials"]) + ".") if A["materials"] else "",
         _versions_note(A, pages),
         worksheet_note]),
+        ("Launch, with the whole class", A["launch"]),
         ("During", _during(A) + (A["steps"] if A["kind"] != "lab" else [])),
         (rotation[0], rotation[1] + [
                          "Say out loud when a student does something the task needs, specifically (“your table "
@@ -550,11 +563,15 @@ def _rotation(A: dict) -> tuple[str, list[str]]:
     if kind == "heads":
         return ("Anyone can be called", ["Roll a die for the number, so every student gets ready, not only the one "
                                          "who usually answers."])
+    sizes = group_sizes(A["class_size"], A["group_size"], *group_range(kind, A["group_size"])) if A["class_size"] else []
+    extra = (f" In a group of {max(sizes)}, two students share a job card." if sizes and max(sizes) > len(A["roles"])
+             and kind in ("lab", "reciprocal") else "")
     return ("Jobs rotate", [("Halfway, partners switch, so each is the coach once." if kind == "pairs" else
                              "Pass the role cards one seat to the left " + (
                                  "after each stop" if kind == "reciprocal" else "each round" if A["rotate_every"] == 1
                                  else f"every {A['rotate_every']} rounds")
-                             + ", so every student does every job.") + " No one is always the helper or the helped."])
+                             + ", so every student does every job.") + " No one is always the helper or the helped."
+                            + extra])
 
 
 def _versions_note(A: dict, pages: dict[str, str]) -> str:
@@ -596,11 +613,14 @@ def _printing(A: dict, pages: dict[str, str]) -> str:
     at = lambda name: f" ({pages[name]})" if pages.get(name) else ""  # noqa: E731
     kind = A["kind"]
     if kind == "lab":
-        extras = [f"the data{at('Data')}" if A["data"] else "", f"the board{at('Board')}" if A["board"] else "",
-                  f"the tokens{at('Tokens')}" if A["tokens"] else ""]
-        extras = [e for e in extras if e]
-        return (f"Print one set of role cards{at('Role cards')} and one task card{at('Group task')} per group"
-                + (", and " + ", ".join(extras) if extras else "") + ".")
+        each = [f"the role cards{at('Role cards')}", f"the task card{at('Group task')}",
+                f"the data{at('Data')}" if A["data"] else "",
+                f"the board{'s' if len(A['boards']) > 1 else ''}{at('Board')}" if A["boards"] else ""]
+        each = [e for e in each if e]
+        sets = A.get("_token_sets", 1)
+        tokens = (f" The tokens{at('Tokens')}: one page holds {sets} groups' sets." if A["tokens"] and sets > 1 else
+                  f" And per group, the tokens{at('Tokens')}." if A["tokens"] else "")
+        return "Per group, print " + ", ".join(each[:-1]) + (" and " if len(each) > 1 else "") + each[-1] + "." + tokens
     if kind == "jigsaw":
         return (f"Print one set of expert cards{at('Role cards')} per home group, and for each student the expert "
                 f"sheet for their letter{at('Expert sheets')} and the home-group notes{at('Home group notes')}.")
@@ -782,8 +802,9 @@ def task_card(pen: Pen, A: dict) -> None:
         row_h = 22.0
         rows = max(1, min(int(table["rows"]), int((y - head - 72) // row_h)))  # room left for the closing line
         if rows < int(table["rows"]):
-            pen.warnings.append(f"the data table has room for {rows} rows, not {table['rows']}: cut steps or dice "
-                                "rows, or ask for fewer rows")
+            pen.warnings.append(f"the Recorder's table has room for {rows} rows, not {table['rows']}: cut steps or "
+                                "dice rows, ask for fewer rows, or use a \"data\" table with blank cells (it runs onto "
+                                "more pages)")
         c.setStrokeGray(0.4)
         c.setLineWidth(0.7)
         c.setFillGray(0.9)
@@ -831,8 +852,11 @@ def data_pages(pen: Pen, A: dict):
         for k, col in enumerate(cols):
             pen.box(str(col), edges[k] + 4, y - head + 2, edges[k + 1] - 4, y - 2, font=pen.f.bold, start=size)
         y -= head
+        blank_rows = any(cell == "" for r in d["rows"] for cell in r)
         for row in d["rows"]:
             h = max(pen.para_height(str(cell), w - 8, size) for cell, w in zip(row, widths)) + 8
+            if blank_rows:
+                h = max(h, 26.0)  # room for handwriting in the blank cells
             if y - h < MARGIN + 10:  # the rest of the table on the next page, under its headings again
                 yield
                 y = _header(pen, A, "Data (continued)")
@@ -853,10 +877,14 @@ def data_pages(pen: Pen, A: dict):
     yield
 
 
-def board_page(pen: Pen, A: dict):
-    """One printed board per group: a grid, a number line, labeled layers, a ring of stations, or graph axes."""
+def board_pages(pen: Pen, A: dict):
+    for b in A["boards"]:
+        yield from board_page(pen, A, b)
+
+
+def board_page(pen: Pen, A: dict, b: dict):
+    """One printed board: a grid, a number line, labeled layers, a ring of stations, graph axes, or a diagram."""
     c = pen.c
-    b = A["board"]
     y = _header(pen, A, b.get("title") or "Board")
     left, right, bottom = MARGIN, PAGE_W - MARGIN, MARGIN + 10
     width, height = right - left, y - 8 - bottom
@@ -918,6 +946,13 @@ def board_page(pen: Pen, A: dict):
             c.rect(bx, by, bw, bh, stroke=1, fill=1)
             c.setFillGray(INK)
             pen.box(name, bx + 6, by + 4, bx + bw - 6, by + bh - 4, font=pen.f.bold, start=_size(A, 14))
+    elif kind == "diagram":
+        scale = min(width / b["width"], height / b["height"])
+        c.saveState()
+        c.translate(left + (width - b["width"] * scale) / 2, y - 8 - b["height"] * scale)
+        c.scale(scale, scale)
+        D.draw_diagram(c, b, 0, 0, pen.f, A.get("_base") or Path("."))
+        c.restoreState()
     else:  # graph axes, with gridlines; "y_down" counts down from the top (depth)
         x0, x1 = left + 50, right - 10
         top, base = y - (40 if b.get("y_down") else 14), bottom + (10 if b.get("y_down") else 36)
@@ -953,9 +988,73 @@ def board_page(pen: Pen, A: dict):
     yield
 
 
+def _token_set_height(A: dict) -> float:
+    width = PAGE_W - 2 * MARGIN
+    h = 0.0
+    for token in A["tokens"]:
+        side = float(token.get("size", 0.75)) * 72
+        cols = max(1, int(width // side))
+        h += -(-token["count"] // cols) * side + 6
+    return h
+
+
 def tokens_page(pen: Pen, A: dict):
-    """Cut-out tokens for one group, in patterns that stay distinct on a black-and-white copy. Each kind starts
-    a new row, at its own size."""
+    """Cut-out tokens, in patterns that stay distinct on a black-and-white copy. Each kind starts a new row, at
+    its own size. When a group's set is small, several sets share a page, split by a cut line."""
+    c = pen.c
+    set_h = _token_set_height(A) + 14
+    sets = max(1, int((PAGE_H - 2 * MARGIN - 40) // set_h))
+    A["_token_sets"] = sets
+    if sets > 1:
+        y = _header(pen, A, f"Tokens: {sets} groups' sets on this page")
+        for k in range(sets):
+            if k:
+                cut_line(c, MARGIN, y - 4, PAGE_W - MARGIN, y - 4)
+                y -= 12
+            y = _token_set(pen, A, y)
+        yield
+        return
+    yield from _token_pages(pen, A)
+
+
+def _token_set(pen: Pen, A: dict, y: float) -> float:
+    """One group's tokens from y down (they fit on the page); returns the y below."""
+    c = pen.c
+    width = PAGE_W - 2 * MARGIN
+    for token in A["tokens"]:
+        side = float(token.get("size", 0.75)) * 72
+        cols = max(1, int(width // side))
+        for k in range(token["count"]):
+            col = k % cols
+            if col == 0:
+                y -= side if k else 6
+            _token(pen, token, MARGIN + col * side, y, side, k)
+        y -= side
+    return y
+
+
+def _token(pen: Pen, token: dict, x0: float, y: float, side: float, k: int) -> None:
+    c = pen.c
+    c.setStrokeGray(0.3)
+    c.setLineWidth(0.6)
+    c.rect(x0, y - side, side, side, stroke=1, fill=0)
+    _pattern(c, token.get("pattern", "plain"), x0 + 6, y - side + 6, side - 12)
+    label = token["label"]
+    size = min(9 + (side - 54) / 8, 18)
+    if pen.width(label, pen.f.bold, size) > side - 8:
+        size = max(6.0, size * (side - 8) / pen.width(label, pen.f.bold, size))
+        if pen.width(label, pen.f.bold, size) > side - 4 and k == 0:
+            pen.warnings.append(f"the token label \"{label}\" is too long for its size: shorten it or make the token "
+                                "bigger")
+    c.setFillGray(1)
+    c.rect(x0 + 3, y - side / 2 - size * 0.7, side - 6, size * 1.35, stroke=0, fill=1)
+    c.setFillGray(INK)
+    c.setFont(pen.f.bold, size)
+    c.drawCentredString(x0 + side / 2, y - side / 2 - size * 0.33, pen.f.text(label))
+
+
+def _token_pages(pen: Pen, A: dict):
+    """One group's tokens across as many pages as they need."""
     c = pen.c
     y = _header(pen, A, "Tokens for one group")
     width = PAGE_W - 2 * MARGIN
@@ -970,23 +1069,7 @@ def tokens_page(pen: Pen, A: dict):
                 if y - side < MARGIN:
                     yield
                     y = _header(pen, A, "Tokens for one group")
-            x0 = MARGIN + col * side
-            c.setStrokeGray(0.3)
-            c.setLineWidth(0.6)
-            c.rect(x0, y - side, side, side, stroke=1, fill=0)
-            _pattern(c, token.get("pattern", "plain"), x0 + 6, y - side + 6, side - 12)
-            label = token["label"]
-            size = min(9 + (side - 54) / 8, 18)
-            if pen.width(label, pen.f.bold, size) > side - 8:
-                size = max(6.0, size * (side - 8) / pen.width(label, pen.f.bold, size))
-                if pen.width(label, pen.f.bold, size) > side - 4 and k == 0:
-                    pen.warnings.append(f"the token label \"{label}\" is too long for its size: shorten it or make "
-                                        "the token bigger")
-            c.setFillGray(1)
-            c.rect(x0 + 3, y - side / 2 - size * 0.7, side - 6, size * 1.35, stroke=0, fill=1)
-            c.setFillGray(INK)
-            c.setFont(pen.f.bold, size)
-            c.drawCentredString(x0 + side / 2, y - side / 2 - size * 0.33, pen.f.text(label))
+            _token(pen, token, MARGIN + col * side, y, side, k)
         y -= side
     yield
 
@@ -1255,6 +1338,7 @@ def build(json_path: Path, out_dir: Path) -> dict:
     except ValueError as e:
         raise TeamworkError(f"{json_path.name} isn't valid JSON: {e}") from None
     A = normalize(data)
+    A["_base"] = json_path.parent
     texts = list(_strings({k: v for k, v in data.items() if k != "versions"}))
     on_pdf, on_word = [], []
     for V in A["versions"]:
@@ -1267,8 +1351,11 @@ def build(json_path: Path, out_dir: Path) -> dict:
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / "teamwork.pdf"
     worksheet = A.get("worksheet")
-    note = (f"Print the worksheet each student does alone at the end ({worksheet}), one per student, with its "
-            "versions for the students who need them: all forms are scanned together and marked like any worksheet."
+    sheet_json = json_path.parent / f"{worksheet}.json" if worksheet else None
+    has_versions = bool(sheet_json and sheet_json.exists() and S.read_json(sheet_json).get("versions"))
+    note = (f"Print the worksheet each student does alone at the end ({worksheet}), one per student"
+            + (", with its versions for the students who need them: all forms are scanned together and marked like any "
+               "worksheet." if has_versions else ": it's scanned and marked like any worksheet.")
             if worksheet else
             "Add a short worksheet each student does alone at the end: group work pays off only when each student "
             "is accountable on their own.")
@@ -1317,8 +1404,8 @@ def build(json_path: Path, out_dir: Path) -> dict:
             sections.append(("Group task", lambda: iter([task_card(pen, A)])))
             if A["data"]:
                 sections.append(("Data", lambda: data_pages(pen, A)))
-            if A["board"]:
-                sections.append(("Board", lambda: board_page(pen, A)))
+            if A["boards"]:
+                sections.append(("Board", lambda: board_pages(pen, A)))
             if A["tokens"]:
                 sections.append(("Tokens", lambda: tokens_page(pen, A)))
         elif A["kind"] == "jigsaw":
@@ -1371,6 +1458,8 @@ def group_range(structure: str, size: int) -> tuple[int, int]:
         return size, size + 1
     if structure == "reciprocal":
         return 3, 5
+    if structure == "game":  # never more players than the game takes
+        return max(2, size - 1), size
     return SIZES[structure]
 
 
@@ -1393,6 +1482,8 @@ def role_names(structure: str, n: int, size: int) -> list[str]:
         return [f"Expert {chr(65 + k % size)}" for k in range(n)]  # a fifth student shares a letter
     if structure == "heads":
         return [f"Number {k % size + 1}" for k in range(n)]
+    if structure == "game":
+        return [""] * n
     names = [r[0] for r in ROLES.get(structure, ROLES["lab"])]
     if structure == "pairs":
         return [names[0]] + [names[1]] * (n - 1)  # a trio: the players take turns
@@ -1412,10 +1503,10 @@ def form_groups(folder: Path, size: int | None = None, skill: str | None = None,
     The first round's jobs are dealt at random, not by score, and the cards rotate after that."""
     from . import prepare as P
     from . import progress as PG
-    if structure not in STRUCTURES:
-        raise TeamworkError(f"\"structure\" is one of {', '.join(STRUCTURES)}")
+    if structure not in STRUCTURES and structure != "game":
+        raise TeamworkError(f"\"structure\" is one of {', '.join(STRUCTURES)}, or game (groups with no jobs)")
     size = (2 if structure == "pairs" else 4) if size is None else size
-    low, high = SIZES[structure]
+    low, high = SIZES.get(structure, (2, 6))
     if not low <= size <= high:
         raise TeamworkError(f"a {STRUCTURES[structure][0].lower()} works with groups of {low}"
                             + (f" to {high}" if high != low else "") + f", not {size}")
@@ -1433,17 +1524,28 @@ def form_groups(folder: Path, size: int | None = None, skill: str | None = None,
         if skill and skill not in data["skills"]:
             raise TeamworkError(f"no skill called {skill!r}; the skills are: {'; '.join(data['skills'])}")
 
+        totals: dict[str, list[float]] = {}
+        for run in runs:  # every point counts the same, whatever skill it's tagged with
+            for sid, st in run["students"].items():
+                for a in st["answers"].values():
+                    if not a.get("retry"):
+                        t = totals.setdefault(sid, [0.0, 0.0])
+                        t[0] += a["earned"]
+                        t[1] += a["possible"]
+
         def score(sid: str) -> float:
-            cells = data["students"][sid]
             if skill:
-                return cells[skill]["pct"] if skill in cells else 0.5
-            return sum(c["pct"] for c in cells.values()) / len(cells) if cells else 0.5
+                return data["students"][sid][skill]["pct"]
+            earned, possible = totals.get(sid, (0.0, 0.0))
+            return earned / possible if possible else 0.5
 
         unplaced = sorted(sid for sid in data["students"] if skill and skill not in data["students"][sid])
-        ids = sorted(data["students"], key=lambda sid: (-score(sid), sid))
+        ties = {sid: rng.random() for sid in data["students"]}  # equal scores in a chance order, not by ID
+        ids = sorted((sid for sid in data["students"] if sid not in unplaced), key=lambda sid: (-score(sid), ties[sid]))
         if roster:
-            unplaced += sorted(set(roster) - set(ids))
-            ids += sorted(set(roster) - set(ids))  # no marked work yet: dealt out after the rest
+            unplaced += sorted(set(roster) - set(data["students"]))
+        middle = len(ids) // 2  # no evidence yet: in the middle, not at the bottom
+        ids = ids[:middle] + unplaced + ids[middle:]
     elif roster:
         ids = sorted(roster)
         rng.shuffle(ids)  # nothing marked yet: at random
@@ -1482,18 +1584,26 @@ def form_groups(folder: Path, size: int | None = None, skill: str | None = None,
     out = Path(out or folder / "progress")
     out.mkdir(parents=True, exist_ok=True)
     how = (("Similar" if similar else "Paired" if structure == "pairs" else "Mixed")
-           + f" by {'“' + skill + '”' if skill else 'all skills so far'}"
-           + (": neighbors in skill, for targeted practice. " if similar else
+           + f" by {'“' + skill + '”' if skill else 'all marked work so far (every point counts the same)'}"
+           + (": neighbors in skill, for targeted practice. Listed from the highest recent scores (Group 1) to "
+              f"the lowest (Group {len(plan)}). " if similar else
               ": the top half paired in order with the lower half. " if structure == "pairs" else
               ": each group has a range. ") if runs else "At random: nothing is marked yet. ")
+    jobs = ("" if structure == "game" else "First-round jobs were dealt at random; pass the role cards left each "
+            "round. ")
     lines = ["# Groups (for the teacher; don't post)", "",
-             how + "First-round jobs were dealt at random; pass the role cards left each round. "
-             f"(Made with seed {seed}; another seed deals new first jobs.)", ""]
+             how + jobs + f"(Made with seed {seed}; another seed reshuffles"
+             + (" ties and first jobs.)" if runs else " the groups.)"), ""]
     for k, g in enumerate(plan, start=1):
-        lines.append(f"- Group {k}: " + ", ".join(f"{sid} ({role})" for sid, role in g))
+        lines.append(f"- Group {k}: " + ", ".join(f"{sid} ({role})" if role else sid for sid, role in g))
     if unplaced and runs:
-        lines += ["", "No marked work " + (f"on “{skill}” " if skill else "") + "yet, so placed as if in the middle: "
+        lines += ["", "No marked work " + (f"on “{skill}” " if skill else "") + "yet, so placed in the middle: "
                   + ", ".join(unplaced) + "."]
+    if runs and skill:
+        distinct = {round(score(sid), 3) for sid in data["students"] if sid not in unplaced}
+        if len(distinct) <= 3:
+            lines += ["", f"Only {len(distinct)} different scores on “{skill}”: few questions measured it, so these "
+                      "groups are rough. Leave out --skill to use all marked work."]
     path = out / f"groups-{structure}{'-similar' if similar else ''}.md"
     path.write_text("\n".join(lines) + "\n")
     S.write_json(path.with_suffix(".json"), {"structure": structure, "similar": similar, "seed": seed,

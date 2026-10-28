@@ -5,6 +5,9 @@ get full credit on, each with the comment they got last time printed above it, a
 the worksheet has variables (or another item from its pool), so the fix is theirs and not a copy. A
 student who worked on a version (support, large print, a home language) practices on that version.
 
+Every student who did the worksheet gets a sheet, so getting one says nothing about who struggled: a
+student with full credit gets the worksheet's stretch questions (or new numbers on the class's hardest ones).
+
 Each sheet is made for one student, with their class ID printed in its boxes, so a scan of the practice
 routes itself. Questions keep their numbers from the worksheet, so progress reports count the practice
 toward the same skills.
@@ -47,6 +50,30 @@ def _fresh(question: dict, avoid: str, seed: str) -> dict:
     return FM._shuffle(chosen, rng)  # a choice's right letter moves, so it isn't A on every practice sheet
 
 
+def _stretch_for(sid: str, stretch: list[dict], raw_questions: dict, results: dict, key: dict) -> list[dict]:
+    """A full-credit student's sheet: the worksheet's stretch questions, or new numbers on the two questions the
+    class found hardest (only where new numbers or another item exist: the same question again proves nothing)."""
+    if stretch:
+        return [{k: v for k, v in q.items() if k not in ("vars", "where", "pool", "support")} | {"stretch": True}
+                for q in (_fresh(q, "", f"{sid}-stretch-{q['q']}") if (q.get("vars") or q.get("pool")) else q
+                          for q in stretch[:2])]
+    earned: dict[int, list[float]] = {}
+    for page in results["pages"]:
+        for b in page["boxes"]:
+            if b.get("points_possible"):
+                earned.setdefault(b["q"], []).append(b["points_awarded"] / b["points_possible"])
+    hardest = sorted((sum(v) / len(v), qn) for qn, v in earned.items()
+                     if qn in raw_questions and (raw_questions[qn].get("vars") or raw_questions[qn].get("pool")))
+    out = []
+    items = {i["q"]: i for i in key["items"]}
+    for _, qn in hardest[:2]:
+        q = _fresh(raw_questions[qn], items.get(qn, {}).get("prompt", ""), f"{sid}-stretch-{qn}")
+        q.pop("support", None)
+        q["skill"] = items.get(qn, {}).get("skill") or q.get("skill")
+        out.append(q)
+    return out
+
+
 def build(work: Path, out: Path | None = None, most: int = 3) -> dict:
     work = Path(work)
     if not (work / "results.json").exists():
@@ -63,6 +90,10 @@ def build(work: Path, out: Path | None = None, most: int = 3) -> dict:
     forms = {form["id"]: defn for form, defn in expanded}
     metas = {form["id"]: form for form, _ in expanded}
     raw_questions = {q["q"]: q for q in source["questions"] if q.get("type", "short") not in ("passage", "note")}
+    stretch = list(source.get("stretch") or [])
+    for q in stretch:
+        if not isinstance(q, dict) or q.get("q") in raw_questions or not q.get("q"):
+            raise LessonError("each \"stretch\" question needs its own \"q\" number, not one the worksheet uses")
 
     notes_path = work / "practice-notes.json"
     written = S.read_json(notes_path) if notes_path.exists() else {}  # Claude's own notes, by ID and question
@@ -83,8 +114,16 @@ def build(work: Path, out: Path | None = None, most: int = 3) -> dict:
         if len(missed) > most:
             left_off[sid] = sorted(b["q"] for b in missed[most:])
         missed = missed[:most]
-        if not missed:
+        if not missed:  # full credit: a stretch, so every student gets a sheet
             all_right.append(sid)
+            extra = _stretch_for(sid, stretch, raw_questions, results, key)
+            if extra:
+                sheet = {"student_id": sid, "questions": extra}
+                meta = metas.get(st["form"], {})
+                if meta.get("kind") == "version":
+                    sheet.update({k: meta[k] for k in ("print", "comment_language", "language", "language_name",
+                                                        "language_english") if meta.get(k)})
+                sheets.append(sheet)
             continue
         defn = forms.get(st["form"]) or forms[""]
         printed = {q["q"]: q for q in defn["questions"] if q.get("type", "short") not in ("passage", "note")}
@@ -132,11 +171,12 @@ def build(work: Path, out: Path | None = None, most: int = 3) -> dict:
     day = date.today().isoformat()
     # Named for the marking it came from, so two classes' practice on one day never share a page code.
     tag = f"{zlib.crc32(str(work.resolve()).encode()) & 0xFFFF:04x}"
-    practice = {**{k: v for k, v in source.items() if k not in ("versions", "variants", "personal", "questions")},
+    practice = {**{k: v for k, v in source.items() if k not in ("versions", "variants", "personal", "questions",
+                                                                    "stretch")},
                 "assignment_id": f"{key['assignment_id']}-practice-{day}-{tag}", "practice_of": str(work.resolve()),
                 "title": f"Practice: {manifest.get('title') or source['title']}",
-                "instructions": "A few questions to try again. Your ID is already printed. Read last time's note "
-                                "first.",
+                "instructions": "A few questions just for you. Your ID is already printed. If there's a note above "
+                                "a question, read it first.",
                 "questions": [{k: v for k, v in q.items() if k not in ("vars", "where", "pool", "support")}
                               for q in forms[""]["questions"]],
                 "personal": sheets}
@@ -158,5 +198,6 @@ def build(work: Path, out: Path | None = None, most: int = 3) -> dict:
     elif todo_path.exists():
         todo_path.unlink()
     return {"out": out, "sheets": len(sheets), "all_right": all_right, "absent": absent, "left_off": left_off,
+            "stretched": [s["student_id"] for s in sheets if s["student_id"] in all_right],
             "todo": todo_path if todo else None,
             "questions": {s["student_id"]: [q["q"] for q in s["questions"] if "q" in q] for s in sheets}}

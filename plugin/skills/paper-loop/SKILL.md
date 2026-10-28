@@ -53,6 +53,8 @@ sandbox can't reach the site, use your web tool and save the text yourself.
      or `variants`. One scan of every copy marks them all.
    - Enrichment ("something more for the ones who finish", "go deeper on X") is a worksheet too: a
      reading from a free source, adapted for the grade, with questions that stretch.
+   - Add one or two `stretch` questions (format guide): after marking, students with full credit practice
+     those, so every student gets a practice sheet.
 3. Save the JSON as `<folder>/<assignment_id>.json` and run
    `PL make "<folder>/<assignment_id>.json" --out "<folder>/<assignment_id>"`. `<folder>` is wherever the
    teacher keeps worksheets. It reports each page's blocks with their heights, its free space, and how many
@@ -64,8 +66,9 @@ sandbox can't reach the site, use your web tool and save the text yourself.
 4. Look at every page before giving it to the teacher: `PL preview "<folder>/<assignment_id>/worksheet.pdf"`
    saves each page as a PNG (use `PL zoom` on it to look closer). Check that nothing overlaps, that diagrams
    look like what they're meant to be, and that label boxes and leader lines point at the right things.
-5. Give the teacher `<folder>/<assignment_id>/worksheet.pdf` to print, or `copies.pdf` when each student gets
-   their own copy (with `copies-key.pdf`, every copy's answers), along with anything `make` printed as
+5. Give the teacher `<folder>/<assignment_id>/worksheet.pdf` to print and `answer-key.pdf` (the sheet with
+   its answers written in), or `copies.pdf` when each student gets their own copy (with `copies-key.pdf`,
+   every copy's answers), along with anything `make` printed as
    notes for them: each version's PDF and how many to print, Word pages for home languages, reference pages,
    and any translation a bilingual adult should check before it prints. Keep the folder: marking needs
    `layout.json` and `key.json` from it.
@@ -190,12 +193,17 @@ centers", or anything a teacher would otherwise do with Quizlet, Kahoot, or Bloo
    - a fortune teller, an eight-page mini-book from one sheet, ABCD answer cards for the whole class, and
      bingo.
 2. Run `PL pieces "<folder>/<name>-pieces.json" --out "<folder>/<name>-pieces"`. Fix every `Check:` line it
-   prints, then look at the pages with `PL preview "<folder>/<name>-pieces/pieces.pdf" --sheet`.
+   prints, then look at every page full size with `PL preview "<folder>/<name>-pieces/pieces.pdf"`.
 3. Give the teacher `pieces.pdf`. Its first page lists what's in it, what to print on, prep time, and
    materials.
 
 Cards work best when every card makes students recall an answer before they check it, so write questions,
 not facts to read. Making their own cards is good practice too.
+
+To group students for a card game (similar skills at a center, say), run `PL groups "<class folder>"
+--structure game --size 4 --similar`: groups with no jobs, never more players than the game takes. When the
+teacher also wants an exit sheet, roles, or a game on its own board (a number line, a grid), build it as a
+lab under "Group work and labs", with a `board`.
 
 ## Group work and labs
 
@@ -214,10 +222,13 @@ When a teacher wants students working together: "a lab", "group roles", "a jigsa
 3. Run `PL teamwork "<folder>/<name>-teamwork.json" --out "<folder>/<name>-teamwork"`, fix every `Check:`
    line, and look at every page full size: `PL preview "<folder>/<name>-teamwork/teamwork.pdf"` (not
    `--sheet`, which is too small to judge type).
-4. Groups: run `PL groups "<class folder>" --size 4 --structure <structure> --roster "<ids.csv>"`. With marked
+4. Groups: run `PL groups "<class folder>" --size <the activity's group_size> --structure <structure> --roster
+   "<ids.csv>"` (with nothing marked and no roster, ask the teacher for a CSV of class ID numbers). With marked
    work it mixes skill in each group (`--similar` instead puts like skills together, for practicing one
-   skill; `--skill "..."` sorts by one skill); with nothing marked, it groups at random. Give the teacher
-   `progress/groups-<structure>.md`. It uses class IDs only; never write why a student is in a group.
+   skill, listed from highest to lowest for the teacher; `--skill "..."` sorts by one skill); with nothing
+   marked, it groups at random. Give the teacher `progress/groups-<structure>.md` (`-similar` when similar).
+   It uses class IDs only, and stays with the teacher: never write on student pages why a student is in a
+   group.
 5. Give the teacher `teamwork.pdf` and the exit sheet. Page 1 is theirs: what to print (with page numbers),
    materials, and how to run it.
 

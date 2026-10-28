@@ -410,7 +410,8 @@ def cmd_teamwork(command: str, argv: list[str]) -> int:
         parser.add_argument("--seed", type=int, default=1, help="another number deals new first jobs")
         parser.add_argument("--skill")
         parser.add_argument("--roster", type=Path)
-        parser.add_argument("--structure", default="lab", choices=list(TW.STRUCTURES))
+        parser.add_argument("--structure", default="lab", choices=list(TW.STRUCTURES) + ["game"],
+                            help="the activity's structure, or game: groups with no jobs, never above --size")
         parser.add_argument("--similar", action="store_true",
                             help="similar-skill groups for targeted practice (default: mixed)")
     args = parser.parse_args(argv)
@@ -444,7 +445,7 @@ def cmd_teamwork(command: str, argv: list[str]) -> int:
     how = f"{kind} by {report['skill'] or 'all skills so far'}" if report["mixed"] else "at random (nothing marked yet)"
     print(f"{len(report['groups'])} groups, {how} (for the teacher only): {report['path']}")
     for k, g in enumerate(report["groups"], start=1):
-        print(f"  Group {k}: " + ", ".join(f"{sid} ({role})" for sid, role in g))
+        print(f"  Group {k}: " + ", ".join(f"{sid} ({role})" if role else sid for sid, role in g))
     return 0
 
 
@@ -461,8 +462,12 @@ def cmd_practice(args) -> int:
           "they got last time above each one.")
     for sid, qs in report["questions"].items():
         print(f"  ID {sid}: Q{', Q'.join(map(str, qs))}")
-    if report["all_right"]:
-        print(f"  Full credit on everything, no sheet: IDs {', '.join(report['all_right'])}.")
+    if report["stretched"]:
+        print(f"  Full credit on everything, a stretch sheet instead: IDs {', '.join(report['stretched'])}.")
+    no_sheet = [sid for sid in report["all_right"] if sid not in report["stretched"]]
+    if no_sheet:
+        print(f"  Full credit on everything, no sheet: IDs {', '.join(no_sheet)}. Add 1-2 \"stretch\" questions to "
+              "the worksheet so every student gets one (then a sheet says nothing about who struggled).")
     if report["absent"]:
         print(f"  Blank worksheet (absent?), no sheet: IDs {', '.join(report['absent'])}.")
     for sid, qs in report["left_off"].items():

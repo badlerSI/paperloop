@@ -63,6 +63,7 @@ def test_the_teacher_page_gives_page_numbers_materials_and_honest_evidence(tmp_p
     teacher = text_of(report["pdf"])[0]
     assert "This page is for you: print it once." in teacher
     assert "role cards (pages 2-3)" in teacher and "task card (page 4)" in teacher and "tokens (page 5)" in teacher
+    assert "plus about 10 for the exit sheet" in teacher
     assert "Each group needs: one sheet of plain paper" in teacher
     assert "every 2 rounds" in teacher and "+0.32" in teacher
     task = text_of(report["pdf"])[3]
@@ -144,7 +145,7 @@ def test_labs_print_their_data_and_boards(tmp_path):
     pages = text_of(report["pdf"])
     assert "558" in pages[4] and "Kauai" in pages[4]  # real USGS values, in full
     assert "distance east of the trench (km)" in pages[5] and "600" in pages[5]
-    assert "the data (page 5), the board (page 6)" in pages[0]
+    assert "Per group, print the role cards (pages 2-3), the task card (page 4), the data (page 5) and the board (page 6)." in pages[0]
     for name in ("math4-fractions", "math3-area", "sci7-greenhouse"):
         out = TW.build(ROOT / "examples" / f"{name}-teamwork.json", tmp_path / name)
         assert "Board" in [n for n, *_ in out["pages"]] and out["warnings"] == []
@@ -487,3 +488,50 @@ def test_team_points_reward_each_student_s_own_improvement(tmp_path):
     assert "0503: " in report["md"].read_text()
     with pytest.raises(TW.TeamworkError, match="no marked class of 'nope'"):
         TW.team_points(cls, "nope")
+
+
+def test_game_groups_have_no_jobs_and_unmarked_students_go_in_the_middle(tmp_path):
+    sys.path.insert(0, str(Path(__file__).parent))
+    scores = {f"06{k:02d}": (1.0 if k < 6 else 0.0) for k in range(12)}
+    _marked_class(tmp_path / "P6", scores)
+    roster = tmp_path / "ids.csv"
+    roster.write_text("\n".join([*scores, "0690", "0691"]) + "\n")
+    report = TW.form_groups(tmp_path / "P6", size=4, structure="game", similar=True, roster_path=roster)
+    assert all(role == "" for g in report["groups"] for _, role in g)
+    assert max(len(g) for g in report["groups"]) <= 4  # never more players than the game takes
+    text = report["path"].read_text()
+    assert "Listed from the highest recent scores (Group 1)" in text and "(Facilitator)" not in text
+    first, last = report["groups"][0], report["groups"][-1]
+    assert not {"0690", "0691"} & {sid for sid, _ in first + last}  # in the middle, not at the teacher's table
+
+
+def test_the_ranking_counts_every_point_the_same(tmp_path):
+    sys.path.insert(0, str(Path(__file__).parent))
+    from test_progress import _marked
+    # 0701 misses the 1-point choice (Q4) only; 0702 misses the big table (Q1) and the work (Q2)
+    _marked(tmp_path / "P7", "w1", "2026-10-20", {"0701": {4: 0}, "0702": {1: 0, 2: 0}, "0703": {}, "0704": {1: 0, 2: 0, 3: 0}})
+    report = TW.form_groups(tmp_path / "P7", size=2, structure="pairs")
+    pairs = [sorted(sid for sid, _ in g) for g in report["groups"]]
+    assert ["0701", "0702"] in pairs or ["0701", "0704"] in pairs  # 0701 ranks in the top half
+
+
+def test_boards_can_be_pictures_and_data_can_have_blanks(tmp_path):
+    data = S.read_json(ROOT / "examples" / "sci7-selection-teamwork.json")
+    data["board"] = [{"kind": "diagram", "title": "The track", "width": 300, "height": 120,
+                      "shapes": [{"shape": "polyline", "points": [[10, 100], [80, 10], [150, 70], [220, 30], [290, 90]]},
+                                 {"shape": "text", "x": 10, "y": 106, "text": "A (8 m)"}]},
+                     {"kind": "rows", "rows": ["PE", "KE", "Thermal"]}]
+    data["data"] = [{"title": "Track points", "columns": ["Point", "Height (m)", "PE", "KE"],
+                     "rows": [["A", "8", "", ""], ["B", "0", "", ""]]}]
+    data["launch"] = ["Sketch the track on the board and model the first move."]
+    data["class_size"] = 29
+    data["tokens"] = [{"label": "500 J", "count": 12, "pattern": "dots"}]  # a small set: several groups to a page
+    S.write_json(tmp_path / "t.json", data)
+    report = TW.build(tmp_path / "t.json", tmp_path / "out")
+    pages = text_of(report["pdf"])
+    names = [n for n, *_ in report["pages"]]
+    assert names.count("Board") == 1 and report["pages"][names.index("Board")][2] - report["pages"][names.index("Board")][1] == 1
+    assert any("A (8 m)" in p for p in pages) and any("Thermal" in p for p in pages)
+    assert "Launch, with the whole class" in pages[0] and "In a group of 5, two students share a job card." in pages[0]
+    assert "the boards (pages" in pages[0]
+    assert "one page holds" in pages[0] and any(p.startswith("Tokens: ") and "groups' sets" in p for p in pages)

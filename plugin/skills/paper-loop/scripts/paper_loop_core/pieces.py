@@ -949,7 +949,7 @@ def piece_cards(m: "Maker", p: dict):
                               [(_icon_cut, "Cut on the solid lines."),
                                (_icon_fold, "Fold on the dashed line, printing out."),
                                (_icon_turn, "Turn it over side to side for the answer.")])
-            w, h = (PAGE_W - 2 * MARGIN) / 2, (top - MARGIN) / rows
+            w, h = (PAGE_W - 2 * MARGIN) / 2, (top - MARGIN - 6) / rows  # clear of the page label below
             for i, card in enumerate(chunk):
                 x0, y_top = MARGIN + (i % 2) * w, top - (i // 2) * h
                 y_fold = y_top - h / 2
@@ -1221,7 +1221,7 @@ WRONG = "The reader tells you the answer. Put the card at the bottom of the pile
 
 GAME_RULES = {
     "snake_race": {
-        "meta": "2 to 4 players  |  about 20 minutes", "move": "move",
+        "meta": "2 to 4 players  |  30-40 minutes (set a timer: farthest along wins)", "move": "move",
         "need": "A checker or chess board (or the printed board), 1 die, the fold-over cards in a pile, and a "
                 "marker for each player: a coin, a checker, or a tent pawn.",
         "rules": ["The snake starts at the bottom-left square. It runs along the bottom row, up one, back along "
@@ -1343,16 +1343,24 @@ def piece_board(m: "Maker", p: dict):
     def draw():
         c = pen.c
         y = pen.header(P["title"], "Game board",
-                       "Small numbers and stars are for Snake Race; for checkers and chess, ignore them. Squares "
-                       "are just under an inch, so the board fits on Letter paper.")
+                       "Snake Race: follow the numbers from Start to Finish. A star means a 3-dot card. (For checkers "
+                       "or chess, ignore the numbers.)")
         sq = (PAGE_W - 2 * MARGIN) / 8
         x0, y0 = MARGIN, y - 8 * sq - 6
         mini_board(c, x0, y0, sq, dark=0.85)
-        c.setFont(pen.f.regular, 7.5)
-        for n in range(1, 65):
+        c.setFont(pen.f.bold, 9.5)
+        for n in range(1, 65):  # dark enough to survive a copier
             col, row = snake_square(n)
-            c.setFillGray(0.5)
-            c.drawString(x0 + col * sq + 4, y0 + (row + 1) * sq - 10, str(n))
+            c.setFillGray(0.2)
+            c.drawString(x0 + col * sq + 4, y0 + (row + 1) * sq - 12, str(n))
+        for n, word in ((1, "Start"), (64, "Finish")):
+            col, row = snake_square(n)
+            c.setFillGray(1)
+            c.rect(x0 + col * sq + 4, y0 + row * sq + 5, sq - 8, 14, stroke=0, fill=1)
+            c.setFillGray(INK)
+            c.setFont(pen.f.bold, 11)
+            c.drawCentredString(x0 + (col + 0.5) * sq, y0 + row * sq + 8, word)
+            c.setFont(pen.f.bold, 9.5)
         for n in snake_corners():
             col, row = snake_square(n)
             star(c, x0 + (col + 1) * sq - 9, y0 + (row + 1) * sq - 8, 4.5, fill=0.5)
@@ -1653,8 +1661,8 @@ def piece_pawns(m: "Maker", p: dict):
 
     def draw():
         c = pen.c
-        y = pen.header(P["title"], "Tent pawns", "One set per column: every player in a group takes a "
-                       "different pattern, so pawns stay easy to tell apart on a black-and-white copy.")
+        y = pen.header(P["title"], "Tent pawns", "Every player in a group takes a different pattern, so pawns "
+                       "stay easy to tell apart on a black-and-white copy.")
         L, d = 3 * PAWN_SIDE, PAWN_DEPTH
         gap = (PAGE_W - 2 * MARGIN - 3 * L) / 2
         band = len(labels) * d
@@ -2203,7 +2211,8 @@ def teacher_page(m: "Maker", plan: list, ranges: list) -> None:
     deck = f"{n} card{'s' if n != 1 else ''}" + (f" ({', '.join(counts)})" if counts else "")
     info = "  |  ".join(x for x in ("Paper pieces", f"grade {P['grade']}", P["subject"], deck) if x)
     y = pen.para(info, MARGIN, y, PAGE_W - 2 * MARGIN, 11, gray=0.35) - 8
-    y = pen.para("Everything prints one-sided, in black and white. Students need only scissors. Each piece starts "
+    y = pen.para("Everything prints one-sided, in black and white. Students need scissors (a glue stick helps for "
+                 "the die and pawns). Each piece starts "
                  "on a new page; print just the pages you want.", MARGIN, y, PAGE_W - 2 * MARGIN, 11) - 14
     cols = [("Pages", 44.0), ("Piece", 206.0), ("Print on", 150.0), ("Prep", 140.0)]
     xs = [MARGIN]

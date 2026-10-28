@@ -187,15 +187,19 @@ def test_practice_sheets_give_each_student_their_misses_and_scan_back_on_their_o
     work = _simulate(tmp_path / "hw", ROOT / "devtools" / "students" / "math6-ratios-hw-01.json", tmp_path)
     X.check(work)
     report = PR.build(work, tmp_path / "practice")
-    assert report["questions"] == {"0203": [2, 3, 4], "0206": [2, 3, 4]}  # every third student slipped on 2-4
+    missed = {sid: qs for sid, qs in report["questions"].items() if sid in ("0203", "0206")}
+    assert missed == {"0203": [2, 3, 4], "0206": [2, 3, 4]}  # every third student slipped on 2-4
     assert report["all_right"] == ["0201", "0202", "0204", "0205"]
+    assert report["stretched"] == report["all_right"]  # full credit: a stretch sheet, so every student gets one
+    assert all(1 <= len(report["questions"][sid]) <= 2 for sid in report["stretched"])
     key = S.read_json(tmp_path / "practice" / "key.json")
     hw_key = S.read_json(tmp_path / "hw" / "key.json")
     sheet = S.form_items(key, "p0203")
     assert sheet[2]["prompt"] != S.form_items(hw_key, "3")[2]["prompt"]  # new numbers, not the copy they had
     assert sheet[3]["asides"][0] == {"kind": "last_other", "text": "That flips the ratio: more mango than yogurt."}
     layout = S.read_json(tmp_path / "practice" / "layout.json")
-    assert {p["student_id"] for p in layout["pages"] if p.get("student_id")} == {"0203", "0206"}
+    assert {p["student_id"] for p in layout["pages"] if p.get("student_id")} == {"0201", "0202", "0203", "0204",
+                                                                                   "0205", "0206"}
     fill = pytest.importorskip("fill")
     students = {"students": [{"id": sid, "form": f"p{sid}", "style": "clean", "answers": {
         "4": {"text": "times 3, so 15", "expected": "correct"}}} for sid in ("0203", "0206")]}

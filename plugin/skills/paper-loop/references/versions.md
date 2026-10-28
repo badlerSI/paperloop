@@ -83,6 +83,11 @@ stays as written.
 | `notes` | For the teacher, not printed ("read the questions aloud on request"). `make` prints it back. |
 | `copies` | How many to print, if the teacher said. |
 
+**Students who read below grade level** (not English learners): plain wording (`plain`) where reading isn't
+what's tested, a word bank, sentence starters, more room to write, and, in `notes`, read-aloud by an adult. On
+a reading or vocabulary question, plain wording and read-aloud change what's measured, so Paper Loop marks
+plain wording there as help.
+
 **Same length as everyone else's.** A version with more pages than the base sheet stands out, so `make` says
 so (unless it has large print, more space, or fewer per page) and prints that version's blocks page by page,
 with its free space and about how much to cut. A one-page exit sheet leaves little room for supports: plan

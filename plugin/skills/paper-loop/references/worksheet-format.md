@@ -323,7 +323,8 @@ reliably, so print in the text whatever Claude should know.
   on 35" are two items, not one. Be specific about what's checked: "two points on the line y = 2x − 1 are
   marked", not "points are marked".
 - A drawing can also have an answer box for a result: `"answer": "7/12"` (plus `accept`, `units`,
-  `answer_points`) adds "Answer: [ ]" below the frame. Use it for "shade it, then write the sum" or "plot it,
+  `answer_points`) adds "Answer: [ ]" below the frame (`answer_label` changes the word: "Total:", "Slope:"; it
+  works on math questions too). Use it for "shade it, then write the sum" or "plot it,
   then give the slope".
 
 ## Diagram shapes
@@ -349,6 +350,14 @@ points wide.
 All basic shapes also take `fill` and `stroke` (gray from 0 black to 1 white, or null for none; stroke defaults to
 black, fill to none) and `width` (line width, default 1). Keep fills light (0.6 or lighter) so pencil shows on
 them.
+
+## Stretch questions for practice
+
+`"stretch": [ ...questions... ]` at the top level holds one or two harder questions on the same skills, with
+their own `q` numbers (say 11 and 12). They don't print on the worksheet. After marking, `practice` gives them
+to students who had full credit, so every student gets a practice sheet and getting one says nothing about
+who struggled. Without them, full-credit students get new numbers on the class's two hardest questions (where
+the worksheet has `vars` or a `pool`), or no sheet.
 
 ## Writing a good worksheet
 

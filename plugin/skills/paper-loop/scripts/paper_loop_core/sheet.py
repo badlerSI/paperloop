@@ -1408,7 +1408,7 @@ def _answer_row(c: canvas.Canvas, L: Layout, q: dict, bottom: float) -> tuple:
     baseline = ay0 + (st["box_h"] + 4 - st["prompt_size"] * 0.72) / 2
     c.setFillGray(INK)
     c.setFont(f.bold, st["prompt_size"])
-    c.drawRightString(ax0 - 6, baseline, "Answer:")
+    c.drawRightString(ax0 - 6, baseline, f.text(q.get("answer_label") or "Answer:"))
     if q["units"]:
         c.setFont(f.regular, st["prompt_size"])
         c.drawString(ax1 + 4, baseline, f.text(q["units"]))

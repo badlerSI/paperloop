@@ -575,7 +575,8 @@ def expand(raw: dict, base_dir: Path) -> list[tuple[dict, dict]]:
                  **({"pool": q["pool"]} if "pool" in q else {})}
         base_q.append(q)
     raw = {**raw, "questions": base_q}
-    base = {**{k: v for k, v in raw.items() if k not in ("versions", "variants", "translations", "personal")},
+    base = {**{k: v for k, v in raw.items() if k not in ("versions", "variants", "translations", "personal",
+                                                          "stretch")},
             "questions": [_strip(q) if q.get("type") != "passage" else q for q in base_q]}
     forms = [({"id": "", "name": "As written", "label": "", "kind": "base"}, base)]
     versions = raw.get("versions") or []
@@ -591,7 +592,8 @@ def expand(raw: dict, base_dir: Path) -> list[tuple[dict, dict]]:
         ids.add(form["id"])
         forms.append((form, defn))
     for k, sheet in enumerate(raw.get("personal") or [], start=1):  # one sheet per student (practice.py)
-        defn = {**{key: v for key, v in raw.items() if key not in ("versions", "variants", "personal", "questions")},
+        defn = {**{key: v for key, v in raw.items() if key not in ("versions", "variants", "personal", "questions",
+                                                                  "stretch")},
                 "questions": sheet["questions"],
                 **{key: sheet[key] for key in ("print", "comment_language") if sheet.get(key)}}
         forms.append(({"id": f"p{sheet['student_id']}", "name": f"Practice for {sheet['student_id']}",
