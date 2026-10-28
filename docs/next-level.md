@@ -146,14 +146,11 @@ What changed because of them:
 
 ## Still open
 
-- Practice for every student (a stretch item for full credit), so a practice sheet isn't a public signal.
-- An accommodation log for case managers, a view of supports fading, and `work_optional` for a calculator or
-  scribe.
-- Writing areas that grow into the space `per_page` leaves.
+Done on Day 2 (see [teamwork.md](teamwork.md)): practice for every student, the accommodation log, writing
+areas that grow, the review option, matching without item numbers, and practice of a practice.
+
 - Bilingual word banks and frames.
-- A review phase option to skip passage slides and the "Fix it" slide.
-- Hiding match-item numbers.
-- Practice of a practice sheet gets no new numbers.
+- A view of supports fading, and `work_optional` for a calculator or scribe.
 - Go-over picks for a `pool` question whose alternatives change the options.
 - Not yet tried in real Cowork on a Claude for Teachers account, or opened in Word, PowerPoint, or Google
   Docs. Not yet tried with real handwriting in a home language.

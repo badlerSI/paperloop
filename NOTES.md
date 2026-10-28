@@ -338,6 +338,21 @@ Each has its own exit sheet, two of them graphing real data (a Kepler light curv
 Ideas come from PhET, NOVA Labs, NetLogo, and NASA, in Paper Loop's own words, after a license check (PhET
 moved to CC BY-NC in March 2026). Three teacher trials shaped it. The log is [docs/teamwork.md](docs/teamwork.md).
 
+## Day 2, overnight (Oct 27-28)
+
+On the `day-2` branch:
+- **Hardening.** An independent code review of the group-work code found 14 bugs; all are fixed and tested,
+  along with the worksheet bugs the trials found.
+- **More labs.** Eight more paper labs, among them a measurements-only greenhouse lab with NOAA data and
+  plate tectonics with USGS earthquakes. They come with printed boards and data tables. A reviewer
+  simulated every dice game, and the three labs that couldn't work as printed were rebuilt.
+- **Every student in group work.** Plain-English and home-language versions of group materials, and STAD
+  team points by each student's own improvement.
+- **The Day 1 backlog.** Practice for every student (stretch questions), an accommodation log for case
+  managers, writing room on spaced-out versions, and review-slide options.
+
+243 tests pass. Details: [docs/teamwork.md](docs/teamwork.md).
+
 ## Top three for Day 2
 
 0. **Try the plugin in real Cowork, on a Claude for Teachers account.** Check that it installs from the marketplace, that the cloud sandbox has numpy, scipy, Pillow, pypdfium2, reportlab, and python-pptx (0.6.22 or later), and that a scan can come in from Google Drive. Open a generated slides.pptx in PowerPoint and in Google Slides. Then mark a full class set (print 25-30 copies) and measure how much of the plan's usage it takes, with and without a subagent per question.

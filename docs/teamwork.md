@@ -140,16 +140,89 @@ What changed because of them:
   by hand. Paper Loop's code never does this. SKILL.md now says never to send a teacher's or student's name
   or email to a website.
 
+## Day 2 (overnight, Oct 27-28)
+
+Ben asked for four things, in order: review and harden; more labs and games (with a measurements-only
+greenhouse lab); every student in group work; then the Day 1 backlog. Commits on the `day-2` branch.
+
+**Review and harden.** An independent code review of the group-work code found 14 confirmed bugs, each
+reproduced. All fixed, with regression tests:
+- **Groups.**
+  - `--similar` put every leftover student in the lowest group.
+  - Groups grew past a structure's limit, and handed out jobs that had no printed card.
+  - `--size 0` crashed.
+  - Groups now come out as even as the structure allows: labs 3-5, pairs 2 or one trio, a jigsaw home
+    group with every letter.
+- **Input.**
+  - Wrong types crashed with a traceback or printed one letter per line.
+  - A number answer on a coach card crashed.
+- **Silent loss.**
+  - Reading parts dropped their key words and quotes.
+  - Long titles, names, task cards, readings and teacher pages ran off the page without a warning.
+  - Unshaped scripts printed reversed or as boxes.
+- **Smaller.** The teacher's group count was wrong for small classes, preview deleted files it shouldn't,
+  and a "Full credit for any two of:" key lost its condition.
+
+The trials' worksheet bugs are fixed too:
+- per-version page fit in `make`;
+- a key-words page without the inline glossary;
+- matching items without numbers, with columns sized to their text;
+- bigger directions in grades 2-3;
+- sentence starters that fit;
+- Wikisource pages without a scan flagged;
+- a rate-limit retry.
+
+**More labs and games.**
+- **New features.** `data` tables (blank cells welcome) and printed boards: `grid`, `number_line`, `rows`,
+  `ring`, `graph`, and `diagram` for a picture.
+- **Eight new labs, each with an exit sheet.**
+  - circuits;
+  - density;
+  - the greenhouse effect, a dice model of infrared plus NOAA's Mauna Loa CO2 measurements, physics only;
+  - forces;
+  - plate tectonics, with real USGS earthquake depths and Hawaii's island ages;
+  - genetic drift;
+  - fractions (grade 4);
+  - area (grade 3).
+- **Testing.** Two more teacher trials (an 8th grade energy lab, 4th grade fraction centers), and a science
+  reviewer who simulated every dice game.
+- **The simulations found three labs that couldn't work as printed:**
+  - lynx and hares never cycled with the cards given;
+  - the beetle game ran out of brown tokens, and its worksheet data couldn't come from the game;
+  - most circuits groups never met both series and parallel.
+- **The review's other fixes:** several science points (friction and weight, unstable isotopes, the
+  fingernail comparison, Hawaii's ages), unfair keys, and corner labels on graphs that don't start at zero.
+
+**Every student in group work.**
+- **Versions.** Activities take `versions`, like worksheets: plain English, or a home language, swapping the
+  words and keeping the work.
+  - Latin, Greek, and Cyrillic versions print as extra pages, with the pages' own words in the language
+    (Spanish built in, `labels` for any other).
+  - Arabic, Chinese, Indic and other scripts go to a Word file.
+  - The exoplanet jigsaw has plain-English and Spanish versions.
+- **Team points.** `PL teampoints` scores teams the STAD way, by each member's improvement on their own
+  earlier work. It writes a page to post, with no names or IDs.
+- **Game groups.** `--structure game`: groups with no jobs, never above the game's player count.
+
+**Day 1 backlog.**
+- **Practice for every student.** A worksheet's `stretch` questions go to students with full credit, so a
+  practice sheet no longer signals who struggled.
+- **An accommodation log.** `progress/supports.csv`, for case managers.
+- **Writing room.** Versions printed a few questions to a page give the free space to writing (up to double).
+- **Review slides** can skip readings or the "Fix it" slide.
+- **Practice of a practice** draws new numbers from the original worksheet. Its test passes either way: the
+  old code fell back to the base numbers, which differ in the test.
+
+243 tests pass.
+
 ## Still open
 
-- Plain-English or bilingual versions of an activity's expert sheets and readings (worksheet versions
-  already cover the exit sheet).
-- Team improvement points: STAD's way of scoring a team by each member's own progress.
-- A board or station cards for journey-style labs (pieces has a board; teamwork doesn't).
-- From the trials, in the worksheet engine:
-  - `make` shows heights and free space for the base sheet only, not for each version.
-  - A glossary page requires the inline glossary.
-  - Match items are numbered like questions.
-  - Header instructions are 8.5pt even in grades 2-3.
-  - Wikisource's "nonstandard texts" are labeled public domain without a scan.
-- Not yet run in a real classroom.
+- Bilingual word banks and sentence frames on worksheets.
+- A view of supports fading over time, and `work_optional` for a calculator or scribe.
+- Go-over picks for a `pool` question whose alternatives change the options.
+- Answer keys for draw questions show the checklist, not the drawn answer (bars, plotted points).
+- Cards-and-games: levels for similar groups (a 1-2 dot pile), a printed Snake Race path, and plainer
+  rules for young readers.
+- Copies of the website's grade 3 and Spanish samples printed before today still mark (their answer areas
+  didn't move), but the website PDFs should be replaced with the rebuilt ones in `samples/`.
+- Not yet run in a real classroom, or in real Cowork on a Claude for Teachers account.

@@ -32,7 +32,9 @@ Paper Loop is also a plugin for Claude Cowork. Claude does the marking itself, s
 
    **Students teaching each other:**
    - **Group work with roles.** "A lab on natural selection for groups of 4", "a jigsaw on how we find exoplanets", "coach-and-player practice on ratios", "reciprocal teaching for this story", or "numbered heads for moles". You get role cards that fold into tents (the job faces the group; what to do and say faces the student), the group's task with a blank data table, tokens to cut out, expert sheets, and a one-page sheet each student does alone at the end, marked like any other. Paper labs take their ideas from simulations like PhET and NOVA Labs: dice for chance, paper tokens for populations, a printed graph for real data.
-   - **Mixed groups.** "Group my class for tomorrow's lab" mixes each group from marked work, by class ID only, and deals the first jobs at random.
+   - **Labs on paper.** Twelve worked examples, from 3rd grade area to 10th grade genetic drift, with printed boards (a number line, a grid, graph axes, a picture) and real data where it's free: a NASA Kepler light curve, NOAA's Mauna Loa CO₂, USGS earthquakes, Hudson's Bay fur records.
+   - **Every student in it.** Group materials come in plain English or a home language, the way worksheets do; the work stays the same, so groups stay mixed.
+   - **Mixed groups.** "Group my class for tomorrow's lab" mixes each group from marked work, by class ID only, and deals the first jobs at random. Similar-skill groups for targeted practice, and team points by each student's own improvement, are there too.
    - **Review games.** Fold-over cards, games for any checker or chess board and a die, a fortune teller, a mini-book, and bingo.
 4. Students write their class ID number in the boxes, never their name.
 5. Scan the stack on the copier (to Google Drive, email, or USB), in any order and orientation. Give Claude the PDF: "Mark this scan of Water's Wild Ride."
