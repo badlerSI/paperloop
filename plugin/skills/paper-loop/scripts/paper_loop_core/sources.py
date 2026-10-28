@@ -160,8 +160,9 @@ def wikipedia(title: str, simple: bool = False, site: str | None = None) -> dict
     """An article's plain text and its revision: {"title", "text", "url", "license", "site", "retrieved"}.
     site: another Wikimedia wiki, such as en.wikisource.org (primary sources, mostly public domain)."""
     site = site or ("simple.wikipedia.org" if simple else "en.wikipedia.org")
-    query = urllib.parse.urlencode({"action": "query", "prop": "extracts|revisions", "explaintext": 1, "titles": title,
-                                    "rvprop": "ids|timestamp", "redirects": 1, "format": "json", "formatversion": 2})
+    query = urllib.parse.urlencode({"action": "query", "prop": "extracts|revisions|categories", "explaintext": 1,
+                                    "titles": title, "rvprop": "ids|timestamp", "cllimit": "max", "redirects": 1,
+                                    "format": "json", "formatversion": 2})
     data = json.loads(_get(f"https://{site}/w/api.php?{query}"))
     page = (data.get("query", {}).get("pages") or [{}])[0]
     if page.get("missing") or not page.get("extract"):
@@ -171,10 +172,15 @@ def wikipedia(title: str, simple: bool = False, site: str | None = None) -> dict
     url = f"https://{site}/w/index.php?title={urllib.parse.quote(name.replace(' ', '_'))}&oldid={revision}"
     text = _clean(page["extract"])
     if "wikisource" in site:  # the source text is usually public domain; its page says which
+        categories = " ".join(c.get("title", "") for c in page.get("categories", [])).lower()
+        unbacked = any(w in categories for w in ("nonstandard texts", "without a source", "unsourced"))
         return {"title": name, "text": text, "url": url, "license": "public domain", "author": "", "site": site,
                 "retrieved": date.today().isoformat(),
-                "check": "Wikisource texts are mostly public domain, but translations and some pages aren't: check "
-                         "the license box at the bottom of the page, and the edition it reproduces"}
+                "check": ("Wikisource files this page under nonstandard or unsourced texts: no scanned edition stands "
+                          "behind it, and its license isn't confirmed. Find the text in a scanned edition (the "
+                          "Internet Archive, HathiTrust, Chronicling America) and quote that instead" if unbacked else
+                          "Wikisource texts are mostly public domain, but translations and some pages aren't: check "
+                          "the license box at the bottom of the page, and the edition it reproduces")}
     return {"title": name, "text": text, "url": url, "license": "CC BY-SA 4.0",
             "author": f"{'Simple English ' if simple else ''}Wikipedia contributors", "site": site,
             "retrieved": date.today().isoformat()}

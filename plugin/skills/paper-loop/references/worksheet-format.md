@@ -239,7 +239,10 @@ reliably, so print in the text whatever Claude should know.
 
 - Leave out `choices` for ordering ("write 1 for the earliest"), or for true/false ("write T or F"); the
   prompt says what goes in the box. Items are then printed with letters (A, B, C), so their labels can't be
-  mistaken for the numbers students write.
+  mistaken for the numbers students write. With choices, items print with no label of their own (numbers
+  under the question's number read as more questions): in a comment, name an item by its words.
+- The item and choice columns split the width by how much each has to say, so long items (events, causes)
+  get room and short ones (vocabulary words) don't waste it.
 - With choices, add one that nobody should pick, so the last one isn't free. `box_height` works as in
   blanks.
 - Ordering marks more reliably from a scan than placing events on a timeline. Use a `timeline` in a draw

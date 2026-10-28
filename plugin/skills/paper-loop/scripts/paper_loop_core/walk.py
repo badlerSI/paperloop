@@ -370,6 +370,9 @@ def _write_in(c, ws: Worksheet, q: int, model: str | None, fonts) -> None:
             for k, line in enumerate(lines):
                 c.drawString(x0 + 8, y1 - spacing * (k + 1) + 4, line)
         else:  # more than the lines hold: small, evenly spaced, inside the box, on white so no line strikes it
+            q_def = next((d for d in ws.defn.get("questions", []) if d.get("q") == q), {})
+            frame = q_def.get("frame") or []
+            y1 -= spacing * (1 if isinstance(frame, str) else len(frame))  # sentence starters stay in view
             c.saveState()
             c.setFillGray(1)
             c.rect(x0 + 1.5, y0 + 1.5, x1 - x0 - 3, y1 - y0 - 3, stroke=0, fill=1)

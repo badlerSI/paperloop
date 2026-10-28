@@ -1,0 +1,89 @@
+{
+  "title": "Fraction Line Race",
+  "grade": 4,
+  "subject": "math",
+  "structure": "lab",
+  "group_size": 4,
+  "minutes": 30,
+  "rounds": 14,
+  "rotate_every": 4,
+  "goal": "Place fractions on a number line, and find fractions that sit at the same point.",
+  "abilities": [
+    "counting carefully",
+    "checking each other",
+    "spotting equal fractions",
+    "explaining how you know"
+  ],
+  "materials": [
+    "two dice",
+    "a pencil for each player"
+  ],
+  "steps": [
+    "Take turns. Roll two dice. The first die is the top number. The second die picks the bottom number (table below).",
+    "Find your fraction on the number line. Count the small marks: each whole is cut into 24 equal parts. Write your initials at that mark.",
+    "The Skeptic checks: how many marks is one part of your fraction? (For fourths, 6 marks.)",
+    "If someone's initials are already at that mark, you found an equal fraction: you both score a point. Example: 2/4 and 3/6 both sit at one half.",
+    "Past 2? It's off the line: pass. The Recorder writes every fraction and who scored."
+  ],
+  "dice": {
+    "title": "The second die picks the bottom number",
+    "rows": [
+      [
+        "1",
+        "halves: 2"
+      ],
+      [
+        "2",
+        "thirds: 3"
+      ],
+      [
+        "3",
+        "fourths: 4"
+      ],
+      [
+        "4",
+        "sixths: 6"
+      ],
+      [
+        "5",
+        "eighths: 8"
+      ],
+      [
+        "6",
+        "twelfths: 12"
+      ]
+    ]
+  },
+  "board": {
+    "kind": "number_line",
+    "title": "Fraction line",
+    "min": 0,
+    "max": 2,
+    "parts": 24
+  },
+  "table": {
+    "title": "Our fractions",
+    "columns": [
+      "Turn",
+      "Fraction",
+      "Same point as",
+      "Turn",
+      "Fraction",
+      "Same point as"
+    ],
+    "rows": 7
+  },
+  "worksheet": "math4-fractions-01",
+  "listen_for": [
+    "“Eighths are bigger than fourths because 8 is bigger than 4.” Ask: how many marks is one eighth? One fourth?",
+    "Counting tick marks from 1 instead of from 0.",
+    "Students explaining why 2/4 and 3/6 meet at the same mark."
+  ],
+  "debrief": [
+    "List every pair of equal fractions the class found. Ask: what pattern do you see in the numbers?",
+    "Ask: which is bigger, 5/6 or 7/8? Use the line to show it."
+  ],
+  "sources": [
+    "The idea is also modeled in PhET Interactive Simulations' Fractions and Number Line simulations (University of Colorado Boulder). The game and questions were written for Paper Loop."
+  ]
+}

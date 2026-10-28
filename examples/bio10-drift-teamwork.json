@@ -1,0 +1,66 @@
+{
+  "title": "Drift or Selection? Chance in Small Populations",
+  "grade": 10,
+  "subject": "biology",
+  "structure": "lab",
+  "group_size": 4,
+  "minutes": 40,
+  "rounds": 10,
+  "rotate_every": 3,
+  "goal": "Find out how chance alone changes a small population's genes from one generation to the next, and how that differs from natural selection.",
+  "abilities": [
+    "drawing fairly",
+    "keeping a data table",
+    "spotting a pattern",
+    "explaining with evidence"
+  ],
+  "materials": [
+    "two cups (one per pair)",
+    "one die",
+    "scissors for the tokens"
+  ],
+  "steps": [
+    "Split into two pairs. Each pair has a population of 10 gene copies: put 5 A and 5 a tokens in your cup. Record generation 0.",
+    "Make the next generation: draw one token without looking, write down its letter, and put it back. Do this 10 times.",
+    "Set your cup to match: as many A tokens as you drew A's, and a tokens for the rest. Record the number of A.",
+    "Pair 1 is drift only. Pair 2 adds selection: each time you draw an a, roll the die; on 1 or 2 that copy doesn't survive, so put it back and draw again.",
+    "Repeat for up to 12 generations, or until a cup is all A or all a. Then compare the two pairs."
+  ],
+  "table": {
+    "title": "Number of A copies in each cup",
+    "columns": [
+      "Generation",
+      "Pair 1 (drift)",
+      "Pair 2 (selection)",
+      "Generation",
+      "Pair 1 (drift)",
+      "Pair 2 (selection)"
+    ],
+    "rows": 7
+  },
+  "tokens": [
+    {
+      "label": "A",
+      "count": 20,
+      "pattern": "solid"
+    },
+    {
+      "label": "a",
+      "count": 20,
+      "pattern": "plain"
+    }
+  ],
+  "worksheet": "bio10-drift-01",
+  "listen_for": [
+    "Surprise when the drift cup loses A with nothing favoring a. Ask: what was different about a, if anything?",
+    "Draws that aren't blind or aren't put back. The Skeptic watches the draws.",
+    "“Selection always wins.” Ask what happened in other groups' selection cups."
+  ],
+  "debrief": [
+    "Tally the class: how many drift cups ended all A, all a, or mixed? How many selection cups? Ask what the difference shows.",
+    "Ask: why do endangered species with tiny populations lose genetic variety even when nothing is selecting against it?"
+  ],
+  "sources": [
+    "The idea is also modeled in NetLogo's GenDrift models (Wilensky, Northwestern University) and HHMI BioInteractive's population genetics tools. The activity and questions were written for Paper Loop."
+  ]
+}

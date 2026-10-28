@@ -1,0 +1,148 @@
+{
+  "title": "Deep Quakes and Hot Spots: Moving Plates",
+  "grade": 9,
+  "subject": "earth science",
+  "structure": "lab",
+  "group_size": 4,
+  "minutes": 40,
+  "goal": "Use real earthquake depths and island ages to find where one plate sinks under another, and how fast the Pacific Plate moves.",
+  "abilities": [
+    "plotting carefully",
+    "reading a data table",
+    "calculating",
+    "explaining with evidence"
+  ],
+  "materials": [
+    "a pencil and a ruler"
+  ],
+  "steps": [
+    "Part 1, the Andes. Plot each earthquake depth from the first table on the board: distance east of the ocean trench across, depth down.",
+    "Connect your points. The Skeptic asks: what shape do the earthquakes make, and which way does it slope?",
+    "Together, sketch the sinking plate on the board. Label the ocean trench, the South American Plate, and the Nazca Plate going under it.",
+    "Part 2, Hawaii. The Big Island sits over a hot spot. Use the second table: how far each island is from the hot spot, and how old its rocks are.",
+    "Work out the plate's speed: distance ÷ age. Turn km per million years into cm per year (1 km per million years = 0.1 cm per year)."
+  ],
+  "data": [
+    {
+      "title": "Earthquakes under the Andes, 20-24° S (USGS, magnitude 5 and up, 2000-2025: the middle depth in each band)",
+      "columns": [
+        "Distance east of the trench (km)",
+        "Middle depth (km)"
+      ],
+      "rows": [
+        [
+          "75",
+          "17"
+        ],
+        [
+          "125",
+          "33"
+        ],
+        [
+          "175",
+          "59"
+        ],
+        [
+          "225",
+          "91"
+        ],
+        [
+          "275",
+          "106"
+        ],
+        [
+          "325",
+          "116"
+        ],
+        [
+          "375",
+          "127"
+        ],
+        [
+          "425",
+          "175"
+        ],
+        [
+          "475",
+          "200"
+        ],
+        [
+          "525",
+          "213"
+        ],
+        [
+          "575",
+          "267"
+        ],
+        [
+          "625",
+          "290"
+        ],
+        [
+          "825",
+          "531"
+        ],
+        [
+          "875",
+          "558"
+        ]
+      ]
+    },
+    {
+      "title": "The Hawaiian Islands (USGS ages of the oldest lava)",
+      "columns": [
+        "Island",
+        "Distance from Kīlauea (km)",
+        "Age (million years)"
+      ],
+      "rows": [
+        [
+          "Kauai",
+          "about 540",
+          "about 5"
+        ],
+        [
+          "Oahu",
+          "about 380",
+          "about 3"
+        ],
+        [
+          "Maui",
+          "about 180",
+          "about 1"
+        ],
+        [
+          "Hawaiʻi (Big Island)",
+          "0",
+          "less than 0.7"
+        ]
+      ]
+    }
+  ],
+  "board": {
+    "kind": "graph",
+    "title": "Cross-section under the Andes",
+    "xmin": 0,
+    "xmax": 900,
+    "xstep": 100,
+    "ymin": 0,
+    "ymax": 600,
+    "ystep": 100,
+    "xlabel": "distance east of the trench (km)",
+    "ylabel": "depth (km)",
+    "y_down": true
+  },
+  "worksheet": "sci9-plates-01",
+  "listen_for": [
+    "Plotting depth upward instead of downward. The Skeptic checks the board's axis.",
+    "“The hot spot moves.” Ask: if the hot spot stays put, what must be moving?",
+    "Units: km per million years versus cm per year."
+  ],
+  "debrief": [
+    "Ask: why are there deep earthquakes on only one side of the trench?",
+    "Ask: 10 cm a year is about how fast fingernails grow, times ten. How far has your town moved since you were born?"
+  ],
+  "sources": [
+    "Earthquakes: USGS earthquake catalog (earthquake.usgs.gov), events of magnitude 5 and up between 20° and 24° S, 2000-2025, grouped in 50 km bands. Island ages: USGS. The idea is also explored in PhET's Plate Tectonics and the Concord Consortium's Seismic Explorer. The activity and questions were written for Paper Loop."
+  ]
+}

@@ -85,3 +85,39 @@ def test_gutenberg_text_loses_its_license_header(monkeypatch):
     monkeypatch.setattr(SR, "_get", lambda url: raw.encode())
     got = SR.gutenberg(42)
     assert got["text"] == "Once upon a time." and got["author"] == "A. Writer" and got["license"] == "public domain"
+
+
+def test_a_wikisource_page_with_no_scan_behind_it_says_so(monkeypatch):
+    page = {"title": "Interview", "extract": "The text of an interview.",
+            "revisions": [{"revid": 7, "timestamp": "2026-10-01T00:00:00Z"}],
+            "categories": [{"title": "Category:Nonstandard texts"}]}
+    monkeypatch.setattr(SR, "_get", lambda url: json.dumps({"query": {"pages": [page]}}).encode())
+    got = SR.wikipedia("Interview", site="en.wikisource.org")
+    assert "no scanned edition" in got["check"]
+    page["categories"] = [{"title": "Category:PD-old"}]
+    assert "mostly public domain" in SR.wikipedia("Interview", site="en.wikisource.org")["check"]
+
+
+def test_a_rate_limited_fetch_tries_once_more(monkeypatch):
+    import urllib.error
+    calls = []
+
+    def fake(request, timeout):
+        calls.append(request.full_url)
+        if len(calls) == 1:
+            raise urllib.error.HTTPError(request.full_url, 429, "Too Many Requests", {}, None)
+
+        class Reply:
+            def __enter__(self):
+                return self
+
+            def __exit__(self, *a):
+                return False
+
+            def read(self):
+                return b"ok"
+        return Reply()
+    monkeypatch.setattr(SR.urllib.request, "urlopen", fake)
+    monkeypatch.setattr(SR.time, "sleep", lambda s: None)
+    assert SR._get("https://en.wikipedia.org/w/api.php") == b"ok" and len(calls) == 2
+    assert "@" not in SR.AGENT  # no one's email goes out with a request

@@ -77,11 +77,17 @@ stays as written.
 | `max_choices` | Keep this many choice options, dropping `drop` ones first and never the answer. Letters stay as printed on the base copy (A, B, D), so marking and results line up. |
 | `only` | The question numbers this version keeps (`[1, 2, 4]`): a shortened assignment, scored out of those. |
 | `grid` | Graph paper in math work areas, for lining up digits. |
-| `reference` | A page students keep beside the worksheet, not handed in: `multiplication` (12×12), `hundreds`, `number_line`, `fractions` (fraction strips), `glossary` (the key words), `formulas` (with `"formulas": [...]`). |
+| `reference` | A page students keep beside the worksheet, not handed in: `multiplication` (12×12), `hundreds`, `number_line`, `fractions` (fraction strips), `glossary` (the key words from the questions' `support`, whether or not the version prints them on the sheet), `formulas` (with `"formulas": [...]`). |
 | `language`, `language_mode`, `translation` | A home language: see below. |
 | `comment_language` | The language marking comments are written in for these students (default: the translation's). |
 | `notes` | For the teacher, not printed ("read the questions aloud on request"). `make` prints it back. |
 | `copies` | How many to print, if the teacher said. |
+
+**Same length as everyone else's.** A version with more pages than the base sheet stands out, so `make` says
+so (unless it has large print, more space, or fewer per page) and prints that version's blocks page by page,
+with its free space and about how much to cut. A one-page exit sheet leaves little room for supports: plan
+for them when you write the base (fewer lines on the base, or glossary terms on a key-words page with
+`reference: ["glossary"]` instead of on the sheet).
 
 **Three kinds of support.**
 - **Access.** Large print, space, per_page, graph paper, translated directions, and glossaries change how a

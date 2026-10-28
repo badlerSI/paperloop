@@ -1,0 +1,301 @@
+{
+  "assignment_id": "math3-area-01",
+  "title": "Rectangle Claim: On Your Own",
+  "subject": "math",
+  "grade": 3,
+  "grade_band": "3rd grade",
+  "instructions": "Answer on your own. Write your number, not your name.",
+  "questions": [
+    {
+      "type": "label",
+      "q": 1,
+      "skill": "I can find area",
+      "prompt": "How Many Squares? What is the area of the shaded rectangle?",
+      "diagram": {
+        "width": 300,
+        "height": 120,
+        "description": "A grid of squares 8 wide and 5 tall. A shaded rectangle 4 squares wide and 3 squares tall sits inside it. Box 1 is to the right of the grid.",
+        "shapes": [
+          {
+            "shape": "line",
+            "points": [
+              [
+                20,
+                10
+              ],
+              [
+                20,
+                110
+              ]
+            ],
+            "stroke": 0.55
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                40,
+                10
+              ],
+              [
+                40,
+                110
+              ]
+            ],
+            "stroke": 0.55
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                60,
+                10
+              ],
+              [
+                60,
+                110
+              ]
+            ],
+            "stroke": 0.55
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                80,
+                10
+              ],
+              [
+                80,
+                110
+              ]
+            ],
+            "stroke": 0.55
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                100,
+                10
+              ],
+              [
+                100,
+                110
+              ]
+            ],
+            "stroke": 0.55
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                120,
+                10
+              ],
+              [
+                120,
+                110
+              ]
+            ],
+            "stroke": 0.55
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                140,
+                10
+              ],
+              [
+                140,
+                110
+              ]
+            ],
+            "stroke": 0.55
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                160,
+                10
+              ],
+              [
+                160,
+                110
+              ]
+            ],
+            "stroke": 0.55
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                180,
+                10
+              ],
+              [
+                180,
+                110
+              ]
+            ],
+            "stroke": 0.55
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                20,
+                10
+              ],
+              [
+                180,
+                10
+              ]
+            ],
+            "stroke": 0.55
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                20,
+                30
+              ],
+              [
+                180,
+                30
+              ]
+            ],
+            "stroke": 0.55
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                20,
+                50
+              ],
+              [
+                180,
+                50
+              ]
+            ],
+            "stroke": 0.55
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                20,
+                70
+              ],
+              [
+                180,
+                70
+              ]
+            ],
+            "stroke": 0.55
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                20,
+                90
+              ],
+              [
+                180,
+                90
+              ]
+            ],
+            "stroke": 0.55
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                20,
+                110
+              ],
+              [
+                180,
+                110
+              ]
+            ],
+            "stroke": 0.55
+          },
+          {
+            "shape": "rect",
+            "x": 40,
+            "y": 30,
+            "w": 80,
+            "h": 60,
+            "fill": 0.85,
+            "width": 2
+          }
+        ]
+      },
+      "labels": [
+        {
+          "n": 1,
+          "box": [
+            200,
+            50,
+            80,
+            28
+          ],
+          "answer": "12",
+          "accept": [
+            "12 squares"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "choice",
+      "q": 2,
+      "skill": "I can find area",
+      "prompt": "Bigger Area: Which rectangle covers more squares? Circle the letter.",
+      "answer": "A",
+      "columns": 2,
+      "options": [
+        {
+          "letter": "A",
+          "text": "2 by 6",
+          "why": "Yes: 12 squares, more than 9."
+        },
+        {
+          "letter": "B",
+          "text": "3 by 3",
+          "why": "3 rows of 3 is 9 squares."
+        },
+        {
+          "letter": "C",
+          "text": "They are the same",
+          "why": "Count them: 12 and 9."
+        },
+        {
+          "letter": "D",
+          "text": "You can't tell",
+          "why": "Rows times columns tells you."
+        }
+      ]
+    },
+    {
+      "type": "math",
+      "q": 3,
+      "skill": "I can find perimeter",
+      "prompt": "Fence It: A garden is 5 squares long and 2 squares wide. How many units of fence go all the way around it?",
+      "answer": "14",
+      "accept": [
+        "14 units"
+      ],
+      "units": "units",
+      "key": "5 + 2 + 5 + 2 = 14. Look for 10 (the area) and 7 (only two sides).",
+      "answer_points": 1,
+      "work_points": 1
+    }
+  ]
+}

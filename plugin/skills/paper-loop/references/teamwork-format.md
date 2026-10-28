@@ -25,6 +25,14 @@ methods with one or neither averaged about +0.07. So every activity has:
 | `sci9-halflife-teamwork.json` | 9 | lab | radioactive decay with spilled paper "atoms" (blank backs work like coins); exit sheet `sci9-halflife-01` |
 | `sci7-predators-teamwork.json` | 7 | lab | lynx and hares: a card toss over ten generations, tokens in two sizes, cards passed every 2 rounds; exit sheet `sci7-predators-01` graphs real fur-trade records |
 | `sci8-atoms-teamwork.json` | 8 | lab | build atoms and ions from paper protons, neutrons, and electrons, a die picks the atom; exit sheet `sci8-atoms-01` (a table, misconceptions, a drawing) |
+| `sci6-circuits-teamwork.json` | 6 | lab | series and parallel circuits from paper cards, a dice table of challenges; exit sheet `sci6-circuits-01` labels bulbs on two circuit diagrams |
+| `sci7-density-teamwork.json` | 7 | lab | mystery blocks: density from mass and volume, then cut in half; exit sheet `sci7-density-03` |
+| `sci7-greenhouse-teamwork.json` | 7 | lab | infrared tokens bounce through air layers on a printed `rows` board, low then high CO₂; exit sheet `sci7-greenhouse-01` graphs NOAA's Mauna Loa CO₂ measurements |
+| `sci8-forces-teamwork.json` | 8 | lab | net force, mass, and acceleration with dice and controlled variables; exit sheet `sci8-forces-01` |
+| `sci9-plates-teamwork.json` | 9 | lab | real USGS earthquake depths (`data`) plotted on a printed `graph` board, and Hawaii's island ages; exit sheet `sci9-plates-01` |
+| `bio10-drift-teamwork.json` | 10 | lab | genetic drift and selection by drawing gene tokens from a cup, in two pairs; exit sheet `bio10-drift-01` |
+| `math4-fractions-teamwork.json` | 4 | lab | a fraction race on a printed `number_line` board; exit sheet `math4-fractions-01` |
+| `math3-area-teamwork.json` | 3 | lab | claiming rectangles on a printed `grid` board, with plain-word `roles`; exit sheet `math3-area-01` |
 | `sci9-exoplanets-teamwork.json` | 9 | jigsaw | four ways to find planets, one expert sheet each, with what to teach and a check question; exit sheet `sci9-exoplanets-01` reads a real Kepler light curve |
 | `ela4-garden-teamwork.json` | 4 | reciprocal | a story in four parts, with a stop to talk after each; exit sheet `ela4-garden-01` |
 | `math6-ratios-teamwork.json` | 6 | pairs | twelve ratio questions, coach and player, a switch halfway; exit sheet `math6-ratios-02` |
@@ -54,10 +62,12 @@ methods with one or neither averaged about +0.07. So every activity has:
 | `abilities` | no | The kinds of ability the task needs ("counting carefully", "spotting a pattern", "explaining with evidence"). Name three or four, so no student is good at all of them and every student is good at some. |
 | `materials` | no | What each group needs besides the printout: `["one die", "a cup", "scissors"]`. Listed on the teacher's page. |
 | `steps` | lab: yes | Lab: what the group does, in order, on the task card. Name which job does what where it matters. Other structures: extra directions for the teacher's "During" list ("finished? start again from card 1"). |
-| `rounds` | no | Lab rounds (default 1): a box to check off for each. |
+| `rounds` | no | Lab rounds (default 1): a box to check off for each. `rounds`, `rotate_every`, `dice`, `table`, `data`, `board`, and `tokens` print only in a lab; other structures refuse them. |
 | `rotate_every` | no | Pass the role cards every this many rounds (default 1). Use 2 or 3 when a round takes a minute or two. |
 | `dice` | no | `{"title": "...", "rows": [["1-4", "what happens"], ["5-6", "..."]]}`: a table on the task card. The first column widens to fit short labels ("Ocean", "1-4"); keep them under about 12 letters. |
 | `table` | no | `{"title": "Our data", "columns": ["Spill", "Atoms left"], "rows": 8}`: a blank table on the task card for the Recorder (up to 6 columns, widths by heading). `teamwork` says if fewer rows fit. |
+| `data` | no | Filled tables the group works from, on their own page: `[{"title": "...", "columns": [...], "rows": [[...], ...]}]`. Real data belongs here (with its source in the title or `sources`). |
+| `board` | no | A printed board, one page per group: `{"kind": "grid", "cols": 18, "rows": 22}`; `{"kind": "number_line", "min": 0, "max": 2, "parts": 24}` (simpler fractions get taller marks; only whole numbers are labeled); `{"kind": "rows", "rows": ["Space", "Air", "Ground"]}` (labeled layers); `{"kind": "ring", "stations": ["Ocean", "Cloud", "Land"]}` (a journey's stops); `{"kind": "graph", "xmin": 0, "xmax": 900, "xstep": 100, "ymin": 0, "ymax": 600, "ystep": 100, "xlabel": "...", "ylabel": "...", "y_down": true}` (axes to plot on; `y_down` counts down, for depth). Any board takes a `title`. |
 | `tokens` | no | `[{"label": "green beetle", "count": 40, "pattern": "plain", "size": 0.75}]`, per group. Each kind starts a new row. Patterns (`solid`, `dots`, `stripes`, `plain`, `checks`, `rings`) tell tokens apart on a black-and-white copy. `size` is the side in inches (0.5 to 4, default 0.75): a predator card can be bigger than its prey. A token has a blank back, so "lands blank side up" works like a coin. For a few pieces each student moves, use coins or erasers instead. |
 | `roles` | no | Your own wording for the cards, replacing the built-in jobs: one entry per card, in order, each `{"name": "Sum It Up", "jobs": ["Tell the big idea."], "say": ["It's mostly about __."]}`. Use it for young students ("Sum It Up", "Ask", "Fix It", "Guess" for reciprocal in grade 2-3) or a subject's own jobs. Reciprocal roles are listed in the order they speak after each part, the last one guessing what comes next. |
 | `parts` | jigsaw, reciprocal: yes | Jigsaw: 3-5 parts, each `{"title", "text", "teach": ["2-3 things to teach"], "check": "a question for the home group"}`; about 150-200 words a part (quote included) fits beside the teach box, and `teamwork` warns past that. Reciprocal: 2-8 chunks of the reading, each `{"text"}` with an optional `title`. Either kind of part can also have: `cite` (the same as a passage's: `teamwork` checks the license and prints the credit line), or `source` (a credit line as written, for text written for the activity); `quote` and `quote_source` (a primary source, set apart under the text); and `words` (`[{"word": "alliance", "means": "an agreement to help each other"}]`, a key-words line under the text, for everyone and especially students still learning English). Parts adapted from CommonLit, ReadWorks, CK-12, OpenStax, Newsela, or Khan Academy are refused, as passages are. `teamwork` flags a reading more than two grades above the class. |
@@ -133,7 +143,10 @@ scores, then:
 - **Similar** (`--similar`, for practicing one skill): neighbors in the ranking together, so the teacher can
   give each group what it needs next. Students in the middle gain most from these. Regroup often.
 
-Extra students join a group (a trio of pairs, a fifth expert who shares a letter), so no one works alone.
-First-round jobs are dealt at random, not by score.
+Groups come out as even as the structure allows, never above its limit: labs and numbered heads 3-5, a
+reading group 3-5 (with three, one student takes two jobs), pairs 2 or one trio, a jigsaw home group with every
+letter and at most one shared. Extra students double up on a job that has a printed card. First-round jobs are
+dealt at random, not by score; `--seed 2` (any other number) deals them again. Students with no marked work
+(on `--skill`, if given) are placed as if in the middle, and the groups file lists them.
 
 The groups file is for the teacher. Don't say why a group is mixed or similar, and don't post it.

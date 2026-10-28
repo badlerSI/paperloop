@@ -1,0 +1,123 @@
+{
+  "assignment_id": "bio10-drift-01",
+  "title": "Drift or Selection? On Your Own",
+  "subject": "biology",
+  "grade": 10,
+  "grade_band": "10th grade",
+  "compact": true,
+  "instructions": "Answer on your own, even though you ran populations with your group. Write your ID number, not your name.",
+  "questions": [
+    {
+      "type": "math",
+      "q": 1,
+      "skill": "I can find an allele frequency",
+      "prompt": "Frequency: A population has 7 A copies and 13 a copies. What fraction of the copies are A? Give a decimal.",
+      "answer": "0.35",
+      "accept": [
+        "35%",
+        "7/20"
+      ],
+      "units": "",
+      "key": "7 ÷ (7 + 13) = 7 ÷ 20 = 0.35. Look for 0.54 (7 ÷ 13, A over a instead of over the total).",
+      "answer_points": 1,
+      "work_points": 1,
+      "work_height": 60
+    },
+    {
+      "type": "choice",
+      "q": 2,
+      "skill": "I can explain genetic drift",
+      "prompt": "Lost by Chance: In a drift-only cup, nothing made A better or worse, yet after 8 generations every copy was a. Why?",
+      "answer": "B",
+      "columns": 1,
+      "options": [
+        {
+          "letter": "A",
+          "text": "The a copies were better adapted.",
+          "why": "Nothing favored a: survival was the same for both."
+        },
+        {
+          "letter": "B",
+          "text": "By chance, some A copies weren't passed on, and once A was gone it couldn't come back.",
+          "why": "Yes: random sampling, generation after generation."
+        },
+        {
+          "letter": "C",
+          "text": "The A copies changed into a copies.",
+          "why": "No copy changed; some just weren't drawn."
+        },
+        {
+          "letter": "D",
+          "text": "The population was too large to keep both.",
+          "why": "Small populations lose versions fastest."
+        }
+      ]
+    },
+    {
+      "type": "choice",
+      "q": 3,
+      "skill": "I can explain genetic drift",
+      "prompt": "Size Matters: Which population is most likely to lose a gene version by chance alone in 10 generations?",
+      "answer": "A",
+      "columns": 2,
+      "options": [
+        {
+          "letter": "A",
+          "text": "10 gene copies",
+          "why": "Yes: small samples swing the most."
+        },
+        {
+          "letter": "B",
+          "text": "100 gene copies",
+          "why": "Bigger samples stay closer to the start."
+        },
+        {
+          "letter": "C",
+          "text": "1,000 gene copies",
+          "why": "Large populations drift slowly."
+        },
+        {
+          "letter": "D",
+          "text": "All are equally likely",
+          "why": "Chance swings shrink as populations grow."
+        }
+      ]
+    },
+    {
+      "type": "short",
+      "q": 4,
+      "lines": 4,
+      "skill": "I can tell drift from selection",
+      "prompt": "Drift or Selection? Two small populations both ended all A. In one, A copies survived better; in the other, nothing favored either. How could scientists tell which was selection? Use what the class's cups showed.",
+      "rubric": [
+        {
+          "criterion": "Repeats: says to look at many populations (or repeat it), not just one.",
+          "short": "Many populations",
+          "levels": [
+            "missing",
+            "vague",
+            "clear"
+          ]
+        },
+        {
+          "criterion": "Selection: says selection pushes most populations the same way (toward A).",
+          "short": "Selection: same way",
+          "levels": [
+            "missing",
+            "vague",
+            "clear"
+          ]
+        },
+        {
+          "criterion": "Drift: says drift goes either way at random (some lose A, some lose a).",
+          "short": "Drift: either way",
+          "levels": [
+            "missing",
+            "vague",
+            "clear"
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,82 @@
+{
+  "title": "Mystery Blocks: Density",
+  "grade": 7,
+  "subject": "physical science",
+  "structure": "lab",
+  "group_size": 4,
+  "minutes": 30,
+  "rounds": 6,
+  "rotate_every": 2,
+  "goal": "Find each mystery block's material from its density, predict whether it floats, and explain why cutting a block doesn't change its density.",
+  "abilities": [
+    "calculating carefully",
+    "using a table",
+    "predicting",
+    "explaining with evidence"
+  ],
+  "materials": [
+    "one die",
+    "a calculator if you like"
+  ],
+  "steps": [
+    "Roll for a mystery block (below). Everyone works out its density: mass ÷ volume, in g/cm³. The Skeptic checks the units.",
+    "Find the material: pine 0.5, ice 0.92, water 1.0, aluminum 2.7, iron 7.9, lead 11.3, gold 19.3 (g/cm³).",
+    "Predict: does it float or sink in water? (Water's density is 1.0 g/cm³.)",
+    "Now cut the block in half. Write the half's mass, volume, and density in the next row. Did the density change?",
+    "The Recorder checks both rows, and you roll again."
+  ],
+  "dice": {
+    "title": "Roll for a mystery block",
+    "rows": [
+      [
+        "1",
+        "mass 54 g, volume 20 cm³"
+      ],
+      [
+        "2",
+        "mass 79 g, volume 10 cm³"
+      ],
+      [
+        "3",
+        "mass 46 g, volume 50 cm³"
+      ],
+      [
+        "4",
+        "mass 15 g, volume 30 cm³"
+      ],
+      [
+        "5",
+        "mass 227 g, volume 20 cm³"
+      ],
+      [
+        "6",
+        "mass 386 g, volume 20 cm³"
+      ]
+    ]
+  },
+  "table": {
+    "title": "Our blocks",
+    "columns": [
+      "Block",
+      "Mass (g)",
+      "Volume (cm³)",
+      "Density (g/cm³)",
+      "Material",
+      "Float or sink?"
+    ],
+    "rows": 8
+  },
+  "worksheet": "sci7-density-03",
+  "listen_for": [
+    "“The bigger block is denser.” Ask: what happened to the density when you cut it in half?",
+    "Volume ÷ mass instead of mass ÷ volume: the Skeptic should catch the units.",
+    "“Heavy things sink.” Block 6 is heavy and sinks, but a heavy log floats: ask why."
+  ],
+  "debrief": [
+    "Ask: which blocks float? What do their densities have in common?",
+    "Ask: a gold ring and a gold bar. Same density? Why?"
+  ],
+  "sources": [
+    "The idea is also modeled in PhET Interactive Simulations' Density (University of Colorado Boulder). Densities are standard reference values. The activity and questions were written for Paper Loop."
+  ]
+}

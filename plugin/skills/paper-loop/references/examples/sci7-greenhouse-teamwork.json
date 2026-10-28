@@ -1,0 +1,91 @@
+{
+  "title": "Photon Bounce: The Greenhouse Effect",
+  "grade": 7,
+  "subject": "earth science",
+  "structure": "lab",
+  "group_size": 4,
+  "minutes": 40,
+  "rounds": 8,
+  "rotate_every": 4,
+  "goal": "Find out how gases in the air that absorb infrared change how much energy escapes to space and how much comes back to the ground.",
+  "abilities": [
+    "following rules carefully",
+    "keeping a data table",
+    "spotting a pattern",
+    "explaining with evidence"
+  ],
+  "materials": [
+    "one die",
+    "scissors for the tokens"
+  ],
+  "steps": [
+    "Each round, the Sun sends 4 sunlight tokens straight down through the air to the Ground. Sunlight passes through the air. At the Ground, swap each one for an infrared token: the warm ground gives off infrared.",
+    "Move each infrared token up one layer at a time. At each air layer, roll the die and use the table below.",
+    "An absorbed token is given off again: roll once more. Even, it moves up a layer; odd, it moves down a layer.",
+    "A token that reaches Space has escaped: count it and set it aside. A token that comes back down to the Ground warms it: count it, and send it up again next round.",
+    "Rounds 1-4 are low CO₂; rounds 5-8 are high CO₂. The Recorder writes each round's numbers."
+  ],
+  "dice": {
+    "title": "At each air layer, roll once",
+    "rows": [
+      [
+        "1-2",
+        "Absorbed, at low or high CO₂. Roll again to see where it goes next."
+      ],
+      [
+        "3-4",
+        "Low CO₂: passes up a layer. High CO₂: absorbed; roll again."
+      ],
+      [
+        "5-6",
+        "Passes up a layer."
+      ]
+    ]
+  },
+  "board": {
+    "kind": "rows",
+    "title": "The air above the ground",
+    "rows": [
+      "Space",
+      "Air layer 3",
+      "Air layer 2",
+      "Air layer 1",
+      "Ground"
+    ]
+  },
+  "table": {
+    "title": "Our rounds",
+    "columns": [
+      "Round",
+      "CO₂",
+      "Escaped to space",
+      "Back to the ground"
+    ],
+    "rows": 8
+  },
+  "tokens": [
+    {
+      "label": "sunlight",
+      "count": 8,
+      "pattern": "stripes"
+    },
+    {
+      "label": "infrared",
+      "count": 24,
+      "pattern": "dots"
+    }
+  ],
+  "worksheet": "sci7-greenhouse-01",
+  "listen_for": [
+    "“Greenhouse gases trap sunlight.” Ask: which tokens did the layers absorb, sunlight or infrared?",
+    "“The heat is stuck forever.” Absorbed tokens are given off again, up or down.",
+    "Comparing rounds by eye. Ask the Recorder for totals at low and at high CO₂."
+  ],
+  "debrief": [
+    "Total the class's escaped and returned tokens at low and at high CO₂. What changed?",
+    "Show NOAA's measurements of CO₂ at Mauna Loa (the worksheet's graph). Ask: what does the graph show since 1960, and how does that connect to the game?"
+  ],
+  "sources": [
+    "The idea is also modeled in PhET Interactive Simulations' Greenhouse Effect (University of Colorado Boulder). The CO₂ values are NOAA's Mauna Loa annual means (gml.noaa.gov). The activity and questions were written for Paper Loop."
+  ]
+}

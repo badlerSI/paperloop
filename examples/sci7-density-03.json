@@ -1,0 +1,135 @@
+{
+  "assignment_id": "sci7-density-03",
+  "title": "Mystery Blocks: On Your Own",
+  "subject": "physical science",
+  "grade": 7,
+  "grade_band": "7th grade",
+  "compact": true,
+  "instructions": "Answer on your own, even though you tested blocks with your group. Water's density is 1.0 g/cm³. Write your ID number, not your name.",
+  "questions": [
+    {
+      "type": "table",
+      "q": 1,
+      "skill": "I can calculate density",
+      "prompt": "Find the Material: Work out each block's density, then name the material: pine 0.5, ice 0.92, aluminum 2.7, iron 7.9, lead 11.3 (g/cm³).",
+      "columns": [
+        "Block",
+        "Mass (g)",
+        "Volume (cm³)",
+        "Density (g/cm³)",
+        "Material"
+      ],
+      "rows": [
+        [
+          "P",
+          "27",
+          "10",
+          {
+            "answer": "2.7"
+          },
+          {
+            "answer": "aluminum",
+            "accept": [
+              "aluminium"
+            ]
+          }
+        ],
+        [
+          "Q",
+          "20",
+          "40",
+          {
+            "answer": "0.5"
+          },
+          {
+            "answer": "pine",
+            "accept": [
+              "wood",
+              "pine wood"
+            ]
+          }
+        ],
+        [
+          "R",
+          "113",
+          "10",
+          {
+            "answer": "11.3"
+          },
+          {
+            "answer": "lead"
+          }
+        ]
+      ],
+      "notes": "Density = mass ÷ volume. Look for 0.37 or 2 (volume ÷ mass) and a material that doesn't match the student's own density."
+    },
+    {
+      "type": "choice",
+      "q": 2,
+      "skill": "I can explain density",
+      "prompt": "Half a Block: You cut block P in half. What is the density of each half?",
+      "answer": "B",
+      "columns": 2,
+      "options": [
+        {
+          "letter": "A",
+          "text": "1.35 g/cm³",
+          "why": "Mass and volume both halve: the ratio stays."
+        },
+        {
+          "letter": "B",
+          "text": "2.7 g/cm³",
+          "why": "Yes: same material, same density."
+        },
+        {
+          "letter": "C",
+          "text": "5.4 g/cm³",
+          "why": "Nothing got packed tighter by cutting."
+        },
+        {
+          "letter": "D",
+          "text": "It depends on the cut",
+          "why": "Any piece of aluminum has the same density."
+        }
+      ]
+    },
+    {
+      "type": "choice",
+      "q": 3,
+      "skill": "I can predict floating and sinking",
+      "prompt": "Heavy Log: A big log weighs more than a small rock, yet the log floats and the rock sinks. Why?",
+      "answer": "C",
+      "columns": 1,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Heavier things float better.",
+          "why": "A heavy iron bar sinks; weight alone doesn't decide."
+        },
+        {
+          "letter": "B",
+          "text": "The log is bigger, so it floats.",
+          "why": "A big rock still sinks; compare mass per volume."
+        },
+        {
+          "letter": "C",
+          "text": "The log is less dense than water, and the rock is denser.",
+          "why": "Yes: density, not weight, decides."
+        },
+        {
+          "letter": "D",
+          "text": "Rocks always sink, whatever their density.",
+          "why": "Pumice is a rock that floats: it's less dense."
+        }
+      ]
+    },
+    {
+      "type": "short",
+      "q": 4,
+      "lines": 3,
+      "skill": "I can predict floating and sinking",
+      "prompt": "Ice: Ice is water that froze. Use density to explain why ice floats on liquid water.",
+      "key": "Ice's density (about 0.92 g/cm³) is less than liquid water's (1.0 g/cm³), because water expands when it freezes (same mass, more volume); anything less dense than water floats. Full credit needs the comparison of densities; adding why it's less dense is a strength, not required. 'Ice is lighter' alone is partial."
+    }
+  ]
+}

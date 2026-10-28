@@ -1,0 +1,548 @@
+{
+  "assignment_id": "sci6-circuits-01",
+  "title": "Bulb Detectives: On Your Own",
+  "subject": "physical science",
+  "grade": 6,
+  "grade_band": "6th grade",
+  "compact": true,
+  "instructions": "Answer on your own, even though you built circuits with your group. Every bulb and battery is the same. Write your ID number, not your name.",
+  "questions": [
+    {
+      "type": "label",
+      "q": 1,
+      "skill": "I can compare series and parallel circuits",
+      "prompt": "Brightness: Compare each bulb with one bulb alone on the same battery. Write brighter, same, or dimmer in each box.",
+      "word_bank": [
+        "brighter",
+        "same",
+        "dimmer"
+      ],
+      "diagram": {
+        "width": 344,
+        "height": 126,
+        "description": "Two circuit diagrams. A (left): a battery and two bulbs in one loop (series), with box 1 under the first bulb and box 2 under the second. B (right): a battery with two branches, one bulb on each branch (parallel), with box 3 left of the first branch's bulb and box 4 above-left of the second's.",
+        "shapes": [
+          {
+            "shape": "line",
+            "points": [
+              [
+                20,
+                20
+              ],
+              [
+                20,
+                45
+              ]
+            ]
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                14,
+                45
+              ],
+              [
+                26,
+                45
+              ]
+            ],
+            "width": 2
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                9,
+                52
+              ],
+              [
+                31,
+                52
+              ]
+            ],
+            "width": 1
+          },
+          {
+            "shape": "text",
+            "x": 2,
+            "y": 49,
+            "text": "+",
+            "size": 9,
+            "bold": true
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                20,
+                52
+              ],
+              [
+                20,
+                112
+              ],
+              [
+                50,
+                112
+              ]
+            ]
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                70,
+                112
+              ],
+              [
+                100,
+                112
+              ]
+            ]
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                120,
+                112
+              ],
+              [
+                150,
+                112
+              ],
+              [
+                150,
+                20
+              ],
+              [
+                20,
+                20
+              ]
+            ]
+          },
+          {
+            "shape": "circle",
+            "x": 60,
+            "y": 112,
+            "r": 10,
+            "fill": 1
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                53,
+                105
+              ],
+              [
+                67,
+                119
+              ]
+            ]
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                53,
+                119
+              ],
+              [
+                67,
+                105
+              ]
+            ]
+          },
+          {
+            "shape": "circle",
+            "x": 110,
+            "y": 112,
+            "r": 10,
+            "fill": 1
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                103,
+                105
+              ],
+              [
+                117,
+                119
+              ]
+            ]
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                103,
+                119
+              ],
+              [
+                117,
+                105
+              ]
+            ]
+          },
+          {
+            "shape": "text",
+            "x": 85,
+            "y": 6,
+            "text": "A: one loop",
+            "size": 8,
+            "bold": true,
+            "align": "center"
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                196,
+                20
+              ],
+              [
+                196,
+                45
+              ]
+            ]
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                190,
+                45
+              ],
+              [
+                202,
+                45
+              ]
+            ],
+            "width": 2
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                185,
+                52
+              ],
+              [
+                207,
+                52
+              ]
+            ],
+            "width": 1
+          },
+          {
+            "shape": "text",
+            "x": 178,
+            "y": 49,
+            "text": "+",
+            "size": 9,
+            "bold": true
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                196,
+                52
+              ],
+              [
+                196,
+                118
+              ],
+              [
+                326,
+                118
+              ]
+            ]
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                262,
+                118
+              ],
+              [
+                262,
+                77
+              ]
+            ]
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                262,
+                57
+              ],
+              [
+                262,
+                20
+              ]
+            ]
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                326,
+                118
+              ],
+              [
+                326,
+                77
+              ]
+            ]
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                326,
+                57
+              ],
+              [
+                326,
+                20
+              ],
+              [
+                196,
+                20
+              ]
+            ]
+          },
+          {
+            "shape": "circle",
+            "x": 262,
+            "y": 67,
+            "r": 10,
+            "fill": 1
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                255,
+                60
+              ],
+              [
+                269,
+                74
+              ]
+            ]
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                255,
+                74
+              ],
+              [
+                269,
+                60
+              ]
+            ]
+          },
+          {
+            "shape": "circle",
+            "x": 326,
+            "y": 67,
+            "r": 10,
+            "fill": 1
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                319,
+                60
+              ],
+              [
+                333,
+                74
+              ]
+            ]
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                319,
+                74
+              ],
+              [
+                333,
+                60
+              ]
+            ]
+          },
+          {
+            "shape": "text",
+            "x": 261,
+            "y": 6,
+            "text": "B: two branches",
+            "size": 8,
+            "bold": true,
+            "align": "center"
+          }
+        ]
+      },
+      "labels": [
+        {
+          "n": 1,
+          "box": [
+            28,
+            70,
+            58,
+            24
+          ],
+          "points_to": [
+            60,
+            100
+          ],
+          "answer": "dimmer",
+          "accept": [
+            "dim",
+            "less bright",
+            "darker"
+          ]
+        },
+        {
+          "n": 2,
+          "box": [
+            88,
+            40,
+            58,
+            24
+          ],
+          "points_to": [
+            110,
+            100
+          ],
+          "answer": "dimmer",
+          "accept": [
+            "dim",
+            "less bright",
+            "darker"
+          ]
+        },
+        {
+          "n": 3,
+          "box": [
+            204,
+            80,
+            44,
+            24
+          ],
+          "points_to": [
+            252,
+            70
+          ],
+          "answer": "same",
+          "accept": [
+            "the same",
+            "as bright",
+            "same as one"
+          ]
+        },
+        {
+          "n": 4,
+          "box": [
+            272,
+            86,
+            40,
+            24
+          ],
+          "points_to": [
+            320,
+            75
+          ],
+          "answer": "same",
+          "accept": [
+            "the same",
+            "as bright",
+            "same as one"
+          ]
+        }
+      ],
+      "notes": "Ideal battery: two bulbs in one loop each get half the push, so each is dimmer; each bulb on its own branch gets the full push, so each is as bright as one bulb alone."
+    },
+    {
+      "type": "choice",
+      "q": 2,
+      "skill": "I can explain current in a circuit",
+      "prompt": "Used Up? A student says the first bulb in circuit A uses up some current, so the second bulb is dimmer than the first. What's right?",
+      "answer": "B",
+      "columns": 1,
+      "options": [
+        {
+          "letter": "A",
+          "text": "The student is right: the second bulb gets less current.",
+          "why": "Current isn't used up; it's the same all around one loop."
+        },
+        {
+          "letter": "B",
+          "text": "The current is the same all around the loop, so both bulbs are equally dim.",
+          "why": "Yes: one loop, one current, two equal bulbs."
+        },
+        {
+          "letter": "C",
+          "text": "The second bulb is brighter, because the current speeds up.",
+          "why": "The current is the same everywhere in one loop."
+        },
+        {
+          "letter": "D",
+          "text": "Only the first bulb lights; the current stops there.",
+          "why": "Current flows all the way around a complete loop."
+        }
+      ]
+    },
+    {
+      "type": "choice",
+      "q": 3,
+      "skill": "I can compare series and parallel circuits",
+      "prompt": "Unscrew One: In circuit B, you unscrew one bulb. What happens to the other bulb?",
+      "answer": "B",
+      "columns": 2,
+      "options": [
+        {
+          "letter": "A",
+          "text": "It goes out.",
+          "why": "Its own branch is still a complete loop."
+        },
+        {
+          "letter": "B",
+          "text": "It stays lit, just as bright.",
+          "why": "Yes: its branch still gets the full push."
+        },
+        {
+          "letter": "C",
+          "text": "It gets brighter.",
+          "why": "Its branch got the full push all along."
+        },
+        {
+          "letter": "D",
+          "text": "It gets dimmer.",
+          "why": "Nothing changed on its branch."
+        }
+      ]
+    },
+    {
+      "type": "short",
+      "q": 4,
+      "lines": 3,
+      "skill": "I can compare series and parallel circuits",
+      "prompt": "House Wiring: The lights in a house are wired on separate branches, not in one loop. Give two reasons, using what you found in the lab.",
+      "key": "Any two: when one light burns out or is switched off, the others stay on; each light gets the full push, so each is as bright as it should be; each light can have its own switch. Full credit needs two reasons; one is partial."
+    }
+  ]
+}

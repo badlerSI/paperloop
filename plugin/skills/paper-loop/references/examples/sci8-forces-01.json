@@ -1,0 +1,135 @@
+{
+  "assignment_id": "sci8-forces-01",
+  "title": "Cart Derby: On Your Own",
+  "subject": "physical science",
+  "grade": 8,
+  "grade_band": "8th grade",
+  "compact": true,
+  "instructions": "Answer on your own, even though you raced carts with your group. Acceleration = net force ÷ mass. Write your ID number, not your name.",
+  "questions": [
+    {
+      "type": "table",
+      "q": 1,
+      "skill": "I can find net force and acceleration",
+      "prompt": "Net Force: Fill in the net force and the acceleration for each cart.",
+      "columns": [
+        "Push (N)",
+        "Friction (N)",
+        "Mass (kg)",
+        "Net force (N)",
+        "Acceleration (m/s²)"
+      ],
+      "rows": [
+        [
+          "30",
+          "10",
+          "20",
+          {
+            "answer": "20"
+          },
+          {
+            "answer": "1"
+          }
+        ],
+        [
+          "50",
+          "10",
+          "10",
+          {
+            "answer": "40"
+          },
+          {
+            "answer": "4"
+          }
+        ],
+        [
+          "10",
+          "10",
+          "40",
+          {
+            "answer": "0"
+          },
+          {
+            "answer": "0"
+          }
+        ]
+      ],
+      "notes": "Net force = push − friction; acceleration = net force ÷ mass. Look for 1.5 or 5 (the push divided by mass, friction forgotten) and 0.25 (10 ÷ 40, the push alone) in the last row."
+    },
+    {
+      "type": "choice",
+      "q": 2,
+      "skill": "I can explain balanced forces",
+      "prompt": "Steady Speed: A cart rolls at a steady 2 m/s on a flat floor. What is the net force on it?",
+      "answer": "A",
+      "columns": 1,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Zero: the forces on it are balanced.",
+          "why": "Yes: no net force means no change in speed."
+        },
+        {
+          "letter": "B",
+          "text": "2 N forward, to keep it moving.",
+          "why": "A moving object needs no net force to keep going."
+        },
+        {
+          "letter": "C",
+          "text": "The push must be bigger than the friction.",
+          "why": "Then it would speed up, not stay steady."
+        },
+        {
+          "letter": "D",
+          "text": "It depends on the cart's mass.",
+          "why": "Steady speed means balanced forces at any mass."
+        }
+      ]
+    },
+    {
+      "type": "choice",
+      "q": 3,
+      "skill": "I can find net force and acceleration",
+      "prompt": "Double the Mass: The same net force pushes a cart with twice the mass. What happens to its acceleration?",
+      "answer": "C",
+      "columns": 2,
+      "options": [
+        {
+          "letter": "A",
+          "text": "It doubles.",
+          "why": "More mass makes it harder to speed up."
+        },
+        {
+          "letter": "B",
+          "text": "It stays the same.",
+          "why": "Same force, more mass: less acceleration."
+        },
+        {
+          "letter": "C",
+          "text": "It is cut in half.",
+          "why": "Yes: a = F ÷ m, and m doubled."
+        },
+        {
+          "letter": "D",
+          "text": "It drops to zero.",
+          "why": "There's still a net force, so it speeds up."
+        }
+      ]
+    },
+    {
+      "type": "math",
+      "q": 4,
+      "skill": "I can find net force and acceleration",
+      "prompt": "Top Speed: A 50 kg cart starts from rest with a net force of 100 N. How fast is it going after 4 seconds?",
+      "answer": "8",
+      "accept": [
+        "8 m/s"
+      ],
+      "units": "m/s",
+      "key": "Acceleration = 100 ÷ 50 = 2 m/s²; speed = 2 × 4 = 8 m/s. Look for 2 (stopped at the acceleration) and 25 (100 ÷ 4).",
+      "answer_points": 1,
+      "work_points": 1,
+      "work_height": 80
+    }
+  ]
+}

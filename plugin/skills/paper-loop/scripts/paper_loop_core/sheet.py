@@ -458,7 +458,8 @@ class Layout:
         self.lang_fonts: dict[tuple[str, str], tuple[str, str]] = {}
         # The header grows with large print too (up to 1.6x): directions, labels, and the ID boxes.
         self.hk = min(self.k, 1.6)
-        self.header_size, self.header_leading = 8.5 * self.hk, 10.5 * self.hk
+        self.header_size, self.header_leading = (10.5, 13.0) if st["primary"] else (8.5, 10.5)
+        self.header_size, self.header_leading = self.header_size * self.hk, self.header_leading * self.hk
         self.header_lines = self.split(defn["instructions"], fonts.regular, self.header_size, 290)
         self.content_top = min(CONTENT_TOP, 716 - (len(self.header_lines) - 1) * self.header_leading - 12
                                - (6 if len(self.header_lines) > 3 else 0))  # a fourth line keeps clear of the rule
@@ -719,10 +720,17 @@ class Layout:
     def match_geometry(self, q: dict):
         box_w = (38.0 if self.st["primary"] else 30.0) * self.k
         full = BOX_RIGHT - LEFT
-        left_w = full * (0.56 if q["choices"] else 1.0)
         size, leading = self.st["option_size"], self.st["option_leading"]
-        item_lines = [self.split(f"{i['name']}. {i['text']}", self.f.regular, size, left_w - box_w - 12)
-                      for i in q["items"]]
+        if q["choices"]:  # split the width by how much each side has to say, from 40% to 70% for the items
+            need_items = box_w + 12 + max(self._width(i["text"], self.f.regular, size) for i in q["items"]) * 0.6
+            need_choices = 8 + max(self._width(f"{c['letter']}. {c['text']}", self.f.regular, size)
+                                   for c in q["choices"]) * 0.6
+            left_w = full * min(0.7, max(0.4, need_items / (need_items + need_choices)))
+        else:
+            left_w = full
+        # With choices, items carry no numbers of their own: under "4." they read as question numbers.
+        item_lines = [self.split(f"{i['name']}. {i['text']}" if not q["choices"] else i["text"], self.f.regular,
+                                 size, left_w - box_w - 12) for i in q["items"]]
         item_h = [max(self.box_h(q) + 6, len(l) * leading + 6) for l in item_lines]
         choice_lines = [self.split(f"{c['letter']}. {c['text']}", self.f.regular, size, full - left_w - 8)
                         for c in q["choices"]]
@@ -1158,8 +1166,12 @@ def _draw_question(c: canvas.Canvas, L: Layout, q: dict, y: float, part: tuple |
             size = st["prompt_size"] * 0.95
             for k, frame in enumerate(q["frame"][:n_lines]):
                 base_y = body_top - (k + 1) * st["line_spacing"] + (st["line_spacing"] * 0.24 if st["primary"] else 5)
-                c.setFont(f.regular, size)
-                c.drawString(LEFT + 8, base_y, f.text(re.sub(r"_{3,}", "_" * 14, frame)))
+                text = f.text(re.sub(r"_{3,}", "_" * 14, frame))
+                fit = size  # a long starter shrinks to stay inside the box
+                while fit > 7 and c.stringWidth(text, f.regular, fit) > right - LEFT - 16:
+                    fit -= 0.5
+                c.setFont(f.regular, fit)
+                c.drawString(LEFT + 8, base_y, text)
             c.setFillGray(INK)
 
     elif q["type"] == "choice":
@@ -1629,7 +1641,7 @@ def _lang_problems(L: Layout, form: dict) -> list[str]:
 
 def unlabeled(key: str) -> str:
     """A key without its own "Full credit:" label, for places that print the label already."""
-    return re.sub(r"^\s*full credit\b[^:]{0,20}:\s*", "", key, flags=re.I)
+    return re.sub(r"^\s*full credit(\s*\([^)]*\))?\s*:\s*", "", key, flags=re.I)  # not "Full credit for any two of:"
 
 
 def make_worksheet(defn: dict, out_dir: Path, base: Path | None = None) -> dict:
@@ -1678,8 +1690,13 @@ def make_worksheet(defn: dict, out_dir: Path, base: Path | None = None) -> dict:
         items = [_key_item(q, L) for q in d["questions"] if q["type"] != "passage"]
         items_by_form[form["id"]] = items
         entry = {k: v for k, v in form.items() if k != "translation"}
+        fit = {}
+        if form["kind"] == "version":  # what to cut when a version runs longer than everyone else's
+            fit = {"shortfall": L.shortfall(), "free_by_page": L.free_by_page(),
+                   "blocks_by_page": [[(_piece_name(d["questions"][i], part), L.piece_height(i, part))
+                                       for i, part in piece] for piece in L.paginate()]}
         form_list.append({**entry, "code_id": code_id, "pdf": pdf, "pages": [p["page"] for p in pages],
-                          "comment_language": d["comment_language"]})
+                          "comment_language": d["comment_language"], **fit})
     for c in canvases.values():
         c.save()
 

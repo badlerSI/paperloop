@@ -1,0 +1,97 @@
+{
+  "title": "Rectangle Claim: Area",
+  "grade": 3,
+  "subject": "math",
+  "structure": "lab",
+  "group_size": 4,
+  "minutes": 30,
+  "rounds": 8,
+  "rotate_every": 2,
+  "goal": "Make rectangles, find their area by counting and by rows times columns, and claim the most squares.",
+  "abilities": [
+    "drawing carefully",
+    "counting squares",
+    "multiplying",
+    "checking each other"
+  ],
+  "materials": [
+    "two dice",
+    "a pencil or crayon for each player"
+  ],
+  "roles": [
+    {
+      "name": "Leader",
+      "jobs": [
+        "Read each step out loud.",
+        "Make sure everyone gets a turn."
+      ],
+      "say": [
+        "Whose turn is it?",
+        "What do we do next?"
+      ]
+    },
+    {
+      "name": "Writer",
+      "jobs": [
+        "Write each rectangle in the table."
+      ],
+      "say": [
+        "How many rows? How many in each row?"
+      ]
+    },
+    {
+      "name": "Checker",
+      "jobs": [
+        "Check each area two ways: count, and rows times columns."
+      ],
+      "say": [
+        "How do you know?",
+        "Let's count it."
+      ]
+    },
+    {
+      "name": "Reporter",
+      "jobs": [
+        "Tell the class what your group found."
+      ],
+      "say": [
+        "We found that __."
+      ]
+    }
+  ],
+  "steps": [
+    "Take turns. Roll two dice. The two numbers are the sides of your rectangle.",
+    "Draw your rectangle on the grid, along the lines, anywhere it fits. Put your initial in it.",
+    "Count the squares inside. That's the area. Write it in your rectangle.",
+    "The Checker checks: rows times the number in each row. Does it match your count?",
+    "No room? Pass. When no one can fit a rectangle, add up your areas. The most area wins."
+  ],
+  "board": {
+    "kind": "grid",
+    "title": "Claim your rectangles",
+    "cols": 18,
+    "rows": 22
+  },
+  "table": {
+    "title": "Our rectangles",
+    "columns": [
+      "Turn",
+      "Sides",
+      "Area (squares)"
+    ],
+    "rows": 8
+  },
+  "worksheet": "math3-area-01",
+  "listen_for": [
+    "Counting the lines instead of the squares.",
+    "Students noticing that 2 by 6 and 3 by 4 have the same area.",
+    "“The longer rectangle is bigger.” Ask the Checker to count both."
+  ],
+  "debrief": [
+    "Ask: who made a rectangle with an area of 12? What sides did it have? Are there others?",
+    "Ask: is there a faster way than counting every square?"
+  ],
+  "sources": [
+    "The idea is also modeled in PhET Interactive Simulations' Area Builder (University of Colorado Boulder). The game and questions were written for Paper Loop."
+  ]
+}

@@ -258,3 +258,25 @@ def test_home_language_comments_print_right_to_left_and_unprintable_ones_are_ref
 def test_dari_hamza_and_brackets():
     assert SC.compose("خانه" + chr(0x654)) == "خانۀ"
     assert SC.visual("x (ابت)") == "x (تبا)"
+
+
+def test_a_key_words_page_needs_no_glossary_on_the_sheet_and_a_long_version_says_what_to_cut(tmp_path):
+    import pypdfium2 as pdfium
+    defn = S.read_json(VERSIONS)
+    defn["versions"] = [{"id": "kw", "name": "Key words page", "scaffolds": ["hint"], "reference": ["glossary"]},
+                        {"id": "roomy", "name": "Roomy", "scaffolds": "all"}]
+    layout = S.make_worksheet(defn, tmp_path / "w", base=VERSIONS.parent)
+    page = pdfium.PdfDocument(str(tmp_path / "w" / "versions" / "kw-reference.pdf"))[0]
+    assert "Key words" in page.get_textpage().get_text_range()
+    roomy = next(f for f in layout["forms_made"] if f["id"] == "roomy")
+    if len(roomy["pages"]) > layout["base_pages"]:  # every support printed: longer, and make says by how much
+        assert roomy["shortfall"] > 0 and roomy["blocks_by_page"] and len(roomy["free_by_page"]) == len(roomy["pages"])
+
+
+def test_matching_items_beside_choices_carry_no_numbers_of_their_own(tmp_path):
+    import pypdfium2 as pdfium
+    path = ROOT / "examples" / "ela4-garden-01.json"
+    S.make_worksheet(S.read_json(path), tmp_path / "g", base=path.parent)
+    doc = pdfium.PdfDocument(str(tmp_path / "g" / "worksheet.pdf"))
+    text = "".join(doc[i].get_textpage().get_text_range() for i in range(len(doc)))
+    assert "exhaust (line 2)" in text and "1. exhaust" not in text and "A. light in color" in text

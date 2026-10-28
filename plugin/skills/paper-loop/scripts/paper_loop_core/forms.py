@@ -462,7 +462,7 @@ def _version(raw: dict, version: dict, index: int, base_dir: Path) -> tuple[dict
                              "Word and Google Docs print correctly, beside the English worksheet")
     tr = _translation(raw, version, base_dir) if lang else {}
 
-    questions, glossary, changes = [], [], []
+    questions, glossary, changes, terms = [], [], [], []
     if lang and tr.get("glossary"):
         glossary = [(g.get("term", ""), g.get("translation", "")) for g in tr["glossary"]]
     used_passages = {q.get("passage") for q in raw["questions"] if only is None or q.get("q") in only}
@@ -485,6 +485,8 @@ def _version(raw: dict, version: dict, index: int, base_dir: Path) -> tuple[dict
             continue
         asides, help_ = [], []  # help_: supports printed here that change what the question measures
         kind = q.get("type", "short")
+        if support.get("glossary"):  # for a key-words page, whether or not the words also print on the sheet
+            terms += [f"{g['term']}: {g['meaning']}" for g in support["glossary"]]
         if "plain" in scaffolds and support.get("plain"):
             q["prompt"] = support["plain"]
             if q.get("passage") or q.get("spelling"):
@@ -552,7 +554,8 @@ def _version(raw: dict, version: dict, index: int, base_dir: Path) -> tuple[dict
             "space": space if space > 1 else None,
             "per_page": per_page, "max_choices": keep, "grid": bool(version.get("grid")), "only": only,
             "language": lang, "language_mode": mode, "language_name": name, "reference": reference,
-            "formulas": version.get("formulas", []), "notes": version.get("notes", ""),
+            "formulas": version.get("formulas", []), "glossary_terms": list(dict.fromkeys(terms)),
+            "notes": version.get("notes", ""),
             "copies": version.get("copies"), "translation": tr if lang else None,
             "modifies": sorted(set(changes)), "print": defn.get("print"),
             "comment_language": defn.get("comment_language"),
@@ -718,15 +721,12 @@ def reference_pages(form: dict, defn: dict, out_dir: Path, L) -> Path:
                 if not entries:
                     raise WorksheetError(f"version {form['id']!r}: a formulas page needs \"formulas\": [...]")
             else:
-                for q in defn["questions"]:
-                    for a in q.get("asides", []):
-                        if a["kind"] == "words":
-                            entries += a["text"]
+                entries = list(form.get("glossary_terms") or [])
                 tr = form.get("translation") or {}
                 entries += [f"{g.get('term', '')} = {g.get('translation', '')}" for g in tr.get("glossary", [])]
                 if not entries:
                     raise WorksheetError(f"version {form['id']!r}: a glossary page needs \"glossary\" in the questions' "
-                                         "support (with the glossary scaffold) or in the translation")
+                                         "support, or in the translation")
             page("Formulas" if kind == "formulas" else "Key words")
             y = S.PAGE_H - 120
             for entry in entries:

@@ -1,0 +1,97 @@
+{
+  "assignment_id": "sci9-plates-01",
+  "title": "Deep Quakes and Hot Spots: On Your Own",
+  "subject": "earth science",
+  "grade": 9,
+  "grade_band": "9th grade",
+  "compact": true,
+  "instructions": "Answer on your own, even though you plotted with your group. Write your ID number, not your name.",
+  "questions": [
+    {
+      "type": "choice",
+      "q": 1,
+      "skill": "I can read earthquake evidence",
+      "prompt": "Which Way Down? Under the Andes, earthquakes near the trench are shallow, and farther east they are deeper, down to about 560 km. What does that show?",
+      "answer": "B",
+      "columns": 1,
+      "options": [
+        {
+          "letter": "A",
+          "text": "The South American Plate is sinking west under the ocean.",
+          "why": "The deep quakes are under the continent, to the east."
+        },
+        {
+          "letter": "B",
+          "text": "The Nazca Plate is sinking east, at a slant, under South America.",
+          "why": "Yes: the quakes trace the sinking plate."
+        },
+        {
+          "letter": "C",
+          "text": "The plates are pulling apart at the trench.",
+          "why": "Pulling apart makes shallow quakes, not a deep slant."
+        },
+        {
+          "letter": "D",
+          "text": "Deep quakes happen everywhere under continents.",
+          "why": "They line up along one slanted band."
+        }
+      ]
+    },
+    {
+      "type": "math",
+      "q": 2,
+      "skill": "I can calculate plate speed",
+      "prompt": "Plate Speed: Kauai's oldest rocks are about 5 million years old, and Kauai is about 540 km from the hot spot. How fast has the Pacific Plate moved, in cm per year? (1 km = 100,000 cm.)",
+      "answer": "10.8",
+      "accept": [
+        "11",
+        "about 11",
+        "10.8 cm per year"
+      ],
+      "units": "cm per year",
+      "key": "540 km ÷ 5 million years = 108 km per million years = 54,000,000 cm ÷ 5,000,000 years ≈ 10.8 cm per year. Look for 108 (km per million years, not converted) and 0.0001-sized answers (dividing the wrong way).",
+      "answer_points": 1,
+      "work_points": 2,
+      "work_height": 100,
+      "notes": "Answers from 10 to 11 are right. USGS gives the Pacific Plate's speed here as about 10 cm a year."
+    },
+    {
+      "type": "choice",
+      "q": 3,
+      "skill": "I can explain hot spots",
+      "prompt": "Island Chain: Why are the Hawaiian Islands older the farther they are from the Big Island?",
+      "answer": "C",
+      "columns": 1,
+      "options": [
+        {
+          "letter": "A",
+          "text": "The hot spot moves northwest, making new islands.",
+          "why": "The hot spot stays put; check what moves."
+        },
+        {
+          "letter": "B",
+          "text": "Older islands sink, so they drift away.",
+          "why": "Sinking doesn't move an island sideways."
+        },
+        {
+          "letter": "C",
+          "text": "The plate carries each island away from the hot spot, and a new one forms over it.",
+          "why": "Yes: a moving plate over a fixed hot spot."
+        },
+        {
+          "letter": "D",
+          "text": "Waves push the older islands away.",
+          "why": "Waves wear islands down; they don't move them."
+        }
+      ]
+    },
+    {
+      "type": "short",
+      "q": 4,
+      "lines": 4,
+      "skill": "I can read earthquake evidence",
+      "prompt": "Only One Side: Deep earthquakes happen east of the trench but not west of it. Explain why, using what you plotted.",
+      "key": "The ocean (Nazca) plate sinks east under South America at a slant, and the deep quakes happen in that sinking plate as it goes down; west of the trench the plate hasn't gone under yet, so nothing is deep there to make quakes. Full credit needs the sinking plate going east (under the continent) and the quakes being in it; 'the plates collide' alone is partial."
+    }
+  ]
+}

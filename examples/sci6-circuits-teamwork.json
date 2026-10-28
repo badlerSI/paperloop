@@ -1,0 +1,106 @@
+{
+  "title": "Bulb Detectives: Series and Parallel",
+  "grade": 6,
+  "subject": "physical science",
+  "structure": "lab",
+  "group_size": 4,
+  "minutes": 35,
+  "rounds": 6,
+  "rotate_every": 2,
+  "goal": "Build circuits from cards, predict how bright each bulb is, and explain why bulbs in one loop are dimmer than bulbs on separate branches.",
+  "abilities": [
+    "building carefully",
+    "tracing a path",
+    "predicting",
+    "explaining with evidence"
+  ],
+  "materials": [
+    "one die",
+    "scrap paper",
+    "scissors for the cards",
+    "a battery, two bulbs, and wires if you have them, to test one prediction"
+  ],
+  "steps": [
+    "Roll for your challenge (below). Lay the cards on the desk to build it: wire cards must touch end to end to make a loop.",
+    "Before deciding anything, the Skeptic traces the loop with a finger from + all the way around to −. No complete loop, no light.",
+    "Use the rules. Bulbs in one loop share the battery's push, so each is dimmer than one bulb alone. Bulbs on separate branches each get the full push, so each is as bright as one bulb alone.",
+    "Predict what happens if you unscrew one bulb. Record the row, and draw the circuit on scrap paper with circuit symbols.",
+    "Take it apart and roll for the next challenge."
+  ],
+  "dice": {
+    "title": "Roll for your challenge",
+    "rows": [
+      [
+        "1",
+        "Light one bulb."
+      ],
+      [
+        "2",
+        "Light two bulbs in one loop (series)."
+      ],
+      [
+        "3",
+        "Light two bulbs on separate branches (parallel)."
+      ],
+      [
+        "4",
+        "Add a switch that turns off both bulbs."
+      ],
+      [
+        "5",
+        "Add a switch that turns off just one bulb."
+      ],
+      [
+        "6",
+        "Light three bulbs so that unscrewing any one leaves two lit."
+      ]
+    ]
+  },
+  "table": {
+    "title": "Our circuits",
+    "columns": [
+      "Challenge",
+      "Bulbs lit",
+      "Each bulb vs. one alone",
+      "Unscrew one: what happens?"
+    ],
+    "rows": 6
+  },
+  "tokens": [
+    {
+      "label": "battery + −",
+      "count": 2,
+      "pattern": "solid",
+      "size": 1.0
+    },
+    {
+      "label": "bulb",
+      "count": 4,
+      "pattern": "rings"
+    },
+    {
+      "label": "switch",
+      "count": 2,
+      "pattern": "stripes"
+    },
+    {
+      "label": "wire",
+      "count": 20,
+      "pattern": "plain",
+      "size": 0.6
+    }
+  ],
+  "worksheet": "sci6-circuits-01",
+  "listen_for": [
+    "“The first bulb uses up the current, so the second is dimmer.” Ask: in one loop, is the current the same all the way around?",
+    "Wire cards that don't close the loop. Ask the Skeptic to trace it again.",
+    "“More bulbs means brighter.” Ask what happened to each bulb's share of the push."
+  ],
+  "debrief": [
+    "Ask: why are the lights in a house on separate branches?",
+    "If you have real bulbs, test one group's prediction in front of the class."
+  ],
+  "sources": [
+    "The idea is also modeled in PhET Interactive Simulations' Circuit Construction Kit (University of Colorado Boulder). The activity and questions were written for Paper Loop."
+  ]
+}

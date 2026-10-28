@@ -1,0 +1,82 @@
+{
+  "title": "Cart Derby: Force, Mass, and Speeding Up",
+  "grade": 8,
+  "subject": "physical science",
+  "structure": "lab",
+  "group_size": 4,
+  "minutes": 35,
+  "rounds": 6,
+  "rotate_every": 2,
+  "goal": "Find out how the net force on a cart and the cart's mass change how fast it speeds up.",
+  "abilities": [
+    "calculating carefully",
+    "keeping a data table",
+    "spotting a pattern",
+    "explaining with evidence"
+  ],
+  "materials": [
+    "one die",
+    "a calculator if you like"
+  ],
+  "steps": [
+    "Every cart has 10 N of friction pushing back. Net force = push − 10 N.",
+    "Rounds 1-3: the cart's mass is 20 kg. Roll for the push (table below).",
+    "Rounds 4-6: the push is 50 N. Use a mass of 10 kg, then 20 kg, then 40 kg. Before round 4, predict: does a heavier cart speed up faster or slower?",
+    "Everyone works out the net force and the acceleration (net force ÷ mass, in m/s²), and the Skeptic checks. Then the speed after 3 seconds from rest: acceleration × 3.",
+    "The Recorder writes the row."
+  ],
+  "dice": {
+    "title": "Roll for the push (rounds 1-3)",
+    "rows": [
+      [
+        "1",
+        "a 10 N push"
+      ],
+      [
+        "2",
+        "a 20 N push"
+      ],
+      [
+        "3",
+        "a 30 N push"
+      ],
+      [
+        "4",
+        "a 40 N push"
+      ],
+      [
+        "5",
+        "a 50 N push"
+      ],
+      [
+        "6",
+        "a 60 N push"
+      ]
+    ]
+  },
+  "table": {
+    "title": "Our carts",
+    "columns": [
+      "Round",
+      "Push (N)",
+      "Net force (N)",
+      "Mass (kg)",
+      "Acceleration (m/s²)",
+      "Speed after 3 s (m/s)"
+    ],
+    "rows": 6
+  },
+  "worksheet": "sci8-forces-01",
+  "listen_for": [
+    "A roll of 1 (a 10 N push against 10 N of friction): “it moves slowly.” Ask: what's the net force, and so what's the acceleration?",
+    "“The heavier cart goes faster because it pushes harder.” Same push, more mass: what happened to the acceleration?",
+    "Speed and acceleration mixed up: acceleration is how much the speed grows each second."
+  ],
+  "debrief": [
+    "Plot acceleration against net force for rounds 1-3 on the board. What shape is it?",
+    "Ask: a cart rolls at a steady speed. What is the net force on it?"
+  ],
+  "sources": [
+    "The idea is also modeled in PhET Interactive Simulations' Forces and Motion: Basics (University of Colorado Boulder). The activity and questions were written for Paper Loop."
+  ]
+}

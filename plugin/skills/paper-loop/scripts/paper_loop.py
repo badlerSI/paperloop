@@ -38,6 +38,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 import sys
 from pathlib import Path
 
@@ -137,7 +138,11 @@ def _forms_report(layout: dict, out: Path) -> None:
         pages_over = len(f["pages"]) - layout["base_pages"]
         if pages_over > 0 and not (f.get("large_print") or f.get("space") or f.get("per_page")):
             print(f"  Check: version {f['label']} runs to {len(f['pages'])} pages, {pages_over} more than everyone "
-                  "else's, so it stands out. Shorten it (or the base sheet) until they match.")
+                  "else's, so it stands out. Shorten it (or the base sheet) until they match"
+                  + (f": cut about {f['shortfall']:.0f}pt." if f.get("shortfall") else "."))
+            for k, (free, blocks) in enumerate(zip(f.get("free_by_page", []), f.get("blocks_by_page", [])), start=1):
+                print(f"    version {f['label']} page {k}: {', '.join(f'{name} {h:.0f}pt' for name, h in blocks)} "
+                      f"({free:.0f}pt free)")
         if f.get("modifies"):
             print(f"    Help that changes what's measured: {', '.join(f['modifies'])}. Scores on those questions show "
                   "what students do with help, and progress reports mark them \"with help on the page\". For "
@@ -258,11 +263,16 @@ def cmd_preview(args) -> int:
         return 0
     out = pdf.parent / "preview"
     out.mkdir(exist_ok=True)
-    # A shorter remake mustn't leave its old last pages behind; one page, or the sheets, replace only themselves.
-    for old in out.glob(f"{pdf.stem}-sheet*.png" if args.sheet else f"{pdf.stem}-p*.png"):
-        if not args.page or args.sheet:
-            old.unlink()
     doc = pdfium.PdfDocument(str(pdf))
+    # A shorter remake mustn't leave old pages behind. A full run replaces everything it makes; one page
+    # (--page) replaces only itself, as a page image even with --sheet.
+    for old in out.glob(f"{pdf.stem}-*.png"):
+        number = re.fullmatch(re.escape(pdf.stem) + r"-p(\d+)\.png", old.name)
+        stale = number and int(number.group(1)) > len(doc)
+        if stale or (not args.page and (args.sheet and "-sheet" in old.name or not args.sheet)):
+            old.unlink()
+    if args.page:
+        args.sheet = False
     try:
         pages = []
         for i in range(len(doc)):
@@ -391,7 +401,8 @@ def cmd_teamwork(command: str, argv: list[str]) -> int:
         parser.add_argument("--out", type=Path, required=True)
     else:
         parser.add_argument("folder", type=Path)
-        parser.add_argument("--size", type=int, default=4)
+        parser.add_argument("--size", type=int, default=None, help="group size (default 4; 2 for pairs)")
+        parser.add_argument("--seed", type=int, default=1, help="another number deals new first jobs")
         parser.add_argument("--skill")
         parser.add_argument("--roster", type=Path)
         parser.add_argument("--structure", default="lab", choices=list(TW.STRUCTURES))
@@ -403,7 +414,7 @@ def cmd_teamwork(command: str, argv: list[str]) -> int:
             report = TW.build(args.activity, args.out)
         else:
             report = TW.form_groups(args.folder, args.size, args.skill, args.roster, args.structure,
-                                    similar=args.similar)
+                                    seed=args.seed, similar=args.similar)
     except (TW.TeamworkError, ValueError, OSError) as e:
         print(f"Can't make the {'group work' if command == 'teamwork' else 'groups'}: {e}")
         return 1

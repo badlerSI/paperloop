@@ -1,0 +1,254 @@
+{
+  "assignment_id": "sci7-greenhouse-01",
+  "title": "Photon Bounce: On Your Own",
+  "subject": "earth science",
+  "grade": 7,
+  "grade_band": "7th grade",
+  "compact": true,
+  "instructions": "Answer on your own, even though you played with your group. ppm means parts per million. Write your ID number, not your name.",
+  "questions": [
+    {
+      "type": "draw",
+      "q": 1,
+      "skill": "I can read a graph of measurements",
+      "prompt": "Real Measurements: NOAA measures carbon dioxide (CO₂) in the air on Mauna Loa, Hawaii. Circle the 1960 and 2020 points. About how many ppm did CO₂ rise between them?",
+      "diagram": {
+        "width": 344,
+        "height": 140,
+        "description": "A line graph of CO₂ (ppm, 300 to 440) by year (1960 to 2030), with dots at 1960 (317), 1970 (326), 1980 (339), 1990 (354), 2000 (370), 2010 (390), 2020 (414), and 2025 (427). Small print: 'Data: NOAA, Mauna Loa annual means'.",
+        "shapes": [
+          {
+            "shape": "axes",
+            "x": 40,
+            "y": 26,
+            "w": 290,
+            "h": 100,
+            "xmin": 1960,
+            "xmax": 2030,
+            "ymin": 300,
+            "ymax": 440,
+            "xstep": 10,
+            "ystep": 20,
+            "label_every": 1,
+            "xlabel": "year",
+            "ylabel": "CO₂ (ppm)"
+          },
+          {
+            "shape": "polyline",
+            "points": [
+              [
+                40.0,
+                38.1
+              ],
+              [
+                81.4,
+                44.3
+              ],
+              [
+                122.9,
+                53.7
+              ],
+              [
+                164.3,
+                64.9
+              ],
+              [
+                205.7,
+                75.8
+              ],
+              [
+                247.1,
+                90.4
+              ],
+              [
+                288.6,
+                107.6
+              ],
+              [
+                309.3,
+                117.0
+              ]
+            ],
+            "width": 1.2
+          },
+          {
+            "shape": "circle",
+            "x": 40.0,
+            "y": 38.1,
+            "r": 2.4,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 81.4,
+            "y": 44.3,
+            "r": 2.4,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 122.9,
+            "y": 53.7,
+            "r": 2.4,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 164.3,
+            "y": 64.9,
+            "r": 2.4,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 205.7,
+            "y": 75.8,
+            "r": 2.4,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 247.1,
+            "y": 90.4,
+            "r": 2.4,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 288.6,
+            "y": 107.6,
+            "r": 2.4,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 309.3,
+            "y": 117.0,
+            "r": 2.4,
+            "fill": 0
+          },
+          {
+            "shape": "text",
+            "x": 330,
+            "y": 134,
+            "text": "Data: NOAA, Mauna Loa annual means",
+            "size": 6,
+            "align": "right"
+          }
+        ]
+      },
+      "checklist": [
+        {
+          "item": "The 1960 point (about 317 ppm) and the 2020 point (about 414 ppm) are circled.",
+          "short": "1960 and 2020 circled"
+        }
+      ],
+      "answer": "97",
+      "accept": [
+        "97.3",
+        "about 97",
+        "100",
+        "about 100"
+      ],
+      "units": "ppm",
+      "answer_points": 1,
+      "notes": "414.21 − 316.91 = 97.3 ppm. Values read off the graph from 95 to 100 are right. Look for 414 or 317 (a reading, not the rise)."
+    },
+    {
+      "type": "choice",
+      "q": 2,
+      "skill": "I can explain the greenhouse effect",
+      "prompt": "Absorb What? In the game, what did the air layers absorb?",
+      "answer": "B",
+      "columns": 1,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Sunlight coming down from the Sun",
+          "why": "Sunlight passed straight through to the ground."
+        },
+        {
+          "letter": "B",
+          "text": "Infrared given off by the warm ground",
+          "why": "Yes: CO₂ absorbs infrared, not sunlight."
+        },
+        {
+          "letter": "C",
+          "text": "Cold air coming down from space",
+          "why": "Only sunlight and infrared moved in the game."
+        },
+        {
+          "letter": "D",
+          "text": "Nothing: every token passed through",
+          "why": "Rolls of 1-2 (or 1-4) were absorbed."
+        }
+      ]
+    },
+    {
+      "type": "choice",
+      "q": 3,
+      "skill": "I can explain the greenhouse effect",
+      "prompt": "More CO₂: When the game switched from low to high CO₂, what happened?",
+      "answer": "C",
+      "columns": 1,
+      "options": [
+        {
+          "letter": "A",
+          "text": "More infrared escaped to space right away.",
+          "why": "More was absorbed on the way up."
+        },
+        {
+          "letter": "B",
+          "text": "Less sunlight reached the ground.",
+          "why": "Sunlight passed through either way."
+        },
+        {
+          "letter": "C",
+          "text": "More infrared came back down to the ground.",
+          "why": "Yes: more absorbed, half sent back down."
+        },
+        {
+          "letter": "D",
+          "text": "Nothing changed.",
+          "why": "Compare your low and high CO₂ rounds."
+        }
+      ]
+    },
+    {
+      "type": "short",
+      "q": 4,
+      "lines": 4,
+      "skill": "I can explain the greenhouse effect",
+      "prompt": "Without It: With no greenhouse gases at all, Earth's average surface temperature would be about −18 °C instead of about 15 °C. Use the game to explain why.",
+      "rubric": [
+        {
+          "criterion": "Absorb: says gases in the air absorb infrared given off by the ground (not sunlight).",
+          "short": "Absorb infrared",
+          "levels": [
+            "missing",
+            "vague",
+            "clear"
+          ]
+        },
+        {
+          "criterion": "Back down: says the gases give the energy off again, some of it back down to the ground.",
+          "short": "Some sent back",
+          "levels": [
+            "missing",
+            "vague",
+            "clear"
+          ]
+        },
+        {
+          "criterion": "Without: says with none, all the infrared escapes, so the ground gets less energy and is colder.",
+          "short": "None: colder",
+          "levels": [
+            "missing",
+            "vague",
+            "clear"
+          ]
+        }
+      ]
+    }
+  ]
+}
