@@ -12,6 +12,8 @@ teacher:
 | `worksheet.pdf` | A copy of the worksheet, so everything to print is in one folder. Marking still uses the folder `make` wrote. |
 
 After marking, `PL goover` makes a better go-over deck from the class's results (see the end of this file).
+The next day's lesson can open with it: a phase with `"review"` (below) puts the most-missed questions, how
+the class answered them, and a "Fix it" slide into that lesson's own slides.
 
 Make the worksheet first (`PL make`), then the lesson: the lesson points at the folder `make` wrote.
 
@@ -119,6 +121,21 @@ Each phase: `{"phase": "Mini-lesson", "minutes": 15, "teacher": "...", "students
   the plan and the notes. Going over the marked sheets the next day (`go-over.pptx`, or `PL goover` after
   marking) is usually better.
 - `"divider": true` opens the phase with a dark section slide.
+- `"review": "<marking folder>"` (a path from the lesson file) opens with an earlier worksheet's go-over,
+  from its marked class. You get:
+  - how each question went;
+  - the most-missed questions (`"most": 2` keeps it short; about 3 minutes each), each with how the class
+    answered, the common mistake, and the worked answer;
+  - a "Fix it" slide, where students fix one mistake on their marked copy.
+
+  Its explanations come from that marking's `goover.json`; write it first (see the end of this file). The
+  plan reminds the teacher to bring the marked copies. Use it to open the next day's lesson: feedback
+  matters most while the work is fresh.
+
+  ```json
+  {"phase": "Yesterday's worksheet", "minutes": 8, "review": "../math6-ratios-01/marking-2026-10-27", "most": 2,
+   "teacher": "Go over the two most-missed questions; students fix one mistake on their marked copy."}
+  ```
 
 Typical phases: Warm-up (or Do now), Mini-lesson, Guided practice, Worksheet, Go over it, Exit ticket.
 Plan time the way the teacher would: a 15-minute worksheet with 6 questions is about right for grade 6;

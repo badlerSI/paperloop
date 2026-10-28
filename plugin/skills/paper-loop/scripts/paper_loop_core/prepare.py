@@ -24,6 +24,7 @@ ID_CONFIDENCE = 0.9  # a misread ID hands one student's work to another
 ID_CONFIDENCE_ON_ROSTER = 0.5
 MIN_INK_PX = 60  # student-ink pixels below which an answer counts as empty
 BOX_INSET_PT = 2.0  # crop short answers just inside the printed border
+BELOW_PT = 14.0  # and this far below it: a last line written under the box still shows
 EMPTY_INSET_PT = 4.0  # the empty-answer check stays clear of the printed border
 MIN_MARK_PX = 150  # a circle around an option leaves at least this much ink in its row
 OUTSIDE_INK_PX = 300  # this much student ink outside a question's answer areas is worth a look
@@ -41,7 +42,7 @@ def answer_ink(ink: np.ndarray, box: dict) -> int:
 def outside_ink(ink: np.ndarray, box: dict) -> tuple[int, tuple]:
     """Student ink in the question's block (prompt to bottom, left margin to the gutter) but outside its answer
     areas: an answer written beside the box, or a correction moved outside it. Returns (pixels, block rect)."""
-    block = (S.LEFT - S.OPTION_REACH, box["rect"][1] - 3, S.BOX_RIGHT + 8, box["feedback_rect"][3])
+    block = (S.LEFT - S.OPTION_REACH, box["rect"][1] - BELOW_PT, S.BOX_RIGHT + 8, box["feedback_rect"][3])
     left, top, right, bottom = S.rect_to_px(block)
     h, w = ink.shape
     region = ink[max(top, 0):min(bottom, h), max(left, 0):min(right, w)].copy()
@@ -73,13 +74,20 @@ def _identify(canonical: np.ndarray, layout: dict, assignment_dir: Path) -> tupl
     code = L.read_code(canonical)
     if code is not None:
         digest, page_no = code
-        if digest != S.assignment_hash(layout["assignment_id"]):
+        forms = layout.get("forms") or [{"id": "", "code_id": layout["assignment_id"]}]
+        form = next((f for f in forms if S.assignment_hash(f["code_id"]) == digest), None)
+        if form is None:
             return None, "page belongs to a different assignment"
-        if page_no not in {p["page"] for p in layout["pages"]}:
-            return None, f"{layout['assignment_id']} has no page {page_no}"
-        return page_no, "code"
+        page = next((p for p in layout["pages"] if p.get("form", "") == form["id"]
+                     and p.get("form_page", p["page"]) == page_no), None)
+        if page is None:
+            return None, f"{layout['assignment_id']} has no page {page_no}" + (f" in form {form['label']}" if form["id"] else "")
+        return page["page"], "code"
+    if len(layout.get("forms") or []) > 1:  # copies look alike: only the code can say which one this is
+        return None, ("the page code in the top-left corner can't be read, and this worksheet has several "
+                      "versions or copies: sort it by hand (the copy's form is in the footer)")
     scores = {}
-    for p in layout["pages"]:
+    for p in S.form_pages(layout):
         blank = L.template(assignment_dir, p["page"])
         scores[p["page"]] = L.page_match(L.flatten(canonical, blank), blank)
     page_no = max(scores, key=scores.get)
@@ -104,12 +112,19 @@ def prepare(scan_pdfs: list[Path], assignment_dir: Path, work: Path) -> dict:
             index += 1
             pages.append(_prepare_page(index, gray, layout, assignment_dir, work))
 
-    # Blank template crops, so Claude can tell printing from student marks on labels and drawings.
+    # Blank template crops, so Claude can tell printing from student marks on labels and drawings: the
+    # base form's, and those of any other form in this scan (named blank-qN-<form>.png).
+    scanned = {p["page"] for p in pages if p.get("page")}
+    forms_seen = {""} | {p.get("form", "") for p in layout["pages"] if p["page"] in scanned}
     for p in layout["pages"]:
-        blank = L.template(assignment_dir, p["page"])
+        if p.get("form", "") not in forms_seen:
+            continue
+        blank = None
         for box in p["boxes"]:
-            if box["type"] in ("label", "draw", "table"):
-                L.save_png(L.crop(blank, box["rect"]), work / "crops" / f"blank-q{box['q']}.png")
+            if box["type"] in ("label", "draw", "table") and box.get("part", 1) == 1:
+                blank = L.template(assignment_dir, p["page"]) if blank is None else blank
+                suffix = f"-{p['form']}" if p.get("form") else ""
+                L.save_png(L.crop(blank, box["rect"]), work / "crops" / f"blank-q{box['q']}{suffix}.png")
 
     sheets = id_sheets(pages, work)
     manifest = {"assignment_dir": str(assignment_dir), "assignment_id": layout["assignment_id"],
@@ -185,24 +200,30 @@ def _prepare_page(index: int, gray: np.ndarray, layout: dict, assignment_dir: Pa
     blank = L.template(assignment_dir, page_no)
     canonical = L.flatten(canonical, blank)
     L.save_png(canonical, work / page["image"])
-    page.update(assignment_id=layout["assignment_id"], page=page_no)
     page_layout = next(p for p in layout["pages"] if p["page"] == page_no)
+    page.update(assignment_id=layout["assignment_id"], page=page_no, form=page_layout.get("form", ""))
     ink = L.student_ink(canonical, blank)
 
     boxes = page_layout["id_boxes"]
     page["id_digits"] = len(boxes)
     region = (min(b[0] for b in boxes) - 3, min(b[1] for b in boxes) - 3,
               max(b[2] for b in boxes) + 3, max(b[3] for b in boxes) + 3)
-    if int(L.crop(ink, region).sum()) < ID_MIN_INK_PX:
+    if page_layout.get("student_id"):  # made for one student (a practice sheet): the ID is printed, not read
+        page.update(status="ok", reason=None, student_id=page_layout["student_id"], id_printed=True)
+    elif int(L.crop(ink, region).sum()) < ID_MIN_INK_PX:
         page["reason"] = "no ID written"
         return page
-    page["id_image"] = f"ids/scan-{index:03}.png"
-    L.save_png(L.crop(canonical, region), work / page["id_image"])
-    page["status"], page["reason"] = "ok", "ID not read yet"
+    else:
+        page["id_image"] = f"ids/scan-{index:03}.png"
+        L.save_png(L.crop(canonical, region), work / page["id_image"])
+        page["status"], page["reason"] = "ok", "ID not read yet"
 
     for box in page_layout["boxes"]:
         crop = f"crops/scan-{index:03}-q{box['q']}.png"
-        L.save_png(L.crop(canonical, box["rect"], BOX_INSET_PT if box["type"] == "short" else 0.0), work / crop)
+        rect = box["rect"]
+        if box["type"] in ("short", "math"):  # writing often runs past the last line: keep what's just below it
+            rect = (rect[0], rect[1] - BELOW_PT, rect[2], rect[3])
+        L.save_png(L.crop(canonical, rect, BOX_INSET_PT if box["type"] == "short" else 0.0), work / crop)
         answer = {"crop": crop, "status": "mark", "read": None, "ink": []}
         if box.get("part"):
             answer["part"] = box["part"]  # an essay running across pages: which page of it this is
@@ -278,6 +299,15 @@ def route(work: Path, roster: set[str] | None = None) -> dict:
         page["status"], page["student_id"] = "ok", digits
         page["id_confidence"], page["id_by_roster"] = confidence, confidence < ID_CONFIDENCE
 
+    forms_of: dict[str, set] = defaultdict(set)
+    for p in manifest["pages"]:
+        if p["status"] == "ok" and p["student_id"]:
+            forms_of[p["student_id"]].add(p.get("form", ""))
+    for p in manifest["pages"]:  # two different copies under one ID: a spoiled sheet, or a misread ID
+        if p["status"] == "ok" and p["student_id"] and len(forms_of[p["student_id"]]) > 1:
+            p["reason"] = (f"student {p['student_id']} handed in pages from more than one copy (forms "
+                           f"{', '.join(sorted(f or 'A' for f in forms_of[p['student_id']]))}): keep the one they used")
+            p["status"], p["student_id"] = "review", None
     seen: dict[tuple[str, int], list[dict]] = defaultdict(list)
     for p in manifest["pages"]:
         if p["status"] == "ok" and p["student_id"]:
@@ -367,17 +397,109 @@ _MENTIONS_TEXT = re.compile(r"\b(story|passage|text|source|article|poem|speech|e
 
 
 def _passage(key: dict, item: dict) -> list[str]:
-    """The passage a question is about: the one it names, or the only one when the prompt points at a text."""
+    """The passages a question is about: the ones it names, or the only one when the prompt points at a text."""
     passages = key.get("passages", [])
-    p = next((p for p in passages if p["id"] == item.get("passage")), None)
-    if p is None and len(passages) == 1 and item["type"] != "choice" and _MENTIONS_TEXT.search(
+    wanted = item.get("passages") or ([item["passage"]] if item.get("passage") else [])
+    chosen = [p for p in passages if p["id"] in wanted]
+    if not chosen and len(passages) == 1 and item["type"] != "choice" and _MENTIONS_TEXT.search(
             " ".join([item["prompt"], item.get("key", ""), item.get("notes", "")])):
-        p = passages[0]
-    if p is None:
-        return []
-    title = f" ({p['title']})" if p["title"] else ""
-    lines = [f"{n or '':>3}  {line}" if n or line.strip() else "" for n, line in p["lines"]]
-    return [f"**The passage{title}, as printed, with its line numbers:**", "```", *lines, "```", ""]
+        chosen = passages[:1]
+    out = []
+    for p in chosen:
+        title = f" ({p['title']})" if p["title"] else ""
+        lines = [f"{n or '':>3}  {line}" if n or line.strip() else "" for n, line in p["lines"]]
+        out += [f"**The passage{title}, as printed, with its line numbers:**", "```", *lines, "```", ""]
+    return out
+
+
+def _key_lines(item: dict) -> list[str]:
+    """What a question expects, for a work order: its key, options, expected boxes, or checklist."""
+    kind = item["type"]
+    lines = []
+    if kind == "short":
+        lines += [f"**Key:** {item['key']}"]
+        if item.get("rubric"):
+            lines += ["", "**Rubric** (score each criterion; level 0 is the first description):"]
+            for c in item["rubric"]:
+                lines.append(f"{c['n']}. {c['criterion']}")
+                lines += [f"   - level {k}: {desc}" for k, desc in enumerate(c["levels"])]
+    elif kind == "choice":
+        lines += ["**Options:**", *[f"- {o['letter']}. {o['text']}" for o in item["options"]],
+                  "", f"**Answer:** {item['answer']} (you only read what was circled; the script judges it)"]
+    elif kind == "label":
+        lines += [f"**Printed diagram:** {item['diagram']}"]
+        if item["word_bank"]:
+            lines += [f"**Word bank printed on the page:** {', '.join(item['word_bank'])}"]
+        lines += ["**Expected labels:**", *_expected(item["labels"], "Box")]
+    elif kind == "blanks":
+        lines += ["**The text, with each numbered blank shown as [blank n]:**", "",
+                  "> " + re.sub(r"\{(\d+)\}", r"[blank \1]", item["text"]).replace("\n", "\n> "), ""]
+        if item["word_bank"]:
+            lines += [f"**Word bank printed on the page:** {', '.join(item['word_bank'])}", ""]
+        lines += ["**Expected:**", *_expected(item["labels"], "Blank")]
+    elif kind == "match":
+        if item.get("choices"):
+            lines += ["**Choices printed on the page:**", *[f"- {c['letter']}. {c['text']}" for c in item["choices"]],
+                      ""]
+        else:
+            lines += ["No choices are printed: the student writes a number or word in each box (an order, T/F, "
+                      "and so on). The items are lettered on the page; the box numbers below are for your file.", ""]
+        lines += ["**Each item's box should hold:**",
+                  *[f"- Item {e['n']} (printed as \"{e.get('name', e['n'])}. {e['text']}\"): {e['answer']}"
+                    + (f" (also accept: {', '.join(e['accept'])})" if e.get("accept") else "") for e in item["labels"]]]
+    elif kind == "table":
+        lines += ["**The table as printed** (cells to fill shown as [n]):", "",
+                  "| " + " | ".join(item["columns"]) + " |", "|" + "---|" * len(item["columns"]),
+                  *["| " + " | ".join(row) + " |" for row in item["rows"]], "",
+                  "**Expected:**", *_expected(item["labels"], "Cell")]
+    elif kind == "math":
+        accept = f" (also accept: {', '.join(item['accept'])})" if item.get("accept") else ""
+        units = f" {item['units']} (printed beside the box)" if item.get("units") else ""
+        lines += [f"**Answer:** {item['answer']}{units}{accept}",
+                  f"**What the work should show:** {item['key'] or 'any correct method'}",
+                  f"**Points:** {item['answer_points']} for the answer, {item['work_points']} for the work"]
+    else:
+        lines += [f"**What's printed:** {item['diagram']}", "**Checklist:**",
+                  *[f"{n}. {c['item']}" for n, c in enumerate(item["checklist"], start=1)]]
+        if item.get("answer"):
+            accept = f" (also accept: {', '.join(item['accept'])})" if item.get("accept") else ""
+            lines += ["", f"**It also has an answer box:** {item['answer']}"
+                          f"{' ' + item['units'] + ' (printed beside the box)' if item.get('units') else ''}"
+                          f"{accept}. Read it and judge it as in the \"math\" rules (answer, answer_verdict)."]
+    return lines
+
+
+_EXPECTS = ("key", "answer", "accept", "labels", "options", "checklist", "rubric", "text", "rows", "units")
+
+
+def _form_lines(base: dict, item: dict, form: dict, base_language: str, words: int) -> list[str]:
+    """How a version or a student's copy printed this question differently, and what that changes for
+    marking. Empty when it printed the same."""
+    lines = []
+    if item["prompt"] != base["prompt"]:
+        lines.append(f"**Prompt as printed on these copies:** {item['prompt']}")
+    for aside in item.get("asides", []):
+        text = aside["text"] if isinstance(aside["text"], str) else "; ".join(aside["text"])
+        label = {"example": "A worked example", "hint": "A hint", "steps": "Steps", "words": "Key words",
+                 "bank": "A word bank", "translation": f"A translation ({form.get('language_name', '')})",
+                 "last": "The comment this student got last time",
+                 "last_other": "The comment this student got last time, on a copy with other numbers"}[aside["kind"]]
+        lines.append(f"- Printed under the prompt: {label}: {text}")
+    if item.get("frame"):
+        lines.append("- Printed in gray on the first writing lines (a sentence starter, not the student's words): "
+                     + " / ".join(item["frame"]).rstrip(".") + ". Read the student's writing as finishing it.")
+    expects_differ = any(item.get(k) != base.get(k) for k in _EXPECTS)
+    if expects_differ:
+        lines += ["**What this copy expects:**", *_key_lines(item)]
+    if item.get("notes") and item.get("notes") != base.get("notes"):
+        lines.append(f"**Notes for marking this copy:** {item['notes']}")
+    language = form.get("comment_language") or base_language
+    if form.get("language"):
+        lines.append(f"- Students with these copies may answer in {form.get('language_english') or form['language']} "
+                     "or English: mark what they mean. Spelling counts only where the key says it does.")
+    if language != base_language:
+        lines.append(f"- Comments for these students: in {language}, {words} words at most.")
+    return lines
 
 
 def todo(work: Path) -> list[Path]:
@@ -386,6 +508,8 @@ def todo(work: Path) -> list[Path]:
     manifest = S.read_json(work / "manifest.json")
     key = S.read_json(Path(manifest["assignment_dir"]) / "key.json")
     layout = S.read_json(Path(manifest["assignment_dir"]) / "layout.json")
+    forms = key.get("forms", {})
+    form_of_page = {p["page"]: p.get("form", "") for p in layout["pages"]}
     words = key.get("comment_words", 15)
     band = key["grade_band"] if re.search(r"\d", key["grade_band"]) or key.get("grade") is None \
         else f"{key['grade_band']} (grade {key['grade']})"
@@ -405,10 +529,11 @@ def todo(work: Path) -> list[Path]:
         routed = [p for p in manifest["pages"] if p["status"] == "ok" and p["student_id"] and q in p["answers"]]
         essay = {p["page"]: b["part"] for p in layout["pages"] for b in p["boxes"] if b["q"] == item["q"] and b.get("part")}
         more = {}  # an essay across pages: the first page's scan -> every page's (scan, answer, part)
+        form_of_scan = {p["scan_index"]: form_of_page.get(p["page"], "") for p in routed}
         if essay:
             by_student = defaultdict(dict)
-            for p in routed:
-                by_student[p["student_id"]][essay[p["page"]]] = p
+            for p in routed:  # a form that fits the essay on one page has no parts: that page is part 1
+                by_student[p["student_id"]][essay.get(p["page"], 1)] = p
             answers, settled = [], []
             for got in by_student.values():
                 first = got[min(got)]  # page 1 of the answer, or the earliest one routed
@@ -442,63 +567,50 @@ def todo(work: Path) -> list[Path]:
         if key.get("instructions"):
             lines[-2:-2] = [f"**Printed at the top of the worksheet:** {key['instructions']}", ""]
         if item.get("notes"):
-            lines += [f"**Notes from the teacher:** {item['notes']}", ""]
+            lines += [f"**Notes for marking:** {item['notes']}", ""]
         if item.get("spelling"):
             lines += ["**Spelling counts on this question:** an answer is right only if it's spelled right, "
                       "accents included.", ""]
-        if kind == "short":
-            lines += [f"**Key:** {item['key']}"]
-            if rubric:
-                lines += ["", "**Rubric** (score each criterion; level 0 is the first description):"]
-                for c in item["rubric"]:
-                    lines.append(f"{c['n']}. {c['criterion']}")
-                    lines += [f"   - level {k}: {desc}" for k, desc in enumerate(c["levels"])]
-        elif kind == "choice":
-            lines += ["**Options:**", *[f"- {o['letter']}. {o['text']}" for o in item["options"]],
-                      "", f"**Answer:** {item['answer']} (you only read what was circled; the script judges it)"]
-        elif kind == "label":
-            lines += [f"**Printed diagram:** {item['diagram']}"]
-            if item["word_bank"]:
-                lines += [f"**Word bank printed on the page:** {', '.join(item['word_bank'])}"]
-            lines += ["**Expected labels:**", *_expected(item["labels"], "Box")]
-        elif kind == "blanks":
-            lines += ["**The text, with each numbered blank shown as [blank n]:**", "",
-                      "> " + re.sub(r"\{(\d+)\}", r"[blank \1]", item["text"]).replace("\n", "\n> "), ""]
-            if item["word_bank"]:
-                lines += [f"**Word bank printed on the page:** {', '.join(item['word_bank'])}", ""]
-            lines += ["**Expected:**", *_expected(item["labels"], "Blank")]
-        elif kind == "match":
-            if item.get("choices"):
-                lines += ["**Choices printed on the page:**", *[f"- {c['letter']}. {c['text']}" for c in item["choices"]],
-                          ""]
-            else:
-                lines += ["No choices are printed: the student writes a number or word in each box (an order, T/F, "
-                          "and so on). The items are lettered on the page; the box numbers below are for your file.", ""]
-            lines += ["**Each item's box should hold:**",
-                      *[f"- Item {e['n']} (printed as \"{e.get('name', e['n'])}. {e['text']}\"): {e['answer']}"
-                        + (f" (also accept: {', '.join(e['accept'])})" if e.get("accept") else "") for e in item["labels"]]]
-        elif kind == "table":
-            lines += ["**The table as printed** (cells to fill shown as [n]):", "",
-                      "| " + " | ".join(item["columns"]) + " |", "|" + "---|" * len(item["columns"]),
-                      *["| " + " | ".join(row) + " |" for row in item["rows"]], "",
-                      "**Expected:**", *_expected(item["labels"], "Cell")]
-        elif kind == "math":
-            accept = f" (also accept: {', '.join(item['accept'])})" if item.get("accept") else ""
-            units = f" {item['units']} (printed beside the box)" if item.get("units") else ""
-            lines += [f"**Answer:** {item['answer']}{units}{accept}",
-                      f"**What the work should show:** {item['key'] or 'any correct method'}",
-                      f"**Points:** {item['answer_points']} for the answer, {item['work_points']} for the work"]
-        else:
-            lines += [f"**What's printed:** {item['diagram']}", "**Checklist:**",
-                      *[f"{n}. {c['item']}" for n, c in enumerate(item["checklist"], start=1)]]
-            if item.get("answer"):
-                accept = f" (also accept: {', '.join(item['accept'])})" if item.get("accept") else ""
-                lines += ["", f"**It also has an answer box:** {item['answer']}"
-                              f"{' ' + item['units'] + ' (printed beside the box)' if item.get('units') else ''}"
-                              f"{accept}. Read it and judge it as in the \"math\" rules (answer, answer_verdict)."]
+        lines += _key_lines(item)
+        if item.get("varies"):
+            lines += ["", "(Each student had their own copy of this question, with other numbers or another item. "
+                          "The copy above is for reference: mark each scan against its own copy, listed below.)"]
         if kind in ("label", "draw", "table"):
             lines += ["", "**The area as printed, before any student touched it** (look at it first): "
                           f"`{(work / 'crops' / f'blank-q{q}.png').resolve()}`"]
+
+        # Answers from copies that printed this question differently are listed under their own heading.
+        groups: dict[str, list] = defaultdict(list)
+        notes: dict[str, list[str]] = {}
+        for s_, a in answers:
+            fid = form_of_scan.get(s_, "")
+            if fid and fid in forms:
+                if fid not in notes:
+                    fitem = S.form_items(key, fid).get(item["q"], item)
+                    notes[fid] = _form_lines(item, fitem, forms[fid], language, words)
+                if notes[fid] or (forms[fid]["kind"] == "variant" and item.get("varies")):
+                    groups[fid].append((s_, a))  # each student's own copy gets its own heading
+                    continue
+            groups[""].append((s_, a))
+
+        def scan_line(s_, a) -> str:
+            extra = ""
+            own = form_of_scan.get(s_, "")
+            blank = work / "crops" / f"blank-q{q}-{own}.png"
+            if own and kind in ("label", "draw", "table") and blank.exists() and (s_, a) in groups.get("", []):
+                extra += f"; printed larger, so compare with `{blank.resolve()}`"
+            if a.get("outside_crop"):
+                extra += (f"; there's also writing outside the answer area, so look at the whole question: "
+                          f"`{(work / a['outside_crop']).resolve()}`")
+            if s_ in more:
+                pieces = [f"then scan {s2} (page {k} of the answer{', blank' if a2['status'] == 'blank' else ''}): "
+                          f"`{(work / a2['crop']).resolve()}`" for s2, a2, k in more[s_][1:]]
+                missing = [k for k in range(1, max(essay.values()) + 1) if k not in {k2 for *_, k2 in more[s_]}]
+                extra += "".join(f"; {piece}" for piece in pieces)
+                if missing:
+                    extra += f"; page{'s' if len(missing) > 1 else ''} {', '.join(map(str, missing))} of the answer isn't in the scan"
+            return f"- scan {s_}: `{(work / a['crop']).resolve()}`{extra}"
+
         lines += ["", "**Answers to mark** (look at each crop; the scan number is the key in your file):"]
         if essay:
             parts = max(essay.values())
@@ -512,19 +624,18 @@ def todo(work: Path) -> list[Path]:
         if any(a.get("answer_crop") for _, a in answers):
             lines.append("(Each crop includes the answer box at its bottom right. If an answer is hard to read, a "
                          "2x close-up is beside the crop: same name, ending in -answer.png.)")
-        for s_, a in answers:
-            extra = ""
-            if a.get("outside_crop"):
-                extra += (f"; there's also writing outside the answer area, so look at the whole question: "
-                          f"`{(work / a['outside_crop']).resolve()}`")
-            if s_ in more:
-                pieces = [f"then scan {s2} (page {k} of the answer{', blank' if a2['status'] == 'blank' else ''}): "
-                          f"`{(work / a2['crop']).resolve()}`" for s2, a2, k in more[s_][1:]]
-                missing = [k for k in range(1, max(essay.values()) + 1) if k not in {k2 for *_, k2 in more[s_]}]
-                extra += "".join(f"; {piece}" for piece in pieces)
-                if missing:
-                    extra += f"; page{'s' if len(missing) > 1 else ''} {', '.join(map(str, missing))} of the answer isn't in the scan"
-            lines.append(f"- scan {s_}: `{(work / a['crop']).resolve()}`{extra}")
+        lines += [scan_line(s_, a) for s_, a in groups.get("", [])]
+        for fid, group in groups.items():
+            if not fid:
+                continue
+            f = forms[fid]
+            head = (f"Copy {f['label']}" + ("" if notes[fid] else " (the same as the copy above)")) \
+                if f["kind"] == "variant" else f"Version {f['label']} ({f['name']}): printed differently"
+            lines += ["", f"### {head}", "", *notes[fid]]
+            blank = work / "crops" / f"blank-q{q}-{fid}.png"
+            if kind in ("label", "draw", "table") and blank.exists():
+                lines.append(f"- The area as printed on these copies: `{blank.resolve()}`")
+            lines += ["", *[scan_line(s_, a) for s_, a in group]]
         shape = SHAPES["rubric" if rubric else kind]
         if kind == "draw" and item.get("answer"):
             shape = shape[:-1] + ', "answer": "...", "answer_verdict": "correct|incorrect|blank|unreadable"}'

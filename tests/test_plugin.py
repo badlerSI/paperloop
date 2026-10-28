@@ -59,7 +59,8 @@ def test_layout_matches_the_cli(water, tmp_path):
     root, _, _ = water
     make_worksheet(load(WorksheetDef, EXAMPLE), tmp_path / "cli")
     ours, cli = S.read_json(root / "assignment" / "layout.json"), S.read_json(tmp_path / "cli" / "layout.json")
-    strip = lambda page: [{k: v for k, v in b.items()} for b in page["boxes"]]  # noqa: E731
+    plugin_only = ("line_spacing", "scale")  # fields the plugin adds for versions and its simulator
+    strip = lambda page: [{k: v for k, v in b.items() if k not in plugin_only} for b in page["boxes"]]  # noqa: E731
     assert json.loads(json.dumps(strip(ours["pages"][0]))) == strip(cli["pages"][0])
     ours_key, cli_key = S.read_json(root / "assignment" / "key.json"), S.read_json(tmp_path / "cli" / "key.json")
     assert [{k: item[k] for k in cli_item} for item, cli_item in zip(ours_key["items"], cli_key["items"])] \
@@ -197,7 +198,8 @@ def test_blank_pages_are_named_and_zoom_enlarges(water, tmp_path):
 # --- All subjects, grades 2-12 -------------------------------------------------------------
 
 PLUGIN_EXAMPLES = sorted(p for p in (ROOT / "plugin" / "skills" / "paper-loop" / "references" / "examples").glob("*.json")
-                         if not p.stem.endswith("-lesson"))  # lessons: tests/test_lessons.py
+                         if not p.stem.endswith(("-lesson", "-pieces"))  # lessons: tests/test_lessons.py
+                         and "." not in p.stem)  # a version's translation (math6-ratios-02.es.json)
 PAGE_BUDGET = {"math6-ratios-01": 1, "span9-casa-01": 1, "sci3-plants-01": 1, "ela11-argument-01": 1,
                "cs10-loops-01": 1, "chem10-moles-01": 1, "mus5-notes-01": 1, "math7-data-01": 1}
 
@@ -207,7 +209,7 @@ def test_every_example_worksheet_makes(path, tmp_path):
     defn = S.read_json(path)
     layout = S.make_worksheet(defn, tmp_path / path.stem, base=path.parent)
     assert layout["unprintable"] == ""
-    assert len(layout["pages"]) <= PAGE_BUDGET.get(path.stem, 2)
+    assert layout["base_pages"] <= PAGE_BUDGET.get(path.stem, 2)
     key = S.read_json(tmp_path / path.stem / "key.json")
     assert key["grade"] == S.normalize(defn)["grade"]
     for page in layout["pages"]:

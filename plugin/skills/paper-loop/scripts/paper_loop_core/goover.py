@@ -50,9 +50,11 @@ def stats(results: dict, ws: WK.Worksheet) -> dict[int, dict]:
             if verdict not in ("correct", "blank") and b.get("crop"):
                 st["crops"] += [b["crop"], *b.get("more_crops", [])]
             if b["type"] == "choice":
-                selected = (b["details"] or [{}])[0].get("selected")
-                st["picks"][selected or "blank"] += 1
+                d = (b["details"] or [{}])[0]
+                st["picks"][d.get("base_selected") or d.get("selected") or "blank"] += 1  # base copy's letters
                 continue
+            if ws.items[q].get("varies"):
+                continue  # each copy had its own numbers: no answers in common to show
             for d in b["details"]:
                 read = str(d.get("read") or "").strip()
                 if d.get("verdict") == "incorrect" and read:
@@ -74,8 +76,8 @@ def _assignment(work: Path, manifest: dict) -> Path:
     return folder
 
 
-def build(work: Path, lesson_path: Path | None = None, out: Path | None = None, most: int | None = None) -> dict:
-    """most: go over only this many questions, the most missed."""
+def _prepare(work: Path, lesson_path: Path | None = None) -> dict:
+    """A marked class, ready to go over: its worksheet, how each question went, and the explanations."""
     work = Path(work)
     if not (work / "results.json").exists():
         raise LessonError(f"{work} has no results.json yet: run `check` until the marks are clean")
@@ -110,38 +112,42 @@ def build(work: Path, lesson_path: Path | None = None, out: Path | None = None, 
                 spec["drawing"] = ws.answer_drawing(q, spec["draw"])
             except ValueError as e:
                 raise LessonError(str(e)) from None
-
     st = stats(results, ws)
     marked = [q for q in ws.questions if st[q]["n"]]
     if not marked:
         raise LessonError("results.json has no marked answers")
     share = {q: st[q]["full"] / st[q]["n"] for q in marked}
     missed = sorted((q for q in marked if share[q] < GOT_IT), key=lambda q: (share[q], q))
-    go_over = missed[:most] if most else missed
     got_it = [q for q in marked if share[q] >= GOT_IT]
+    return {"work": work, "ws": ws, "folder": folder, "walk": walk, "st": st, "marked": marked, "share": share,
+            "missed": missed, "got_it": got_it, "subject": subject, "grade_band": grade_band}
 
-    texts = DK._strings(walk) + [i["prompt"] for i in ws.items.values()] + [i["key"] for i in ws.items.values()]
-    measure = K.Measure(texts)
-    theme = K.theme_for(subject)
+
+def texts(ctx: dict) -> list[str]:
+    """Every string the go-over slides may print, for choosing fonts."""
+    ws = ctx["ws"]
+    return DK._strings(ctx["walk"]) + [i["prompt"] for i in ws.items.values()] + [i["key"] for i in ws.items.values()]
+
+
+def build(work: Path, lesson_path: Path | None = None, out: Path | None = None, most: int | None = None) -> dict:
+    """most: go over only this many questions, the most missed."""
+    ctx = _prepare(work, lesson_path)
+    go_over = ctx["missed"][:most] if most else ctx["missed"]
+    measure = K.Measure(texts(ctx))
+    theme = K.theme_for(ctx["subject"])
+    work = ctx["work"]
     out = Path(out) if out else work / "out"
     shutil.rmtree(out / "go-over-images", ignore_errors=True)  # from an earlier version, which kept them
     images = Path(tempfile.mkdtemp(prefix="paper-loop-goover-"))
     try:
-        return _build(work, ws, folder, walk, st, marked, share, missed, go_over, got_it, subject, grade_band,
-                      measure, theme, out, images)
+        return _build(ctx, go_over, measure, theme, out, images)
     finally:
         shutil.rmtree(images, ignore_errors=True)
 
 
-def _build(work, ws, folder, walk, st, marked, share, missed, go_over, got_it, subject, grade_band, measure, theme,
-           out, images) -> dict:
-    grade = S.grade_of({"grade_band": grade_band, "grade": ws.key.get("grade")})
-    b = DK.Builder(theme, grade, measure, images, folder)
-    chip = " · ".join(x[:1].upper() + x[1:] for x in (subject, grade_band) if x)
-    b.title_slide(f"Going over: {ws.title}", "", chip)
-    overview(b, ws, st, marked, go_over)
-    if got_it:
-        nailed(b, ws, st, got_it, walk)
+def _questions(b: DK.Builder, ctx: dict, go_over: list[int]) -> None:
+    """For each question gone over: the question as printed, with how the class answered, then its answer."""
+    ws, st, walk = ctx["ws"], ctx["st"], ctx["walk"]
     shown = set()
     for q in go_over:
         pid = ws.items[q].get("passage")
@@ -153,14 +159,13 @@ def _build(work, ws, folder, walk, st, marked, share, missed, go_over, got_it, s
                         side_extra=lambda s, x, y, w, h, q=q, spec=spec: class_panel(b, ws, q, st[q], spec, s, x, y, w, h),
                         words=int(b.sz["words"] * 1.3))
         b.walk_answer(ws, q, spec, notes=LS._answer_notes(ws, q, spec))
-    title = f"Going over: {ws.title}"
-    K.write_pptx(b.slides, out / "go-over.pptx", title)
-    K.write_pdf(b.slides, out / "go-over.pdf", title, measure)
-    todo = out / "go-over-todo.md"
-    _todo(todo, ws, st, go_over, walk, share)
+
+
+def _warnings(ctx: dict, go_over: list[int], todo: Path) -> list[str]:
+    walk = ctx["walk"]
     unexplained = [q for q in go_over if not walk.get(q, {}).get("steps") and not walk.get(q, {}).get("idea")]
     unseen = [q for q in go_over if not walk.get(q, {}).get("saw")]
-    warnings = list(b.warnings)
+    warnings = []
     if unexplained:
         warnings.append(f"no explanation for question{'s' if len(unexplained) > 1 else ''} "
                         f"{', '.join(map(str, unexplained))}: its answer slide shows only the key. Add \"idea\", "
@@ -168,8 +173,55 @@ def _build(work, ws, folder, walk, st, marked, share, missed, go_over, got_it, s
     if unseen:
         warnings.append(f"no \"saw\" for question{'s' if len(unseen) > 1 else ''} {', '.join(map(str, unseen))}: "
                         f"{todo} lists the answers that missed, to look at")
-    return {"slides": len(b.slides), "go_over": go_over, "got_it": got_it, "left_out": missed[len(go_over):],
-            "warnings": warnings, "share": share, "students": max(st[q]["n"] for q in marked), "out": out}
+    return warnings
+
+
+def _build(ctx: dict, go_over: list[int], measure, theme, out: Path, images: Path) -> dict:
+    ws, st, marked = ctx["ws"], ctx["st"], ctx["marked"]
+    grade = S.grade_of({"grade_band": ctx["grade_band"], "grade": ws.key.get("grade")})
+    b = DK.Builder(theme, grade, measure, images, ctx["folder"])
+    chip = " · ".join(x[:1].upper() + x[1:] for x in (ctx["subject"], ctx["grade_band"]) if x)
+    b.title_slide(f"Going over: {ws.title}", "", chip)
+    overview(b, ws, st, marked, go_over)
+    if ctx["got_it"]:
+        nailed(b, ws, st, ctx["got_it"], ctx["walk"])
+    _questions(b, ctx, go_over)
+    fix_it(b)
+    title = f"Going over: {ws.title}"
+    K.write_pptx(b.slides, out / "go-over.pptx", title)
+    K.write_pdf(b.slides, out / "go-over.pdf", title, measure)
+    todo = out / "go-over-todo.md"
+    _todo(todo, ws, st, go_over, ctx["walk"], ctx["share"])
+    return {"slides": len(b.slides), "go_over": go_over, "got_it": ctx["got_it"],
+            "left_out": ctx["missed"][len(go_over):], "warnings": list(b.warnings) + _warnings(ctx, go_over, todo),
+            "share": ctx["share"], "students": max(st[q]["n"] for q in marked), "out": out}
+
+
+def review(b: DK.Builder, ctx: dict, most: int | None = None) -> dict:
+    """The go-over of an earlier worksheet, inside another deck (the next day's lesson): how it went, the
+    most-missed questions with how the class answered, and a slide for fixing mistakes on the marked copy."""
+    ws, st = ctx["ws"], ctx["st"]
+    go_over = ctx["missed"][:most] if most else ctx["missed"]
+    overview(b, ws, st, ctx["marked"], go_over, title=f"How \u201c{ws.title}\u201d went")
+    _questions(b, ctx, go_over)
+    fix_it(b)
+    todo = Path(ctx["work"]) / "out" / "go-over-todo.md"
+    _todo(todo, ws, st, go_over, ctx["walk"], ctx["share"])
+    return {"go_over": go_over, "got_it": ctx["got_it"], "left_out": ctx["missed"][len(go_over):],
+            "warnings": _warnings(ctx, go_over, todo), "title": ws.title}
+
+
+def fix_it(b: DK.Builder) -> None:
+    """Feedback works when students use it: a few minutes to fix one mistake on their own marked copy."""
+    s = b.new("Fix it", "Hand back the marked sheets before this slide. Give 3 to 5 minutes. Walk around: a fix "
+                        "that explains why is worth more than a new answer. Collect them again if you want to see "
+                        "the fixes, or have partners check each other's.")
+    top = b.heading(s, "Fix it", "On your marked sheet", chip_fill=b.t.dark)
+    size = b.sz["body"]
+    points = ["Find **one question** with a comment.", "Read the comment, then **redo it** beside the box.",
+              "Write **one sentence**: what you'll do differently next time.", "Done? Check a partner's fix."]
+    b.text(s, DK.X0, top, DK.X1 - DK.X0, DK.BOTTOM - top, b.bullets(points, size), size, b.sz["dense"])
+    b.finish(s)
 
 
 def _todo(path: Path, ws: WK.Worksheet, st: dict, go_over: list[int], walk: dict, share: dict) -> None:
@@ -177,8 +229,9 @@ def _todo(path: Path, ws: WK.Worksheet, st: dict, go_over: list[int], walk: dict
     lines = [f"# Going over {ws.title}", "",
              "Write goover.json in the marking folder: for each question below, `saw` (one or two sentences to the class "
              "about the most common mistake, naming no one), and `idea`, `steps`, and `mistakes` if there's no lesson "
-             "file. If you didn't mark this scan in this session, look at the crops listed under each question first. "
-             "Then run `goover` again.", ""]
+             "file. For a written question, add `model`: a short model answer for the answer slide, which otherwise "
+             "shows the whole marking key. If you didn't mark this scan in this session, look at the crops listed "
+             "under each question first. Then run `goover` again.", ""]
     for q in go_over:
         item, s = ws.items[q], st[q]
         lines += [f"## Question {q} ({share[q]:.0%} full credit): {item['prompt']}", "",
@@ -196,13 +249,14 @@ def _todo(path: Path, ws: WK.Worksheet, st: dict, go_over: list[int], walk: dict
     path.write_text("\n".join(lines))
 
 
-def overview(b: DK.Builder, ws: WK.Worksheet, st: dict, marked: list[int], go_over: list[int]) -> None:
+def overview(b: DK.Builder, ws: WK.Worksheet, st: dict, marked: list[int], go_over: list[int],
+             title: str = "How it went") -> None:
     order = ", ".join(f"question {q}" for q in go_over)
     note = ("Full credit on each question. " + (f"Next, most missed first: {order}." if go_over else
                                                  "Every question was 85% or better.")
             + (" The darker bars are the ones we'll go over." if 0 < len(go_over) < len(marked) else ""))
-    s = b.new("How it went", note)
-    top = b.heading(s, "How it went", "Full credit", chip_fill=b.t.dark)
+    s = b.new(title, note)
+    top = b.heading(s, title, "Full credit", chip_fill=b.t.dark)
     labels = [f"Q{q}" for q in marked]
     values = [round(100 * st[q]["full"] / st[q]["n"]) for q in marked]
     colors = [b.t.accent if q in go_over else b.t.soft for q in marked]
@@ -256,6 +310,8 @@ def class_panel(b: DK.Builder, ws: WK.Worksheet, q: int, st: dict, spec: dict, s
                           space_after=size * 0.5))
     if spec.get("saw"):
         lines.append(Para(K.runs(f"**What I noticed:** {spec['saw']}", MUTED)))
+    if item.get("varies"):
+        lines.append(Para(K.runs("Everyone had their own numbers. This is one version.", MUTED)))
     end = (y + chart_h) if wide else ty
     if lines:
         t = b.text(s, tx, ty, tw, max(bottom - ty, size * 1.2), lines, size, size - 2)
@@ -269,6 +325,9 @@ def _notes(ws: WK.Worksheet, q: int, st: dict, spec: dict) -> str:
              + (f", {st['blank']} left it blank" if st["blank"] else "") + "."]
     if spec.get("saw"):
         parts.append(f"What I noticed while marking: {spec['saw']}")
+    if ws.items[q].get("varies"):
+        parts.append("Each student had a different copy of this question; the slide shows the base copy. Ask "
+                     "students to check their own numbers against these steps.")
     if spec.get("think"):
         parts.append(f"Ask: {spec['think']}")
     if spec.get("ask"):

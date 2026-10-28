@@ -1,0 +1,108 @@
+{
+  "assignment_id": "sci5-photosynthesis-enrich-01",
+  "title": "Going Further: How Plants Make Food",
+  "subject": "science",
+  "grade": 5,
+  "grade_band": "5th grade",
+  "instructions": "Read the passage, then answer each question in its box. Write your ID number, not your name.",
+  "questions": [
+    {
+      "type": "passage",
+      "id": "leaf",
+      "title": "Plants Make Their Own Food",
+      "line_numbers": true,
+      "reading_level": 5,
+      "text": "Plants make their own food. This is called photosynthesis. A plant takes in carbon dioxide, a gas in the air, through tiny holes in its leaves called stomata. Its roots take in water from the soil.\n\nInside the leaves are chloroplasts. They hold a green pigment called chlorophyll, which catches energy from light. The plant uses that energy to turn carbon dioxide and water into a sugar called glucose. That sugar is the plant's food. Oxygen is left over, and the plant lets it out into the air.\n\nLong ago, before tiny living things began making food this way, Earth's air had almost no oxygen. Over a very long time, photosynthesis filled the air with the oxygen that people and animals breathe today.",
+      "cite": {
+        "title": "Photosynthesis",
+        "author": "Simple English Wikipedia contributors",
+        "url": "https://simple.wikipedia.org/w/index.php?title=Photosynthesis&oldid=10903963",
+        "license": "CC BY-SA 4.0",
+        "changes": "shortened and simplified for grade 5"
+      }
+    },
+    {
+      "type": "choice",
+      "q": 1,
+      "passage": "leaf",
+      "skill": "I can explain how plants make food",
+      "prompt": "Sugar Source: Where does a plant's sugar come from? Circle the letter.",
+      "answer": "B",
+      "options": [
+        {
+          "letter": "A",
+          "text": "From the soil",
+          "why": "Roots take in water from soil, not sugar."
+        },
+        {
+          "letter": "B",
+          "text": "Carbon dioxide and water, using light energy",
+          "why": "Yes: light energy turns them into glucose."
+        },
+        {
+          "letter": "C",
+          "text": "From the oxygen in the air",
+          "why": "Oxygen is what the plant gives off."
+        },
+        {
+          "letter": "D",
+          "text": "From sunlight alone",
+          "why": "Light gives energy, but what is the sugar made of?"
+        }
+      ],
+      "columns": 2
+    },
+    {
+      "type": "blanks",
+      "q": 2,
+      "passage": "leaf",
+      "skill": "I can explain how plants make food",
+      "prompt": "In and Out: Use words from the passage.",
+      "word_bank": [
+        "oxygen",
+        "water",
+        "stomata",
+        "carbon dioxide",
+        "chlorophyll"
+      ],
+      "text": "Leaves take in {1} through tiny holes called {2}.\nRoots take in {3}. The leaf gives off {4}.",
+      "answers": [
+        {
+          "n": 1,
+          "answer": "carbon dioxide",
+          "accept": [
+            "CO2"
+          ],
+          "width": 110
+        },
+        {
+          "n": 2,
+          "answer": "stomata"
+        },
+        {
+          "n": 3,
+          "answer": "water"
+        },
+        {
+          "n": 4,
+          "answer": "oxygen"
+        }
+      ]
+    },
+    {
+      "type": "short",
+      "q": 3,
+      "passage": "leaf",
+      "lines": 3,
+      "skill": "I can use evidence from a text",
+      "prompt": "Big Idea: Why do people and animals depend on plants? Use a detail from the passage.",
+      "key": "Plants give off the oxygen people and animals breathe (lines 6-7), and/or plants make the food (sugar) that feeds other living things. Full credit needs a reason tied to the passage, such as oxygen in the air; 'they are nice' or no reason is not credit."
+    },
+    {
+      "type": "note",
+      "title": "Done early?",
+      "text": "Draw a leaf. Use arrows to show what goes in and what comes out, and label each arrow."
+    }
+  ],
+  "compact": true
+}

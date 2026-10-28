@@ -20,14 +20,16 @@ _CONTROL = re.compile(r"[\x00-\x08\x0c\x0e-\x1f]")  # not allowed in XML; \v (a 
 
 
 def _runs(text: str, bold: bool = False, italic: bool = False, color: str | None = None, size: float | None = None,
-          markup: bool = True) -> str:
-    """Runs for text with **bold** marked; markup=False for worksheet text, where ** is Python's power."""
+          markup: bool = True, lang: str | None = None, rtl: bool = False) -> str:
+    """Runs for text with **bold** marked; markup=False for worksheet text, where ** is Python's power.
+    lang (a BCP 47 code such as "es" or "ar") lets Word pick fonts and spelling for the language; rtl sets
+    right-to-left text. Word shapes every script itself, so any language prints correctly."""
     text = _CONTROL.sub("", text.replace("\v", "\n").replace("\r", ""))
     out = []
     for k, piece in enumerate(re.split(r"\*\*", text) if markup else [text]):
         if not piece:
             continue
-        props = []
+        props = []  # in the order Word's schema requires: b, i, color, sz, rtl, lang
         if bold or (markup and k % 2 == 1):
             props.append("<w:b/>")
         if italic:
@@ -36,6 +38,10 @@ def _runs(text: str, bold: bool = False, italic: bool = False, color: str | None
             props.append(f'<w:color w:val="{color}"/>')
         if size:
             props.append(f'<w:sz w:val="{int(size * 2)}"/>')
+        if rtl:
+            props.append("<w:rtl/>")
+        if lang:
+            props.append(f'<w:lang w:val="{escape(lang)}" w:eastAsia="{escape(lang)}" w:bidi="{escape(lang)}"/>')
         rpr = f"<w:rPr>{''.join(props)}</w:rPr>" if props else ""
         lines = piece.split("\n")
         body = '<w:br/>'.join(f'<w:t xml:space="preserve">{escape(line)}</w:t>' for line in lines)
@@ -56,9 +62,11 @@ class Doc:
         self.body.append(f'<w:p><w:pPr><w:pStyle w:val="Heading{level}"/></w:pPr>{_runs(text)}</w:p>')
 
     def para(self, text: str, bold: bool = False, italic: bool = False, color: str | None = None,
-             size: float | None = None, after: int | None = None, markup: bool = True) -> None:
-        spacing = f'<w:pPr><w:spacing w:after="{after}"/></w:pPr>' if after is not None else ""
-        self.body.append(f"<w:p>{spacing}{_runs(text, bold, italic, color, size, markup)}</w:p>")
+             size: float | None = None, after: int | None = None, markup: bool = True, lang: str | None = None,
+             rtl: bool = False) -> None:
+        props = ("<w:bidi/>" if rtl else "") + (f'<w:spacing w:after="{after}"/>' if after is not None else "")
+        ppr = f"<w:pPr>{props}</w:pPr>" if props else ""
+        self.body.append(f"<w:p>{ppr}{_runs(text, bold, italic, color, size, markup, lang, rtl)}</w:p>")
 
     def labeled(self, label: str, text: str) -> None:
         """"Label: text", the label bold and the text as written (worksheet text: no markup)."""
@@ -76,8 +84,9 @@ class Doc:
             self.body.append('<w:p><w:pPr><w:pStyle w:val="ListParagraph"/><w:numPr><w:ilvl w:val="0"/>'
                              f'<w:numId w:val="{num}"/></w:numPr></w:pPr>{_runs(item)}</w:p>')
 
-    def table(self, rows: list[list[str]], widths: list[float], header: bool = True) -> None:
-        """widths in inches; the first row is the header."""
+    def table(self, rows: list[list[str]], widths: list[float], header: bool = True, lang: str | None = None,
+              rtl_columns: tuple[int, ...] = ()) -> None:
+        """widths in inches; the first row is the header. Columns in rtl_columns are right to left."""
         twips = [int(w * 1440) for w in widths]
         grid = "".join(f'<w:gridCol w:w="{t}"/>' for t in twips)
         borders = "".join(f'<w:{side} w:val="single" w:sz="4" w:space="0" w:color="B8BEC6"/>'
@@ -92,9 +101,11 @@ class Doc:
             head = header and r == 0
             trpr = "<w:trPr><w:tblHeader/><w:cantSplit/></w:trPr>" if head else "<w:trPr><w:cantSplit/></w:trPr>"
             cells = []
-            for text, t in zip(row, twips):
+            for col, (text, t) in enumerate(zip(row, twips)):
                 shade = f'<w:shd w:val="clear" w:color="auto" w:fill="{self.tint}"/>' if head else ""
-                paras = "".join(f"<w:p><w:pPr><w:spacing w:after=\"40\"/></w:pPr>{_runs(line, bold=head)}</w:p>"
+                rtl = col in rtl_columns
+                paras = "".join(f"<w:p><w:pPr>{'<w:bidi/>' if rtl else ''}<w:spacing w:after=\"40\"/></w:pPr>"
+                                f"{_runs(line, bold=head, markup=not lang, lang=lang if rtl or col else None, rtl=rtl)}</w:p>"
                                 for line in (text or "").split("\n\n"))
                 cells.append(f'<w:tc><w:tcPr><w:tcW w:w="{t}" w:type="dxa"/>{shade}</w:tcPr>{paras}</w:tc>')
             out.append(f"<w:tr>{trpr}{''.join(cells)}</w:tr>")

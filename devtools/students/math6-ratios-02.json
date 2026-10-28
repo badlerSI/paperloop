@@ -1,0 +1,374 @@
+{
+ "students": [
+  {
+   "id": "0101",
+   "style": "clean",
+   "form": "",
+   "answers": {
+    "1": {
+     "boxes": {
+      "1": "4",
+      "2": "9",
+      "3": "10",
+      "4": "15"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "incorrect",
+      "3": "correct",
+      "4": "correct"
+     }
+    },
+    "2": {
+     "work": [
+      "15 ÷ 6 = 2.5"
+     ],
+     "answer": "$2.50"
+    },
+    "3": {
+     "sketch": [
+      {
+       "shape": "dot",
+       "x": 51.2,
+       "y": 40.0
+      },
+      {
+       "shape": "dot",
+       "x": 86.4,
+       "y": 66.0
+      },
+      {
+       "shape": "dot",
+       "x": 156.8,
+       "y": 117.0
+      },
+      {
+       "shape": "line",
+       "points": [
+        [
+         16,
+         14
+        ],
+        [
+         156.8,
+         117.0
+        ]
+       ]
+      }
+     ],
+     "expected_items": {
+      "1": "yes",
+      "2": "yes",
+      "3": "yes",
+      "4": "yes"
+     }
+    },
+    "4": {
+     "circle": [
+      "C"
+     ]
+    },
+    "5": {
+     "text": "Yes she added the same",
+     "expected": "incorrect"
+    }
+   }
+  },
+  {
+   "id": "0102",
+   "style": "clean",
+   "form": "support",
+   "answers": {
+    "1": {
+     "boxes": {
+      "1": "4",
+      "2": "9",
+      "3": "10",
+      "4": "15"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "incorrect",
+      "3": "correct",
+      "4": "correct"
+     }
+    },
+    "2": {
+     "work": [
+      "15 ÷ 6 = 2.5"
+     ],
+     "answer": "$2.50"
+    },
+    "3": {
+     "sketch": [
+      {
+       "shape": "dot",
+       "x": 51.2,
+       "y": 40.0
+      },
+      {
+       "shape": "dot",
+       "x": 86.4,
+       "y": 66.0
+      },
+      {
+       "shape": "dot",
+       "x": 156.8,
+       "y": 117.0
+      },
+      {
+       "shape": "line",
+       "points": [
+        [
+         16,
+         14
+        ],
+        [
+         156.8,
+         117.0
+        ]
+       ]
+      }
+     ],
+     "expected_items": {
+      "1": "yes",
+      "2": "yes",
+      "3": "yes",
+      "4": "yes"
+     }
+    },
+    "4": {
+     "circle": [
+      "B"
+     ]
+    },
+    "5": {
+     "text": "No, because adding changes the ratio. You multiply both.",
+     "expected": "correct"
+    }
+   }
+  },
+  {
+   "id": "0103",
+   "style": "messy",
+   "form": "lp",
+   "answers": {
+    "1": {
+     "boxes": {
+      "1": "4",
+      "2": "9",
+      "3": "10",
+      "4": "15"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "incorrect",
+      "3": "correct",
+      "4": "correct"
+     }
+    },
+    "2": {
+     "work": [
+      "15 ÷ 6 = 2.5"
+     ],
+     "answer": "$2.50"
+    },
+    "3": {
+     "sketch": [
+      {
+       "shape": "dot",
+       "x": 51.2,
+       "y": 40.0
+      },
+      {
+       "shape": "dot",
+       "x": 86.4,
+       "y": 66.0
+      },
+      {
+       "shape": "dot",
+       "x": 156.8,
+       "y": 117.0
+      },
+      {
+       "shape": "line",
+       "points": [
+        [
+         16,
+         14
+        ],
+        [
+         156.8,
+         117.0
+        ]
+       ]
+      }
+     ],
+     "expected_items": {
+      "1": "yes",
+      "2": "yes",
+      "3": "yes",
+      "4": "yes"
+     }
+    },
+    "4": {
+     "circle": [
+      "A"
+     ]
+    },
+    "5": {
+     "text": "No, because adding changes the ratio. You multiply both.",
+     "expected": "correct"
+    }
+   }
+  },
+  {
+   "id": "0104",
+   "style": "clean",
+   "form": "es",
+   "answers": {
+    "1": {
+     "boxes": {
+      "1": "4",
+      "2": "9",
+      "3": "10",
+      "4": "15"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "incorrect",
+      "3": "correct",
+      "4": "correct"
+     }
+    },
+    "2": {
+     "work": [
+      "15 ÷ 6 = 2.5"
+     ],
+     "answer": "$2.50"
+    },
+    "3": {
+     "sketch": [
+      {
+       "shape": "dot",
+       "x": 51.2,
+       "y": 40.0
+      },
+      {
+       "shape": "dot",
+       "x": 86.4,
+       "y": 66.0
+      },
+      {
+       "shape": "dot",
+       "x": 156.8,
+       "y": 117.0
+      },
+      {
+       "shape": "line",
+       "points": [
+        [
+         16,
+         14
+        ],
+        [
+         156.8,
+         117.0
+        ]
+       ]
+      }
+     ],
+     "expected_items": {
+      "1": "yes",
+      "2": "yes",
+      "3": "yes",
+      "4": "yes"
+     }
+    },
+    "4": {
+     "circle": [
+      "B"
+     ]
+    },
+    "5": {
+     "text": "No, porque sumar cambia la razón.",
+     "expected": "correct"
+    }
+   }
+  },
+  {
+   "id": "0105",
+   "style": "clean",
+   "form": "ar",
+   "answers": {
+    "1": {
+     "boxes": {
+      "1": "4",
+      "2": "9",
+      "3": "10",
+      "4": "15"
+     },
+     "expected": {
+      "1": "correct",
+      "2": "incorrect",
+      "3": "correct",
+      "4": "correct"
+     }
+    },
+    "2": {
+     "work": [
+      "15 ÷ 6 = 2.5"
+     ],
+     "answer": "$2.50"
+    },
+    "3": {
+     "sketch": [
+      {
+       "shape": "dot",
+       "x": 51.2,
+       "y": 40.0
+      },
+      {
+       "shape": "dot",
+       "x": 86.4,
+       "y": 66.0
+      },
+      {
+       "shape": "dot",
+       "x": 156.8,
+       "y": 117.0
+      },
+      {
+       "shape": "line",
+       "points": [
+        [
+         16,
+         14
+        ],
+        [
+         156.8,
+         117.0
+        ]
+       ]
+      }
+     ],
+     "expected_items": {
+      "1": "yes",
+      "2": "yes",
+      "3": "yes",
+      "4": "yes"
+     }
+    },
+    "4": {
+     "circle": [
+      "C"
+     ]
+    },
+    "5": {
+     "text": "No, because adding changes the ratio. You multiply both.",
+     "expected": "correct"
+    }
+   }
+  }
+ ]
+}

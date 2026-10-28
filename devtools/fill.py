@@ -95,9 +95,10 @@ def circle(draw, at, crossed: bool, rng: random.Random, ink: int) -> None:
         draw.line((cx - r, cy + r, cx + r, cy - r), fill=ink, width=5)
 
 
-def sketch(draw, origin, shapes: list[dict], fname: str, rng: random.Random, ink: int) -> None:
+def sketch(draw, origin, shapes: list[dict], fname: str, rng: random.Random, ink: int, k: float = 1.0) -> None:
+    """k: the diagram's print scale on this copy (large print)."""
     ox, oy = origin
-    pt = lambda x, y: px(ox + x + wobble(rng, 0.8), oy + y + wobble(rng, 0.8))  # noqa: E731
+    pt = lambda x, y: px(ox + k * x + wobble(rng, 0.8), oy + k * y + wobble(rng, 0.8))  # noqa: E731
     for s in shapes:
         kind = s["shape"]
         if kind in ("line", "arrow", "polyline"):
@@ -114,7 +115,7 @@ def sketch(draw, origin, shapes: list[dict], fname: str, rng: random.Random, ink
             draw.ellipse((cx - 9, cy - 9, cx + 9, cy + 9), fill=ink)
         elif kind == "circle":
             cx, cy = pt(s["x"], s["y"])
-            r = s["r"] * S.scale(DPI)
+            r = s["r"] * k * S.scale(DPI)
             draw.ellipse((cx - r, cy - r, cx + r, cy + r), outline=ink, width=4)
         elif kind == "text":
             f = font(fname, round(s.get("size", 11) * S.scale(DPI)))
@@ -128,7 +129,7 @@ def fill_page(blank: np.ndarray, page: dict, key: dict, layout_style: str, stude
     draw = ImageDraw.Draw(img)
     fname = STYLE_FONTS.get(student.get("style", "clean"), "Noteworthy.ttc")
     ink = 70 if student.get("style") == "messy" else 45
-    for digit, rect in zip(student["id"], page["id_boxes"]):
+    for digit, rect in zip(student["id"], [] if page.get("student_id") else page["id_boxes"]):
         in_box(draw, rect, digit, fname, rng, ink)
     items = {i["q"]: i for i in key["items"]}
     line_spacing = S.STYLES[layout_style]["line_spacing"]
@@ -142,8 +143,9 @@ def fill_page(blank: np.ndarray, page: dict, key: dict, layout_style: str, stude
             part = box.get("part", 1)  # an essay across pages: "more" holds the text for each later page
             text = a.get("text", "") if part == 1 else (a.get("more", []) + [""] * part)[part - 2]
             if text:
+                spacing = box.get("line_spacing", line_spacing)
                 write_text(draw, x0, y1, x1 - x0, y1 - y0, text, fname, rng, ink,
-                           size_pt=min(15, line_spacing * 0.68), line_pt=line_spacing)
+                           size_pt=min(15, spacing * 0.68), line_pt=spacing)
         elif kind == "choice":
             for mark in a["circle"]:
                 letter = mark.strip("~")
@@ -162,7 +164,7 @@ def fill_page(blank: np.ndarray, page: dict, key: dict, layout_style: str, stude
             if a.get("answer"):
                 in_box(draw, box["answer_rect"], a["answer"], fname, rng, ink)
         elif kind == "draw":
-            sketch(draw, (x0, y0), a["sketch"], fname, rng, ink)
+            sketch(draw, (x0, y0), a["sketch"], fname, rng, ink, box.get("scale", 1.0))
     return np.array(img)
 
 
@@ -174,11 +176,12 @@ def main(assignment: Path, students_path: Path, out_pdf: Path, seed: int = 11) -
     sheets = []
     for student in roster["students"]:
         flip = student.get("style") == "messy"
-        for page in layout["pages"]:
-            blank = L.render_pdf(assignment / "worksheet.pdf")[page["page"] - 1]
+        for page in S.form_pages(layout, student.get("form", "")):  # a student's version or own copy
+            blank = L.template(assignment, page["page"])
             filled = fill_page(blank, page, key, layout.get("style", "standard"), student, rng)
             damaged = _scan_damage(filled, rng, rng.uniform(-1.5, 1.5), flip)
-            sheets.append((damaged, {"student_id": student["id"], "page": page["page"], "upside_down": flip}))
+            sheets.append((damaged, {"student_id": student["id"], "page": page["page"], "upside_down": flip,
+                                     "form": student.get("form", "")}))
     noise = np.random.default_rng(seed).normal(0, 4, sheets[0][0].shape)
     sheets.append((np.clip(248 + noise, 0, 255).astype(np.uint8), {"blank": True}))
     rng.shuffle(sheets)

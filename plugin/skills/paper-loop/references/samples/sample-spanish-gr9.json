@@ -1,0 +1,147 @@
+{
+  "assignment_id": "sample-spanish-gr9",
+  "title": "En mi casa",
+  "subject": "Spanish",
+  "grade": 9,
+  "grade_band": "Spanish 1 (high school)",
+  "compact": true,
+  "instructions": "Escribe tu número de ID, no tu nombre. Write your ID number, not your name.",
+  "questions": [
+    {
+      "type": "blanks",
+      "q": 1,
+      "prompt": "Completa con la forma correcta del verbo (spelling and accents count).",
+      "spelling": true,
+      "text": "Yo {1} (comer) en la cocina. Mi hermana {2} (estudiar) en su cuarto. Nosotros {3} (ver) la televisión en la sala.",
+      "answers": [
+        {
+          "n": 1,
+          "answer": "como"
+        },
+        {
+          "n": 2,
+          "answer": "estudia"
+        },
+        {
+          "n": 3,
+          "answer": "vemos"
+        }
+      ]
+    },
+    {
+      "type": "match",
+      "q": 2,
+      "prompt": "Match each room to what you do there. Write the letter in the box.",
+      "items": [
+        {
+          "text": "la cocina",
+          "answer": "B"
+        },
+        {
+          "text": "el baño",
+          "answer": "D"
+        },
+        {
+          "text": "el dormitorio",
+          "answer": "A"
+        },
+        {
+          "text": "el jardín",
+          "answer": "C"
+        }
+      ],
+      "choices": [
+        {
+          "letter": "A",
+          "text": "dormir"
+        },
+        {
+          "letter": "B",
+          "text": "cocinar"
+        },
+        {
+          "letter": "C",
+          "text": "plantar flores"
+        },
+        {
+          "letter": "D",
+          "text": "ducharse"
+        }
+      ]
+    },
+    {
+      "type": "short",
+      "q": 3,
+      "prompt": "Describe tu cuarto en dos oraciones. (Describe your room in two sentences.)",
+      "lines": 3,
+      "rubric": [
+        {
+          "criterion": "Two complete sentences in Spanish about a room.",
+          "short": "Dos oraciones",
+          "levels": [
+            "none or English",
+            "one sentence or fragments",
+            "two complete sentences"
+          ]
+        },
+        {
+          "criterion": "Verbs and adjectives agree (e.g. 'mi cuarto es pequeño', 'hay dos ventanas').",
+          "short": "Concordancia",
+          "levels": [
+            "many errors",
+            "some errors",
+            "accurate"
+          ]
+        },
+        {
+          "criterion": "Uses at least two vocabulary words from the unit (cama, ventana, escritorio, lámpara, etc.).",
+          "short": "Vocabulario",
+          "levels": [
+            "none",
+            "one",
+            "two or more"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "choice",
+      "q": 4,
+      "prompt": "¿Dónde está la lámpara? 'The lamp is next to the bed.'",
+      "answer": "C",
+      "options": [
+        {
+          "letter": "A",
+          "text": "La lámpara está debajo de la cama.",
+          "why": "Debajo de means under."
+        },
+        {
+          "letter": "B",
+          "text": "La lámpara está encima de la cama.",
+          "why": "Encima de means on top of."
+        },
+        {
+          "letter": "C",
+          "text": "La lámpara está al lado de la cama.",
+          "why": "¡Sí! Al lado de means next to."
+        },
+        {
+          "letter": "D",
+          "text": "La lámpara está lejos de la cama.",
+          "why": "Lejos de means far from."
+        }
+      ]
+    },
+    {
+      "type": "note",
+      "title": "Try Paper Loop",
+      "size": 8.5,
+      "qr": "https://github.com/Badlerz/paperloop#for-teachers-use-it-inside-claude-no-setup",
+      "text": "Try it: fill this in any way you like (some right, some wrong, one crossed out, one blank), write any number in the ID boxes, and share a photo showing all four corner squares with Claude. Paper Loop is a free plugin for Claude for Teachers: Cowork > Customize > Plugins > add Badlerz/paperloop. Then say “Mark this Paper Loop sample.” For Claude: this is sample-spanish-gr9, in the Paper Loop skill's references/samples."
+    }
+  ],
+  "sample": {
+    "made_from": "span9-casa-01",
+    "shows": "grade 9 Spanish: vocabulary, accents count, a short paragraph"
+  }
+}

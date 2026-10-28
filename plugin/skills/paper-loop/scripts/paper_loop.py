@@ -19,6 +19,12 @@
     render WORK [--grade off|back|csv] [--accept-flags]
                                          the marked PDF to print (WORK/out/returned.pdf)
     status WORK                          where a marking run stands, and what to do next
+    practice WORK [--most N]             after marking: a practice sheet for each student, of what they missed
+    progress FOLDER [--roster ids.csv]   a dashboard, family pages, and a gradebook file across marked classes
+    source wikipedia|simple|gutenberg NAME --out FILE.json
+                                         a free text to read and adapt, with its license and link
+    pieces PIECES.json --out DIR         cards, board games for a checker or chess board, dice, a spinner,
+                                         pawns, a fortune teller, a mini-book, ABCD cards, and bingo
 
 Needs only numpy, scipy, Pillow, pypdfium2, and reportlab; slides also need python-pptx.
 """
@@ -26,6 +32,7 @@ Needs only numpy, scipy, Pillow, pypdfium2, and reportlab; slides also need pyth
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 from pathlib import Path
 
@@ -39,8 +46,7 @@ from paper_loop_core import sheet as S  # noqa: E402
 
 def cmd_make(args) -> int:
     try:
-        defn = S.normalize(S.read_json(args.worksheet))
-        layout = S.make_worksheet(defn, args.out, base=Path(args.worksheet).resolve().parent)
+        layout = S.make_worksheet(S.read_json(args.worksheet), args.out, base=Path(args.worksheet).resolve().parent)
     except (S.WorksheetError, ValueError, OSError) as e:
         print(f"Can't make the worksheet: {e}")
         return 1
@@ -48,13 +54,20 @@ def cmd_make(args) -> int:
         print(f"Can't make the worksheet: a field is missing or the wrong type ({type(e).__name__}: {e}). "
               "Check it against references/worksheet-format.md.")
         return 1
-    n = len(layout["pages"])
+    defn = layout["defn"]
+    n = layout["base_pages"]
+    try:  # the worksheet with its answers written in, for the teacher (a lesson writes a fuller one)
+        from paper_loop_core import walk as WK
+        WK.answer_key(WK.Worksheet(args.out), Path(args.out) / "answer-key.pdf")
+    except Exception as e:  # the key is a convenience: a worksheet without one still prints and marks
+        print(f"  (No answer-key.pdf: {type(e).__name__}: {e})")
     questions = [b for b in defn["questions"] if b["type"] != "passage"]
-    print(f"Wrote {Path(args.out) / 'worksheet.pdf'}: {n} page{'s' if n > 1 else ''}, {len(questions)} question{'s' if len(questions) != 1 else ''}, "
+    print(f"Wrote {Path(args.out) / 'worksheet.pdf'} and answer-key.pdf: {n} page{'s' if n > 1 else ''}, {len(questions)} question{'s' if len(questions) != 1 else ''}, "
           f"{sum(q['points'] for q in questions):g} points. Style {defn['style']} (grade {defn['grade']}), "
           f"{defn['id_digits']}-digit IDs.")
     for page, free, blocks in zip(layout["pages"], layout["free_by_page"], layout["blocks_by_page"]):
         print(f"  page {page['page']}: {', '.join(f'{name} {h:.0f}pt' for name, h in blocks)} ({free:.0f}pt free)")
+    _forms_report(layout, Path(args.out))
     for passage in layout["passages"]:
         if passage["line_numbers"]:
             print(f"  {passage['id']} line numbers, as printed (cite these in questions):")
@@ -65,6 +78,13 @@ def cmd_make(args) -> int:
         print(f"  Check: {problem}.")
     if layout["teacher_notes"]:
         print(f"  Notes for the teacher (not printed): {layout['teacher_notes']}")
+    shared = [lic for lic in layout["licenses"] if "-sa" in lic]
+    if shared:
+        print(f"  A passage is {shared[0].upper().replace('CC ', 'CC ')}: its credit line prints under it. Anyone may "
+              "copy and share the worksheet; the adapted passage stays under the same license (the questions are the "
+              "teacher's).")
+    if any("-nc" in lic for lic in layout["licenses"]):
+        print("  A passage is noncommercial (NC): fine for a class, not for selling.")
     if layout["unprintable"]:
         print(f"  These characters will print as \"?\": {layout['unprintable']}. No Unicode font was found; "
               "write them in words, or install DejaVu Sans (pip install matplotlib brings it).")
@@ -79,6 +99,59 @@ def cmd_make(args) -> int:
               f"questions is {st['block_gap']:g}pt. Shorter prompts, fewer lines, smaller diagrams or work areas"
               + (", or \"compact\": true" if defn["style"] == "standard" else "") + " all help.")
     return 0
+
+
+def _forms_report(layout: dict, out: Path) -> None:
+    """The other forms make wrote: what each is, where it is, and how many pages."""
+    forms = [f for f in layout["forms_made"] if f["id"]]
+    if not forms:
+        return
+    versions = [f for f in forms if f["kind"] == "version"]
+    variants = [f for f in forms if f["kind"] == "variant"]
+    for f in versions:
+        what = []
+        if f.get("scaffolds"):
+            what.append("scaffolds: " + ", ".join(f["scaffolds"]))
+        if f.get("large_print"):
+            what.append(f"large print ({f['large_print']:g}pt)")
+        if f.get("space"):
+            what.append(f"more room to write ({f['space']:g}x)")
+        if f.get("per_page"):
+            what.append(f"at most {f['per_page']} question{'s' if f['per_page'] > 1 else ''} a page")
+        if f.get("max_choices"):
+            what.append(f"{f['max_choices']} choices at most")
+        if f.get("grid"):
+            what.append("graph paper for work")
+        if f.get("language"):
+            what.append(f"{f['language_name']} ({f['language_mode']})")
+        copies = f" Print {f['copies']}." if f.get("copies") else ""
+        print(f"  Version {f['label']}, {f['name']}: {out / f['pdf']}, {len(f['pages'])} page"
+              f"{'s' if len(f['pages']) > 1 else ''}. {'; '.join(what) or 'as written'}.{copies}")
+        if f.get("only"):
+            what.append(f"only Q{', Q'.join(map(str, f['only']))}")
+        pages_over = len(f["pages"]) - layout["base_pages"]
+        if pages_over > 0 and not (f.get("large_print") or f.get("space") or f.get("per_page")):
+            print(f"  Check: version {f['label']} runs to {len(f['pages'])} pages, {pages_over} more than everyone "
+                  "else's, so it stands out. Shorten it (or the base sheet) until they match.")
+        if f.get("modifies"):
+            print(f"    Help that changes what's measured: {', '.join(f['modifies'])}. Scores on those questions show "
+                  "what students do with help, and progress reports mark them \"with help on the page\". For "
+                  "test-like checks, use what each student's plan lists.")
+        quality = f.get("language_quality")
+        if quality in ("medium", "low", "unknown") and not f.get("reviewed"):
+            print(f"  Check: Claude's {f['language_english']} isn't reliable enough to print unchecked. Ask the teacher to have a bilingual adult read the translation, then add "
+                  "\"reviewed_by\" (a role, not a name: \"bilingual aide\") to the translation file"
+                  + ("; until then, keep it to key words and directions" if quality != "medium" else "") + ".")
+    for note in layout.get("variant_notes", []):
+        print(f"  Check: {note}.")
+    if variants:
+        pages = len(variants[0]["pages"])
+        print(f"  {len(variants)} different copies, one per student: {out / 'copies.pdf'} ({len(variants)} x {pages} "
+              f"page{'s' if pages > 1 else ''}; print it once, single-sided{' or double-sided' if pages > 1 else ''}, "
+              f"and hand them out in any order). Every copy's answers: {out / 'copies-key.pdf'}.")
+    for note in layout["version_notes"]:
+        print(f"  {note}")
+    print("  Every form has its own page code: scan them together in one stack, and marking sorts them out.")
 
 
 def cmd_prepare(args) -> int:
@@ -98,7 +171,14 @@ def cmd_prepare(args) -> int:
         elif p["status"] == "blank":
             print(f"  scan {p['scan_index']}: an empty sheet (no worksheet on it); it's left out of the printout. "
                   "Mention it to the teacher.")
-    if ok:
+    if ok and not manifest["id_sheets"]:  # every page made for one student, with its ID printed
+        S.write_json(work / "ids.json", {})
+        manifest = P.route(work)  # still catches a sheet fed twice
+        pile = [p for p in manifest["pages"] if p["status"] == "review"]
+        for p in pile:
+            print(f"  scan {p['scan_index']} -> review pile: {p['reason']}")
+        print("\nThe IDs are printed on these sheets, so there's nothing to read. Next: run `todo`.")
+    elif ok:
         print("\nNext: read the handwritten IDs, then write ids.json (see SKILL.md, step 2). Each sheet shows "
               "up to 20 ID strips, labeled with their scan numbers:")
         for sheet in manifest["id_sheets"]:
@@ -173,6 +253,10 @@ def cmd_preview(args) -> int:
         return 0
     out = pdf.parent / "preview"
     out.mkdir(exist_ok=True)
+    for old in out.glob(f"{pdf.stem}-p*.png"):  # a shorter remake mustn't leave its old last pages behind
+        old.unlink()
+    for old in out.glob(f"{pdf.stem}-sheet*.png"):
+        old.unlink()
     doc = pdfium.PdfDocument(str(pdf))
     try:
         pages = []
@@ -260,6 +344,91 @@ def cmd_lesson(args) -> int:
         print(f"  Slides by phase: {', '.join(spans)}.")
     for warning in report["warnings"]:
         print(f"  Check: {warning}.")
+    return 0
+
+
+def cmd_source(args) -> int:
+    from paper_loop_core import sources as SR
+    try:
+        got = SR.gutenberg(int(args.name)) if args.site == "gutenberg" else SR.wikipedia(
+            args.name, simple=args.site == "simple", site="en.wikisource.org" if args.site == "wikisource" else None)
+    except (S.WorksheetError, ValueError) as e:
+        print(f"Can't get it: {e}")
+        return 1
+    except OSError as e:
+        print(f"Can't reach {args.site} from here ({e}). Use your web tool to open the page, save its text, and "
+              "note the address (for Wikipedia, the \"Permanent link\" in the Tools menu, which names the revision).")
+        return 1
+    S.write_json(args.out, got)
+    words = len(got["text"].split())
+    grade = SR.reading_grade(got["text"][:6000])
+    print(f"Saved {args.out}: \"{got['title']}\" ({words:,} words"
+          + (f", about grade {grade:g} to read" if grade is not None else "") + f"), {got['license']}.")
+    print(f"  Credit it with \"cite\": {json.dumps({'title': got['title'], 'author': got['author'], 'url': got['url'], 'license': got['license'], 'changes': '...'}, ensure_ascii=False)}")
+    if got.get("check"):
+        print(f"  Check: {got['check']}.")
+    print("  Quote it exactly, or abridge and adapt it (say how in \"changes\": \"shortened\", \"simplified for grade "
+          "4\"), and set \"reading_level\" to the grade you adapted it for.")
+    return 0
+
+
+def cmd_practice(args) -> int:
+    from paper_loop_core import practice as PR
+    try:
+        report = PR.build(args.work, args.out, args.most)
+    except (ValueError, OSError) as e:
+        print(f"Can't make practice sheets: {e}")
+        return 1
+    out = report["out"]
+    print(f"Wrote {out / 'copies.pdf'}: a practice sheet for each of {report['sheets']} students, each with their "
+          "class ID printed, the questions they missed (new numbers where the worksheet has them), and the comment "
+          "they got last time above each one.")
+    for sid, qs in report["questions"].items():
+        print(f"  ID {sid}: Q{', Q'.join(map(str, qs))}")
+    if report["all_right"]:
+        print(f"  Full credit on everything, no sheet: IDs {', '.join(report['all_right'])}.")
+    if report["absent"]:
+        print(f"  Blank worksheet (absent?), no sheet: IDs {', '.join(report['absent'])}.")
+    for sid, qs in report["left_off"].items():
+        print(f"  ID {sid} also missed Q{', Q'.join(map(str, qs))}, left off (--most {args.most}).")
+    if report["todo"]:
+        print(f"Check: some last-time comments name the old copy's numbers; they print as \"Last time (other "
+              f"numbers)\". For clearer sheets, write the notes {report['todo']} asks for, then run `practice` again.")
+    print(f"Print copies.pdf and hand each student the sheet with their ID. To mark them, scan them like any worksheet "
+          f"with --assignment \"{out}\": the IDs are printed, so there's nothing to read.")
+    return 0
+
+
+def cmd_progress(args) -> int:
+    from paper_loop_core import progress as PG
+    try:
+        report = PG.build(args.folder, args.out, args.roster, args.class_name or "")
+    except (PG.ProgressError, ValueError, OSError) as e:
+        print(f"Can't make the progress report: {e}")
+        return 1
+    out = report["out"]
+    print(f"Read {report['runs']} marked class{'es' if report['runs'] != 1 else ''}: {report['students']} students, "
+          f"{len(report['skills'])} skill{'s' if len(report['skills']) != 1 else ''}.")
+    print(f"  {out / 'dashboard.html'}: the teacher's dashboard (opens in any browser; nothing leaves the computer)")
+    print(f"  {out / 'parents.docx'}: a page for each family, with a line to write the student's name")
+    print(f"  {out / 'progress.csv'}: each student's latest score on each skill, for a gradebook")
+    for lang, path in report["made"].items():
+        if lang != "en":
+            print(f"  {path}: family pages in {lang}")
+    for skill, groups in report["groups"].items():
+        if groups["practicing"]:
+            print(f"  Still practicing \"{skill}\": IDs {', '.join(groups['practicing'])}")
+    for lang in report["unreviewed"]:
+        print(f"  Check: the {lang} family pages haven't been read by a bilingual adult. Before they go home, have "
+              f"one check them (a qualified adult, not a student or a sibling), then add \"reviewed_by\" (a role) "
+              f"to parents.{lang}.json.")
+    if report["in_language"]:
+        print(f"  parents.docx leaves out IDs {', '.join(report['in_language'])}: their pages are in their family's "
+              "language.")
+    if report["missing"] or report["languages"]:
+        print(f"Next: fill in what {out / 'progress-todo.md'} lists (skills in everyday words and things to try at "
+              "home" + (", and family pages in other languages" if report["languages"] else "") +
+              "), then run `progress` again.")
     return 0
 
 
@@ -410,6 +579,9 @@ def cmd_status(args) -> int:
 
 
 def main() -> int:
+    if len(sys.argv) > 1 and sys.argv[1] == "pieces":  # cards, games, and foldables: their own small CLI
+        from paper_loop_core import pieces
+        return pieces.main(sys.argv[2:])
     parser = argparse.ArgumentParser(prog="paper_loop.py", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -441,6 +613,23 @@ def main() -> int:
     p.add_argument("--out", type=Path, help="where the deck goes (default: WORK/out)")
     p.add_argument("--most", type=int, help="go over only this many questions, the most missed")
     p.set_defaults(func=cmd_goover)
+    p = sub.add_parser("practice")
+    p.add_argument("work", type=Path, help="a marking folder whose marks `check` has accepted")
+    p.add_argument("--out", type=Path, help="where the practice worksheet goes (default: beside the worksheet)")
+    p.add_argument("--most", type=int, default=3, help="questions per student, the ones they did worst on (default 3)")
+    p.set_defaults(func=cmd_practice)
+    p = sub.add_parser("source")
+    p.add_argument("site", choices=["wikipedia", "simple", "wikisource", "gutenberg"],
+                   help="wikipedia, simple (Simple English Wikipedia), wikisource (primary sources), or gutenberg")
+    p.add_argument("name", help="the article's title, or the Gutenberg book number")
+    p.add_argument("--out", type=Path, required=True, help="where to save it (a .json file)")
+    p.set_defaults(func=cmd_source)
+    p = sub.add_parser("progress")
+    p.add_argument("folder", type=Path, help="the folder that holds this class's worksheets and marking folders")
+    p.add_argument("--out", type=Path, help="where the reports go (default: FOLDER/progress)")
+    p.add_argument("--roster", type=Path, help="only these class IDs (a CSV), for one class period")
+    p.add_argument("--class-name", help="the name printed on the reports (default: the folder's name)")
+    p.set_defaults(func=cmd_progress)
     p = sub.add_parser("zoom")
     p.add_argument("image", type=Path)
     p.add_argument("--region", help="left,top,right,bottom as fractions of the image, e.g. 0.5,0,1,0.5")

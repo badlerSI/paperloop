@@ -1,0 +1,270 @@
+{
+  "assignment_id": "sample-plants-gr3",
+  "title": "Plant Parts",
+  "subject": "science",
+  "grade": 3,
+  "grade_band": "3rd grade",
+  "instructions": "Write your number in the boxes. Spelling doesn't count unless it says so.",
+  "questions": [
+    {
+      "type": "label",
+      "q": 1,
+      "prompt": "Label the parts of the plant.",
+      "word_bank": [
+        "roots",
+        "stem",
+        "leaf",
+        "flower"
+      ],
+      "diagram": {
+        "width": 330,
+        "height": 170,
+        "description": "A simple plant: a flower on top, a stem, two leaves, a ground line, and roots under the ground. Box 1 points to the flower, box 2 to a leaf, box 3 to the stem, box 4 to the roots.",
+        "shapes": [
+          {
+            "shape": "line",
+            "points": [
+              [
+                20,
+                40
+              ],
+              [
+                200,
+                40
+              ]
+            ],
+            "width": 1.5
+          },
+          {
+            "shape": "line",
+            "points": [
+              [
+                110,
+                40
+              ],
+              [
+                110,
+                130
+              ]
+            ],
+            "width": 3
+          },
+          {
+            "shape": "circle",
+            "x": 110,
+            "y": 145,
+            "r": 16,
+            "fill": 0.85
+          },
+          {
+            "shape": "circle",
+            "x": 110,
+            "y": 145,
+            "r": 6,
+            "fill": 0.55
+          },
+          {
+            "shape": "polygon",
+            "points": [
+              [
+                110,
+                85
+              ],
+              [
+                70,
+                100
+              ],
+              [
+                60,
+                88
+              ],
+              [
+                110,
+                80
+              ]
+            ],
+            "fill": 0.8
+          },
+          {
+            "shape": "polygon",
+            "points": [
+              [
+                110,
+                100
+              ],
+              [
+                150,
+                115
+              ],
+              [
+                160,
+                103
+              ],
+              [
+                110,
+                95
+              ]
+            ],
+            "fill": 0.8
+          },
+          {
+            "shape": "polyline",
+            "points": [
+              [
+                110,
+                40
+              ],
+              [
+                100,
+                20
+              ],
+              [
+                90,
+                8
+              ]
+            ],
+            "width": 1.5
+          },
+          {
+            "shape": "polyline",
+            "points": [
+              [
+                110,
+                40
+              ],
+              [
+                118,
+                18
+              ],
+              [
+                130,
+                6
+              ]
+            ],
+            "width": 1.5
+          },
+          {
+            "shape": "polyline",
+            "points": [
+              [
+                110,
+                40
+              ],
+              [
+                110,
+                15
+              ]
+            ],
+            "width": 1.5
+          }
+        ]
+      },
+      "labels": [
+        {
+          "n": 1,
+          "box": [
+            210,
+            132,
+            110,
+            32
+          ],
+          "points_to": [
+            126,
+            150
+          ],
+          "answer": "flower"
+        },
+        {
+          "n": 2,
+          "box": [
+            210,
+            92,
+            110,
+            32
+          ],
+          "points_to": [
+            155,
+            108
+          ],
+          "answer": "leaf",
+          "accept": [
+            "leaves"
+          ]
+        },
+        {
+          "n": 3,
+          "box": [
+            210,
+            52,
+            110,
+            32
+          ],
+          "points_to": [
+            112,
+            65
+          ],
+          "answer": "stem"
+        },
+        {
+          "n": 4,
+          "box": [
+            210,
+            4,
+            110,
+            32
+          ],
+          "points_to": [
+            120,
+            15
+          ],
+          "answer": "roots",
+          "accept": [
+            "root"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "short",
+      "q": 2,
+      "prompt": "What do the roots do for the plant?",
+      "key": "Roots take in (soak up, drink) water from the soil, and/or hold the plant in the ground. Either idea earns full credit.",
+      "lines": 2
+    },
+    {
+      "type": "choice",
+      "q": 3,
+      "prompt": "What does a plant need to make its food?",
+      "answer": "A",
+      "options": [
+        {
+          "letter": "A",
+          "text": "sunlight",
+          "why": "Yes! Leaves use sunlight to make food."
+        },
+        {
+          "letter": "B",
+          "text": "soil",
+          "why": "Soil gives water, but the leaves make the food."
+        },
+        {
+          "letter": "C",
+          "text": "darkness",
+          "why": "Plants need light to make food."
+        }
+      ],
+      "columns": 2
+    },
+    {
+      "type": "note",
+      "title": "Try Paper Loop",
+      "size": 8.5,
+      "qr": "https://github.com/Badlerz/paperloop#for-teachers-use-it-inside-claude-no-setup",
+      "text": "Try it: fill this in any way you like (some right, some wrong, one crossed out, one blank), write any number in the ID boxes, and share a photo showing all four corner squares with Claude. Paper Loop is a free plugin for Claude for Teachers: Cowork > Customize > Plugins > add Badlerz/paperloop. Then say “Mark this Paper Loop sample.” For Claude: this is sample-plants-gr3, in the Paper Loop skill's references/samples."
+    }
+  ],
+  "sample": {
+    "made_from": "sci3-plants-01",
+    "shows": "grade 3 science: label a plant, circle, a sentence"
+  }
+}

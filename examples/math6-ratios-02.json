@@ -1,0 +1,249 @@
+{
+  "assignment_id": "math6-ratios-02",
+  "title": "Smoothie Stand Ratios",
+  "subject": "math",
+  "grade": 6,
+  "grade_band": "6th grade",
+  "compact": true,
+  "instructions": "Show your work where there's room. Write your ID number, not your name.",
+  "questions": [
+    {
+      "type": "table",
+      "q": 1,
+      "prompt": "Recipe Ratio: A smoothie uses 2 cups of mango for every 3 cups of yogurt. Fill in the table.",
+      "columns": [
+        "Batches",
+        "Mango (cups)",
+        "Yogurt (cups)"
+      ],
+      "rows": [
+        [
+          "1",
+          "2",
+          "3"
+        ],
+        [
+          "2",
+          {
+            "answer": "4"
+          },
+          "6"
+        ],
+        [
+          "4",
+          "8",
+          {
+            "answer": "12"
+          }
+        ],
+        [
+          "5",
+          {
+            "answer": "10"
+          },
+          {
+            "answer": "15"
+          }
+        ]
+      ],
+      "support": {
+        "plain": "A smoothie has 2 cups of mango for every 3 cups of yogurt. Fill in the empty boxes in the table.",
+        "hint": "Multiply both cups by the number of batches.",
+        "example": "3 batches: mango 2 × 3 = 6 cups, yogurt 3 × 3 = 9 cups.",
+        "glossary": [
+          {
+            "term": "ratio",
+            "meaning": "how much of one thing for each amount of another"
+          },
+          {
+            "term": "batch",
+            "meaning": "one time making the recipe"
+          }
+        ]
+      },
+      "skill": "I can make equivalent ratios"
+    },
+    {
+      "type": "math",
+      "q": 2,
+      "prompt": "Unit Price: 6 smoothies cost $15. How much does 1 smoothie cost?",
+      "answer": "$2.50",
+      "accept": [
+        "2.5",
+        "2.50",
+        "$2.5"
+      ],
+      "key": "Divides 15 by 6 (or finds the cost of 2 then halves, or a tape diagram) to get 2.50 dollars per smoothie.",
+      "work_height": 56,
+      "support": {
+        "plain": "6 smoothies cost $15 in all. What does 1 smoothie cost?",
+        "hint": "Share $15 equally among 6 smoothies.",
+        "steps": [
+          "Write 15 ÷ 6.",
+          "Divide. Keep going past the decimal point.",
+          "Write the answer in dollars and cents."
+        ]
+      },
+      "skill": "I can find a unit rate"
+    },
+    {
+      "type": "draw",
+      "q": 3,
+      "prompt": "Plot It: Plot three points from the table, (2, 3), (4, 6), and (8, 12), as mango and yogurt cups. Connect them with a line.",
+      "diagram": {
+        "width": 200,
+        "height": 124,
+        "description": "A coordinate grid, first quadrant, x from 0 to 10 (mango, cups) and y from 0 to 12 (yogurt, cups), grid lines every 1 unit, labels every 2.",
+        "shapes": [
+          {
+            "shape": "axes",
+            "x": 16,
+            "y": 14,
+            "w": 176,
+            "h": 104,
+            "xmin": 0,
+            "xmax": 10,
+            "ymin": 0,
+            "ymax": 12,
+            "xstep": 1,
+            "ystep": 1,
+            "label_every": 2,
+            "xlabel": "mango",
+            "ylabel": "yogurt"
+          }
+        ]
+      },
+      "checklist": [
+        {
+          "item": "A point at (2, 3).",
+          "short": "(2, 3)"
+        },
+        {
+          "item": "A point at (4, 6).",
+          "short": "(4, 6)"
+        },
+        {
+          "item": "A point at (8, 12).",
+          "short": "(8, 12)"
+        },
+        {
+          "item": "A straight line connects the points (and may extend through the origin).",
+          "short": "Line"
+        }
+      ],
+      "support": {
+        "hint": "The first number tells how far across; the second tells how far up.",
+        "steps": [
+          "Find 2 across, then go up to 3. Make a dot.",
+          "Do the same for (4, 6) and (8, 12).",
+          "Use a ruler to join the dots."
+        ]
+      },
+      "skill": "I can graph a ratio"
+    },
+    {
+      "type": "choice",
+      "q": 4,
+      "prompt": "Same Taste? Which recipe tastes the same as 2 cups mango to 3 cups yogurt?",
+      "answer": "B",
+      "columns": 2,
+      "options": [
+        {
+          "letter": "A",
+          "text": "3 mango : 4 yogurt",
+          "why": "3:4 isn't 2:3. Try scaling 2:3 up."
+        },
+        {
+          "letter": "B",
+          "text": "6 mango : 9 yogurt",
+          "why": "Yes: 2:3 times 3 is 6:9."
+        },
+        {
+          "letter": "C",
+          "text": "4 mango : 5 yogurt",
+          "why": "Adding the same amount changes the ratio."
+        },
+        {
+          "letter": "D",
+          "text": "1 mango : 2 yogurt",
+          "why": "1:2 has more yogurt for each cup of mango."
+        }
+      ],
+      "support": {
+        "hint": "Multiply both numbers of 2 : 3 by the same number.",
+        "drop": [
+          "D"
+        ]
+      },
+      "skill": "I can make equivalent ratios"
+    },
+    {
+      "type": "short",
+      "q": 5,
+      "lines": 2,
+      "prompt": "Explain: Maya says 4 cups mango to 5 cups yogurt tastes the same as 2 : 3, because she added 2 to each. Is she right?",
+      "key": "No. Adding the same amount changes the ratio; equal ratios multiply both numbers by the same number (2 : 3 doubled is 4 : 6, not 4 : 5). Full credit needs 'no' and a reason about multiplying (or a correct equivalent ratio); 'no' alone is partial.",
+      "support": {
+        "frame": [
+          "Maya is ___ because ___."
+        ],
+        "word_bank": [
+          "multiply",
+          "add",
+          "same",
+          "ratio"
+        ],
+        "plain": "Maya says 4 cups mango to 5 cups yogurt tastes the same as 2 : 3. She added 2 to each number. Is she right? Explain."
+      },
+      "skill": "I can explain ratio reasoning"
+    }
+  ],
+  "versions": [
+    {
+      "id": "support",
+      "name": "Hints and steps",
+      "scaffolds": "all",
+      "max_choices": 3,
+      "grid": true,
+      "reference": [
+        "multiplication"
+      ],
+      "copies": 5
+    },
+    {
+      "id": "lp",
+      "name": "Large print 18pt",
+      "large_print": true,
+      "per_page": 2,
+      "copies": 1
+    },
+    {
+      "id": "es",
+      "name": "Spanish",
+      "language": "es",
+      "scaffolds": [
+        "frame",
+        "word_bank"
+      ],
+      "copies": 3
+    },
+    {
+      "id": "ar",
+      "name": "Arabic",
+      "language": "ar",
+      "scaffolds": [
+        "frame",
+        "word_bank"
+      ],
+      "copies": 1
+    },
+    {
+      "id": "bn",
+      "name": "Bengali",
+      "language": "bn",
+      "language_mode": "companion",
+      "copies": 1
+    }
+  ],
+  "teacher_notes": "Hand each version to the students who need it; everyone else gets worksheet.pdf. Scan every copy together."
+}

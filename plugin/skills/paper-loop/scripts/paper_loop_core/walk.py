@@ -44,13 +44,13 @@ class Worksheet:
         self.defn = S.read_json(self.folder / "worksheet.json") if (self.folder / "worksheet.json").exists() else {}
         self.items = {item["q"]: item for item in self.key["items"]}
         self.boxes, self.page_of = {}, {}
-        for page in self.layout["pages"]:
+        for page in S.form_pages(self.layout):  # slides show the worksheet as written
             for b in page["boxes"]:
                 if b.get("part", 1) == 1:
                     self.boxes[b["q"]] = b
                     self.page_of[b["q"]] = page["page"]
         self.passages: dict[str, list[tuple[int, tuple]]] = {}  # id: (page, rect) for each piece
-        for page in self.layout["pages"]:
+        for page in S.form_pages(self.layout):
             for piece in page.get("passages", []):
                 self.passages.setdefault(piece["id"], []).append((page["page"], tuple(piece.get("body_rect")
                                                                                        or piece["rect"])))

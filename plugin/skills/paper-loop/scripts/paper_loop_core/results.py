@@ -13,6 +13,7 @@ from collections import defaultdict
 from fractions import Fraction
 from pathlib import Path
 
+from . import script as SC
 from . import sheet as S
 
 THRESHOLD = 0.8  # flag answers Claude is less sure of than this for the teacher
@@ -65,6 +66,9 @@ def _choice(box: dict, item: dict, selected: list[str], source: str, crop: str, 
             crossed: list[str] = (), ink: list[int] = (), reviewed: bool = False) -> dict:
     details = [{"selected": "+".join(selected) or None, "answer": item["answer"], "source": source,
                 "crossed_out": list(crossed), "ink": list(ink)}]
+    bases = {o["letter"]: o.get("base", o["letter"]) for o in item["options"]}
+    if len(selected) == 1 and bases.get(selected[0], selected[0]) != selected[0]:
+        details[0]["base_selected"] = bases[selected[0]]  # a shuffled copy: the letter on the base copy
     if not selected:
         r = _blank(box, crop)
         r["details"] = details
@@ -331,7 +335,6 @@ def check(work: Path) -> dict:
     {"errors": [...], "warnings": [...], "flagged": [...], "pages": [...]}, and writes results.json."""
     work = Path(work)
     manifest, layout, key_file = _key(work)
-    key = {item["q"]: item for item in key_file["items"]}
     max_words = key_file.get("comment_words", 15)
     young = key_file.get("grade", 7) <= 3
     marks, errors, warnings = {}, [], []
@@ -345,19 +348,21 @@ def check(work: Path) -> dict:
         marks[q] = {str(k): v for k, v in data.get("marks", {}).items()}
 
     routed = {(p["student_id"], p["page"]): p for p in manifest["pages"] if p["status"] == "ok" and p["student_id"]}
-    essay_pages = defaultdict(list)  # an essay across pages: its page numbers, in order
+    essay_pages = defaultdict(list)  # an essay across pages: its page numbers in each form, in order
     for p in layout["pages"]:
         for b in p["boxes"]:
             if b.get("part"):
-                essay_pages[b["q"]].append(p["page"])
+                essay_pages[(p.get("form", ""), b["q"])].append(p["page"])
     pages = []
     for page in manifest["pages"]:
         if page["status"] != "ok" or not page["student_id"]:
             continue
         page_layout = next(p for p in layout["pages"] if p["page"] == page["page"])
+        form = page_layout.get("form", "")
+        key = S.form_items(key_file, form)
         boxes = []
         for box in page_layout["boxes"]:
-            part, pages_of = box.get("part", 1), essay_pages.get(box["q"], [])
+            part, pages_of = box.get("part", 1), essay_pages.get((form, box["q"]), [])
             if part > 1:  # an essay's later page: its mark goes with the first page of it that was routed
                 if any(routed.get((page["student_id"], n)) for n in pages_of[:part - 1]):
                     continue
@@ -404,6 +409,12 @@ def check(work: Path) -> dict:
             else:
                 r = _draw(box, item, mark, answer["crop"])
             r["more_crops"] = [p["answers"][str(box["q"])]["crop"] for p in later if p]  # an essay's later pages
+            scripts = SC.complex_scripts(r["comment"])
+            if scripts:
+                errors.append(f"{where}: the comment is in {', '.join(scripts)}, which can't print on the marked page "
+                              "here. Write it in English, or in English first and then a short version the page "
+                              "can print; the student's Word page can carry the rest")
+                continue
             words = len(r["comment"].split())
             if words > max_words and box["type"] != "choice":
                 warnings.append(f"{where}: comment is {words} words; keep it to {max_words} or fewer")
@@ -411,7 +422,7 @@ def check(work: Path) -> dict:
                 warnings.append(f"{where}: for grades 2-3 use only periods, question marks, and commas")
             boxes.append(r)
         pages.append({"scan_index": page["scan_index"], "student_id": page["student_id"], "page": page["page"],
-                      "boxes": boxes})
+                      "form": form, "boxes": boxes})
 
     flagged = [f"scan {p['scan_index']} (ID {p['student_id']}) Q{b['q']}: {'; '.join(b['flag_reasons'])}; "
                f"scored {b['points_awarded']:g}/{b['points_possible']} ({b['verdict']}) for now, "
@@ -455,7 +466,6 @@ def summary_todo(work: Path, pages: list[dict]) -> Path:
     Each question's prompt is listed once at the top; each student gets one compact line per answer."""
     work = Path(work)
     _, _, key_file = _key(work)
-    key = {item["q"]: item for item in key_file["items"]}
     words, strength = _limits(key_file)
     lines = ["# Summaries: one per student", "",
              "Write `summaries.json`, keyed by student ID. Rules: the \"summary\" section of "
@@ -465,9 +475,18 @@ def summary_todo(work: Path, pages: list[dict]) -> Path:
     for item in key_file["items"]:
         lines.append(f"- Q{item['q']} ({'rubric' if item.get('rubric') else item['type']}): {item['prompt']}")
     lines.append("")
+    forms = key_file.get("forms", {})
     for student, student_pages in by_student(pages).items():
         scans = ", ".join(str(p["scan_index"]) for p in student_pages)
-        lines += [f"## ID {student} (scan{'s' if len(student_pages) > 1 else ''} {scans})", ""]
+        form = student_pages[0].get("form", "")
+        extra = ""
+        if form in forms:
+            f = forms[form]
+            extra = f", {'copy' if f['kind'] == 'variant' else 'version'} {f['label']}"
+            if f.get("comment_language") and f["comment_language"] != key_file.get("comment_language", "English"):
+                extra += f"; write this summary in {f['comment_language']}"
+        lines += [f"## ID {student} (scan{'s' if len(student_pages) > 1 else ''} {scans}{extra})", ""]
+        key = S.form_items(key_file, form)
         for page in student_pages:
             for b in page["boxes"]:
                 item = key[b["q"]]
@@ -505,6 +524,10 @@ def summaries(work: Path, pages: list[dict]) -> tuple[dict, list[str], list[str]
             errors.append(f"{where}: at most two next steps")
         if len(s["strength"].split()) > strength_words:
             warnings.append(f"{where}: strength is {len(s['strength'].split())} words; keep it under {strength_words}")
+        scripts = SC.complex_scripts(" ".join([str(s.get("strength", "")), *map(str, s["fixes"])]))
+        if scripts:
+            errors.append(f"{where}: written in {', '.join(scripts)}, which can't print on the marked page here; "
+                          "write the summary in English")
         for fix in s["fixes"]:
             if len(str(fix).split()) > words:
                 warnings.append(f"{where}: a next step is {len(str(fix).split())} words; keep it to {words}")

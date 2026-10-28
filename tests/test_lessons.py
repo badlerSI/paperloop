@@ -338,3 +338,32 @@ def test_a_phone_photo_stands_up(tmp_path):
     prs = pptx.Presentation(str(tmp_path / "out" / "slides.pptx"))
     pic = next(sh for s in prs.slides for sh in s.shapes if sh.shape_type == 13)
     assert pic.height > pic.width
+
+
+def test_the_next_lesson_opens_with_the_last_worksheet_gone_over(tmp_path):
+    S.make_worksheet(S.read_json(ROOT / "examples" / "math6-ratios-01.json"), tmp_path / "math6-ratios-01")
+    ws = WK.Worksheet(tmp_path / "math6-ratios-01")
+    work = tmp_path / "math6-ratios-01" / "marking-2026-10-27"
+    work.mkdir()
+    S.write_json(work / "manifest.json", {"assignment_dir": str(tmp_path / "math6-ratios-01"), "pages": []})
+    S.write_json(work / "results.json", fake_results(ws))
+    S.write_json(work / "goover.json", {"questions": [{"q": 1, "saw": "Many doubled the 4-batch row wrong."}]})
+    lesson = S.read_json(ROOT / "examples" / "math6-ratios-lesson.json")
+    lesson["sequence"].insert(0, {"phase": "Yesterday's worksheet", "minutes": 8, "most": 1,
+                                  "review": "math6-ratios-01/marking-2026-10-27"})
+    lesson["minutes"] += 8
+    S.write_json(tmp_path / "day2.json", lesson)
+    report = LS.build(tmp_path / "day2.json", tmp_path / "day2")
+    prs = pptx.Presentation(str(tmp_path / "day2" / "slides.pptx"))
+    titles = [s.shapes.title.text for s in prs.slides]
+    start = titles.index("How “Smoothie Stand Ratios” went")
+    assert titles[start:start + 4] == ["How “Smoothie Stand Ratios” went", "Question 1", "Question 1", "Fix it"]
+    assert report["ranges"][0] == (start + 1, start + 4)
+    assert "Many doubled the 4-batch row wrong." in " ".join(texts(prs))
+    assert "Hand back the marked copies" in prs.slides[start].notes_slide.notes_text_frame.text
+    plan = zipfile.ZipFile(tmp_path / "day2" / "lesson-plan.docx").read("word/document.xml").decode()
+    assert "Bring the marked copies of" in plan
+    lesson["sequence"][0]["review"] = "nowhere"
+    S.write_json(tmp_path / "bad.json", lesson)
+    with pytest.raises(DK.LessonError, match="has no results.json"):
+        LS.build(tmp_path / "bad.json", tmp_path / "bad")

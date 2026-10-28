@@ -30,6 +30,12 @@ EXIT = re.compile(r"\bexit\b", re.I)
 SKIPPABLE = ("title", "targets", "agenda")
 
 
+def _period(text: str) -> str:
+    """Text ending in one full stop: "fine." stays "fine.", not "fine.."."""
+    text = text.rstrip()
+    return text if text.endswith((".", "!", "?", ".\u201d", ".\"")) else text + "."
+
+
 def _need(obj: dict, name: str, where: str):
     if obj.get(name) in (None, "", []):
         raise LessonError(f"{where}: missing \"{name}\"")
@@ -97,7 +103,7 @@ def normalize(lesson: dict) -> dict:
         if not isinstance(raw, dict):
             raise LessonError(f"{where}: each step of the sequence is an object with \"phase\" and \"minutes\"")
         p = {"teacher": "", "students": "", "slides": [], "worksheet": False, "walkthrough": False,
-             "divider": False, "then": "", **raw}
+             "divider": False, "then": "", "review": "", "most": None, **raw}
         _need(p, "phase", where)
         where = f"sequence {k} ({p['phase']})"
         try:
@@ -110,6 +116,11 @@ def normalize(lesson: dict) -> dict:
         if p["walkthrough"] not in (True, False) and not (isinstance(p["walkthrough"], list)
                                                            and all(isinstance(q, int) for q in p["walkthrough"])):
             raise LessonError(f"{where}: \"walkthrough\" is true (every question) or a list of question numbers")
+        if not isinstance(p["review"], str):
+            raise LessonError(f"{where}: \"review\" is the marking folder of an earlier worksheet, as a path from "
+                              "the lesson file")
+        if p["most"] is not None and (not isinstance(p["most"], int) or p["most"] < 1):
+            raise LessonError(f"{where}: \"most\" is how many of the most-missed questions to go over, 1 or more")
         for n, s in enumerate(p["slides"], start=1):
             _check_slide(s, f"{where}, slide {n}")
         phases.append(p)
@@ -203,7 +214,7 @@ def _slide(b: DK.Builder, s: dict, where: str, L: dict, exit_ticket: bool = Fals
     kind = s["type"]
     if kind == "question" and exit_ticket and s.get("answer"):
         # No answer slide after an exit ticket: students still writing would copy it. It goes in the notes.
-        answer = f"Answer (in the notes only, so no one copies it): {s['answer']}." + (f" {s['why']}" if s.get("why") else "")
+        answer = f"Answer (in the notes only, so no one copies it): {_period(s['answer'])}" + (f" {s['why']}" if s.get("why") else "")
         s = {**s, "answer": "", "why": "", "say": K.plain(s.get("say", "") + ("\n\n" if s.get("say") else "") + answer)}
     if kind == "points":
         b.points(s, where)
@@ -261,6 +272,15 @@ def build(lesson_path: Path, out_dir: Path) -> dict:
     texts = DK._strings(S.read_json(lesson_path))
     if ws:
         texts += [i["prompt"] for i in ws.items.values()] + [i["key"] for i in ws.items.values()]
+    from . import goover as G  # goover imports this module
+    for p in L["sequence"]:
+        if p["review"]:  # an earlier worksheet's go-over, from its marked class
+            work = base / p["review"]
+            if not (work / "results.json").exists():
+                raise LessonError(f"sequence ({p['phase']}): \"review\" points at {work}, which has no results.json: "
+                                  "it's the marking folder of a worksheet whose marks `check` has accepted")
+            p["_review"] = G._prepare(work)
+            texts += G.texts(p["_review"])
     measure = K.Measure(texts)
     theme = K.theme_for(L["subject"])
     out_dir.mkdir(parents=True, exist_ok=True)
@@ -297,6 +317,14 @@ def _build(L: dict, ws, warnings: list, measure, theme, out_dir: Path, images: P
             _slide(b, s, f"sequence {k} ({p['phase']}), slide {n}", L, bool(EXIT.search(p["phase"])))
             if not worksheet_done:  # before the worksheet, a slide mustn't give its answers away
                 teaching += range(before, len(b.slides))
+        if p["review"]:
+            from . import goover as G
+            first_review = len(b.slides)
+            done = G.review(b, p["_review"], p["most"])
+            warnings += [f"review of {done['title']}: {w}" for w in done["warnings"]]
+            if first_review < len(b.slides):
+                b.slides[first_review].notes = (f"Hand back the marked copies of {done['title']} now (returned.pdf "
+                                                "from its marking). " + b.slides[first_review].notes)
         if p["walkthrough"]:
             start_walk = len(b.slides)
             walkthrough(b, ws, _walk_questions(p, ws), L["walk"])
@@ -412,11 +440,26 @@ def plan(L: dict, ws: WK.Worksheet | None, ranges: list, n_slides: int, theme: K
     doc.heading("Before class")
     prep = []
     if ws:
-        pages = len(ws.layout["pages"])
-        prep.append(f"Print the worksheet, \"{ws.title}\" (worksheet.pdf): one copy per student, {pages} page"
-                    + ("s, double-sided" if pages > 1 else "") + ".")
+        pages = len(S.form_pages(ws.layout))
+        forms = [f for f in ws.layout.get("forms", []) if f["id"]]
+        versions = [f for f in forms if f["kind"] == "version"]
+        if any(f["kind"] == "variant" for f in forms):
+            prep.append(f"Print copies.pdf once: a different copy of \"{ws.title}\" for each student "
+                        f"({sum(f['kind'] == 'variant' for f in forms)} copies). Hand them out in any order.")
+        else:
+            prep.append(f"Print the worksheet, \"{ws.title}\" (worksheet.pdf): one copy per student, {pages} page"
+                        + ("s, double-sided" if pages > 1 else "") + (", minus the versions below" if versions else "")
+                        + ".")
+        for f in versions:
+            prep.append(f"Print version {f['label']} ({f['name']}, versions/{f['id']}.pdf)"
+                        + (f": {f['copies']} cop{'ies' if f['copies'] != 1 else 'y'}" if f.get("copies") else "")
+                        + " for the students who need it. Every version is marked from the same scan.")
         prep.append("Have the class ID list handy: students write their class ID number on the worksheet, never "
                     "their name. A substitute needs it too.")
+    for p in L["sequence"]:
+        if p.get("_review"):
+            prep.append(f"Bring the marked copies of \"{p['_review']['ws'].title}\" (returned.pdf in its marking "
+                        f"folder) to hand back during {p['phase']}: students fix one mistake on them.")
     prep.append(f"Open slides.pptx ({n_slides} slides; slides.pdf is the same deck). What to say is in the speaker notes.")
     prep += L["materials"]
     doc.bullets(prep)
@@ -465,7 +508,7 @@ def plan(L: dict, ws: WK.Worksheet | None, ranges: list, n_slides: int, theme: K
                 labels = "12345678" if q.get("choice_labels") == "numbers" else "ABCDEFGH"
                 line += " " + "; ".join(f"{labels[k]}. {c}" for k, c in enumerate(q["choices"]))
             if q.get("answer"):
-                line += f" **Answer:** {K.plain(str(q['answer']))}." + (f" {K.plain(q['why'])}" if q.get("why") else "")
+                line += f" **Answer:** {_period(K.plain(str(q['answer'])))}" + (f" {K.plain(q['why'])}" if q.get("why") else "")
             doc.bullets([line])
     if L["checks"]:
         doc.heading("Checks for understanding")

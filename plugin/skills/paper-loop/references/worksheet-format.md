@@ -20,6 +20,12 @@ family. Find the closest one, read it, and model yours on it.
 | `math7-data-01.json` | 7 | statistics: read a bar chart, draw the bars, find the mean |
 | `chem10-moles-01.json` | 10 | chemistry: balance an equation (blanks), a table of particles, molar mass and moles with units |
 | `cs10-loops-01.json` | 10 | computer science: a code listing, a trace table, fill-in-the-code blanks, predict the output |
+| `sci5-photosynthesis-enrich-01.json` | 5 | enrichment: a passage adapted from Simple English Wikipedia with its credit line, a reading level, a "Done early?" note |
+| `math6-ratios-02.json` | 6 | versions: support, large print, Spanish, Arabic, Bengali (see `references/versions.md`) |
+| `math6-ratios-hw-01.json` | 6 | a different copy for each of 30 students: variables, a pool, shuffled choices |
+
+To print versions for students who need supports (scaffolds, large print, a home language) or a different
+copy for each student, read `references/versions.md` too.
 
 ```json
 {
@@ -62,7 +68,11 @@ same water for a week..."). Any question can add:
 - `"spelling": true` when spelling counts (spelling tests, vocabulary, world languages);
 - `"passage": "<its id>"` when it's about a passage, so marking sees the text;
 - `"notes"`: guidance for marking that isn't printed ("capital letters don't matter", "accept any two of the
-  four causes").
+  four causes");
+- `"skill"`: the "I can" statement it practices ("I can find a unit rate"). Progress reports follow each
+  student skill by skill across worksheets, so use the same wording every time a skill comes back. Without
+  one, the worksheet's title stands in;
+- `"support"`: scaffolds that versions can print (`references/versions.md`).
 
 Questions sit in the left part of the page (344 points wide); the right column is left empty for the
 comments Paper Loop prints beside each answer. Default points: short 2, choice 1, math 1 for the answer and 1
@@ -83,10 +93,80 @@ for the work, and 1 per box, label, blank, cell, item, or checklist item (set `p
 - `mono: true` prints code: a fixed-width font, every line and its indentation kept as written (one `\n`
   per line), and with `line_numbers` every line numbered, as in an editor. Use a short `title` ("Program A")
   so prompts can refer to it. Keep code lines under about 70 characters; longer ones wrap.
-- Only use text you wrote, or text in the public domain (and say which in `source`). Don't reproduce
-  copyrighted readings. To make an old text readable, you may define hard words in [brackets] and mark
-  cuts with "...", and say "adapted" in `source`. If you quote a public-domain text from memory, tell the
-  teacher, so they can check it against a published copy.
+- Only use text you wrote, text in the public domain, or openly licensed text, and credit it. Don't
+  reproduce copyrighted readings. To make an old text readable, you may define hard words in [brackets]
+  and mark cuts with "...". If you quote a public-domain text from memory, tell the teacher, so they can
+  check it against a published copy.
+
+#### Readings from free, human-written sources
+
+For enrichment, or a reading on any topic, start from a real text rather than writing one. Good sources:
+- Wikipedia, and Simple English Wikipedia for younger readers (CC BY-SA);
+- Project Gutenberg and Wikisource (public domain);
+- US government sites: NASA, NOAA, USGS, the Library of Congress.
+
+`PL source wikipedia "<article title>" --out "<folder>/sources/<name>.json"` saves an article's plain text
+with a link to the exact revision. The other sources:
+- `simple` for Simple English Wikipedia;
+- `wikisource "<page title>"` for primary sources: speeches, laws, letters, old books;
+- `gutenberg <book number>` for a book.
+
+A text you fetched another way (with your web tool) needs the same credit: its title, author, address, and
+license go in `cite`.
+
+**Quote primary sources from a scan-backed edition**, never from a quotation inside an encyclopedia article,
+which may be slightly wrong. Good sources:
+- Wikisource pages marked as checked against a scan;
+- the Library of Congress;
+- the Avalon Project;
+- the first printing.
+
+Gutenberg's plain text sometimes drops punctuation or changes small capitals and dashes. Check a quote
+against a scan when the exact words matter. Read it, then quote it exactly or abridge and adapt it for the grade. Credit it with `cite` on
+the passage:
+
+```json
+{"type": "passage", "id": "leaf", "title": "Plants Make Their Own Food", "reading_level": 5, "text": "...",
+ "cite": {"title": "Photosynthesis", "author": "Simple English Wikipedia contributors",
+          "url": "https://simple.wikipedia.org/w/index.php?title=Photosynthesis&oldid=10903963",
+          "license": "CC BY-SA 4.0", "changes": "shortened and simplified for grade 5"}}
+```
+
+- **The credit line.** The worksheet prints the line the license asks for under the passage: title,
+  authors, link, license, and what changed. An adapted CC BY-SA passage stays CC BY-SA (`make` says so);
+  the questions are the teacher's.
+- **`license`.** One of: public domain, US government work, CC0, CC BY 4.0, CC BY-SA 4.0, CC BY-NC 4.0, CC
+  BY-NC-SA 4.0, CC BY-ND 4.0, CC BY-NC-ND 4.0, or "written for this worksheet". An ND license allows no
+  `changes`.
+- **`changes`.** Say how you changed it: "shortened", "simplified for grade 4", "excerpted". Leave it out
+  only for an exact quote.
+- **`reading_level`.** The grade you adapted it for. `make` estimates every English passage's reading level
+  (Flesch-Kincaid) and warns when a passage reads well above the worksheet's grade, or above its
+  `reading_level`. It's a rough guide: short sentences and everyday words bring it down.
+- **Sources that refuse adaptation.** Some free sites forbid adapting their texts (`make` refuses):
+  CommonLit, ReadWorks, and CK-12 forbid rewriting or AI use, newer OpenStax books forbid AI use, and
+  Newsela is licensed. For those, find the same topic on Wikipedia, or the public-domain original on
+  Gutenberg or Wikisource.
+- **Wikipedia text.** Formulas in Wikipedia text come through as `[formula]`: write them yourself, as plain
+  text with Unicode subscripts.
+- **Be accurate.** When adapting, keep the facts right: simplify the words, not the science.
+- **Notes and line breaks.** Bracketed definitions or background notes inside a quotation are fine:
+  "[ham = an escaping person]". Say so in `changes` ("excerpted, with bracketed definitions"). A single line
+  break (`\n`) in a passage is kept, for telegrams, poems, and lists; a blank line starts a new paragraph.
+- **A question about two sources.** Use `"passage": ["still", "douglass"]`; marking sees both.
+- **Primary sources run hard.** They often read well above grade level; `make` warns only when that looks
+  unintended. For younger readers, read them aloud, or add a short adapted summary beside the original.
+
+### note: printed text, not a reading
+
+```json
+{"type": "note", "title": "Done early?", "text": "Draw a leaf. Use arrows to show what goes in and comes out."}
+```
+
+A dashed box, full width, for directions, an extension task, or a key-word list. It isn't marked, and
+marking never sends it to Claude as a passage. `"size": 8.5` prints it small (a note for an adult), and
+`"qr": "<url>"` adds a QR code at its right for a phone camera. Claude can't read a QR code from a photo
+reliably, so print in the text whatever Claude should know.
 
 ### short: writes in a ruled box
 
@@ -174,7 +254,7 @@ for the work, and 1 per box, label, blank, cell, item, or checklist item (set `p
 
 - A cell is printed text, or `{"answer": ..., "accept": [...]}` for a cell to fill. Cells to fill are
   numbered in reading order, across each row, and the number prints small in the cell's corner.
-- `col_widths` (points, adding up to 344) and `row_height` (default 32pt; 30 compact; 42 for grades 2-3)
+- `col_widths` (points, adding up to 344) and `row_height` (default 32pt; 30 compact; 42 for grades 2-3; the header row keeps its own height)
   are optional. A table with tall rows is the easiest way to give big writing boxes.
 - **Dictation** (a spelling test, a dictated sentence): use a table with a number column and empty cells to
   write in, and `"spelling": true`. The words go in the answers and in `teacher_notes`, never in the

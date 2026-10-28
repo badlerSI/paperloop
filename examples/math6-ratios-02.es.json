@@ -1,0 +1,39 @@
+{
+  "language": "es",
+  "title": "Razones en el puesto de batidos",
+  "instructions": "Muestra tu trabajo donde haya espacio. Escribe tu número de identificación, no tu nombre. Puedes responder en español o en inglés.",
+  "questions": {
+    "1": "Razón de la receta: Un batido lleva 2 tazas de mango por cada 3 tazas de yogur. Completa la tabla (tandas, tazas de mango, tazas de yogur).",
+    "2": "Precio por unidad: 6 batidos cuestan $15. ¿Cuánto cuesta 1 batido?",
+    "3": "Grafícalo: Marca tres puntos de la tabla, (2, 3), (4, 6) y (8, 12): tazas de mango en el eje horizontal y tazas de yogur en el vertical. Únelos con una línea.",
+    "4": {
+      "prompt": "¿El mismo sabor? ¿Qué receta sabe igual que 2 tazas de mango por 3 de yogur?",
+      "options": {
+        "A": "3 de mango : 4 de yogur",
+        "B": "6 de mango : 9 de yogur",
+        "C": "4 de mango : 5 de yogur",
+        "D": "1 de mango : 2 de yogur"
+      }
+    },
+    "5": "Explica: Maya dice que 4 tazas de mango por 5 de yogur sabe igual que 2 : 3, porque sumó 2 a cada número. ¿Tiene razón? Explica."
+  },
+  "glossary": [
+    {
+      "term": "ratio",
+      "translation": "razón"
+    },
+    {
+      "term": "batch",
+      "translation": "tanda"
+    },
+    {
+      "term": "unit price",
+      "translation": "precio por unidad"
+    },
+    {
+      "term": "plot",
+      "translation": "marcar en la gráfica"
+    }
+  ],
+  "comment_language": "Spanish"
+}

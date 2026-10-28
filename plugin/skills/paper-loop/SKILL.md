@@ -1,6 +1,6 @@
 ---
 name: paper-loop
-description: Turns the school copier into a feedback machine for any subject, grades 2-12. Plans lessons - a lesson plan (Word), PowerPoint slides to teach it, a deck that goes over each worksheet problem, and an answer key. Makes printable worksheets (reading passages, short and rubric-scored written answers and multi-page essays, multiple choice, fill-in-the-blank, matching, tables, show-your-work math, labeled diagrams, maps, graphs and bar charts, drawings, code listings, chemical equations, music on a staff) that can be marked from a scan, and marks scanned class sets of them - reads every answer, writes a short comment beside it, returns one PDF of marked pages to print and hand back, and makes a go-over deck from what the class missed. Use when a teacher wants a lesson plan, slides, or a worksheet, or has a scan of completed Paper Loop worksheets to mark, grade, or give feedback on.
+description: Turns the school copier into a feedback machine for any subject, grades 2-12. Plans lessons - a lesson plan (Word), PowerPoint slides to teach it, a deck that goes over each worksheet problem, and an answer key. Makes printable worksheets (reading passages, short and rubric-scored written answers and multi-page essays, multiple choice, fill-in-the-blank, matching, tables, show-your-work math, labeled diagrams, maps, graphs and bar charts, drawings, code listings, chemical equations, music on a staff) that can be marked from a scan - in versions for students who need supports (scaffolds, IEP accommodations like large print, home-language translations in 30+ languages), as a different copy for each student, or as enrichment adapted from free sources like Wikipedia with the credit line the license needs. Marks scanned class sets - reads every answer, writes a short comment beside it, returns one PDF of marked pages to print and hand back - then makes a go-over deck (or opens the next day's lesson with one), a practice sheet for each student of what they missed, a progress dashboard across worksheets, and a progress page for each family. Use when a teacher wants a lesson plan, slides, a worksheet, differentiated or individualized copies, enrichment, or progress reports, or has a scan of completed Paper Loop worksheets to mark, grade, or give feedback on.
 ---
 
 # Paper Loop
@@ -12,7 +12,8 @@ letters, and laying out the PDF. You do the reading and judging.
 
 Run the scripts as `python3 <this skill's folder>/scripts/paper_loop.py <command>`, written `PL` below.
 They need numpy, scipy, Pillow, pypdfium2, and reportlab, and python-pptx for slides, which Claude's
-sandboxes include. If an import fails, `pip install` the missing one.
+sandboxes include. If an import fails, `pip install` the missing one. `PL source` needs the internet; if the
+sandbox can't reach the site, use your web tool and save the text yourself.
 
 ## Privacy: always
 
@@ -20,12 +21,17 @@ sandboxes include. If an import fails, `pip install` the missing one.
   accept, or write down student names. If the teacher offers a roster with names, ask for a CSV of just
   the ID numbers. Many teachers already give each student a class number; that works.
 - Look only at the crops and ID strips the scripts make. Don't open the scanned PDF or the full page
-  images: the crops leave out everything else a student wrote on the page.
+  images: the crops leave out everything else a student wrote on the page. The crops reach a little below
+  each writing box, and a work order adds a crop of the whole question when there's writing outside its
+  box, so an answer that runs over is still in view.
 - If a crop shows a student's name or other personal details, don't repeat them. Tell the teacher which
   scan has a name on it.
 - On a teacher's own Claude for Teachers account, student work must stay de-identified unless their
   school or district has authorized Claude for student records. If the teacher plans to use names or
   district student numbers, tell them that first.
+- Never ask for or record who has an IEP or 504 plan, who is learning English, or anything else about a
+  student's background. The teacher hands out versions to whoever needs them; Paper Loop only knows which
+  form a class ID turned in. Family pages have a line where the teacher writes the name by hand.
 
 ## Making a worksheet
 
@@ -35,9 +41,16 @@ sandboxes include. If an import fails, `pip install` the missing one.
    (`feedback` in the format guide).
 2. Read `references/worksheet-format.md`, then the example in `references/examples/` closest in grade and
    subject. Write the worksheet as JSON. Mix question types. Write keys as what full credit needs, rubrics
-   with levels a stranger could apply, and drawing checklists as things you can see on the page. Reading
-   passages must be your own writing or public domain. A picture the teacher supplies (a map, a photo) goes
-   beside the JSON, referenced by its file name.
+   with levels a stranger could apply, and drawing checklists as things you can see on the page. Give each
+   question the `skill` it practices, so progress reports can follow it. For a reading, start from a free,
+   human-written source (Wikipedia, Simple English Wikipedia, Project Gutenberg, a US government site:
+   `PL source`) and credit it with `cite`; otherwise write it yourself. A picture the teacher supplies (a
+   map, a photo) goes beside the JSON, referenced by its file name.
+   - If some students need supports (scaffolds, large print, more room, a home language) or the teacher
+     wants a different copy for each student (homework), read `references/versions.md` and add `versions`
+     or `variants`. One scan of every copy marks them all.
+   - Enrichment ("something more for the ones who finish", "go deeper on X") is a worksheet too: a
+     reading from a free source, adapted for the grade, with questions that stretch.
 3. Save the JSON as `<folder>/<assignment_id>.json` and run
    `PL make "<folder>/<assignment_id>.json" --out "<folder>/<assignment_id>"`. `<folder>` is wherever the
    teacher keeps worksheets. It reports each page's blocks with their heights, its free space, and how many
@@ -49,13 +62,18 @@ sandboxes include. If an import fails, `pip install` the missing one.
 4. Look at every page before giving it to the teacher: `PL preview "<folder>/<assignment_id>/worksheet.pdf"`
    saves each page as a PNG (use `PL zoom` on it to look closer). Check that nothing overlaps, that diagrams
    look like what they're meant to be, and that label boxes and leader lines point at the right things.
-5. Give the teacher `<folder>/<assignment_id>/worksheet.pdf` to print, along with anything `make` printed as
-   notes for them. Keep the folder: marking needs `layout.json` and `key.json` from it.
+5. Give the teacher `<folder>/<assignment_id>/worksheet.pdf` to print, or `copies.pdf` when each student gets
+   their own copy (with `copies-key.pdf`, every copy's answers), along with anything `make` printed as
+   notes for them: each version's PDF and how many to print, Word pages for home languages, reference pages,
+   and any translation a bilingual adult should check before it prints. Keep the folder: marking needs
+   `layout.json` and `key.json` from it.
 
 ## Planning a lesson
 
-When the teacher wants a lesson plan or slides, make the worksheet first (above), then the lesson around
-it. A lesson without a worksheet works too; offer one, since it's what Paper Loop marks.
+When the teacher wants a lesson plan or slides, offer a worksheet to go with it, since it's what Paper Loop
+marks; if they want one, make it first (above), then the lesson around it. A lesson without a worksheet
+works too. The plan reminds the teacher to bring marked copies when the lesson opens with a `review`, so
+don't list them in `materials` too.
 
 1. Find out the class length and anything the teacher wants included (a standard, a text, an activity, a
    warm-up routine). Ask only for what they haven't said.
@@ -140,12 +158,96 @@ double quotes. If you lose track at any point, `PL status "<work>"` says what's 
    2 minutes a question). Then write `<work>/goover.json` with what you saw on each question it goes over
    (`<work>/out/go-over-todo.md` lists the answers that missed, if you didn't mark this scan yourself), and
    run it again. Give the teacher `<work>/out/go-over.pptx`: most-missed questions first, each with how
-   the class answered and its answer worked through. Details: the end of `references/lesson-format.md`.
+   the class answered and its answer worked through, ending with a "Fix it" slide for the marked copies.
+   If you're planning the next day's lesson, open it with a `"review"` phase instead: the same slides go
+   into that lesson's deck. Details: the end of `references/lesson-format.md`.
+9. **Practice sheets** (offer them when several students missed things):
+   - Run `PL practice "<work>"`. It makes a sheet for each student with the questions they missed, the
+     comment they got last time above each one, and new numbers where the worksheet has variables.
+   - Each sheet has the student's ID printed. Students can do them as homework or a warm-up.
+   - Scan them back like any worksheet (`prepare` with `--assignment` set to the practice folder), then go
+     straight to `todo`: there are no IDs to read.
+   - Details: `references/versions.md`.
 
 The printed page shows each comment beside its question, a check or cross on each box the student wrote in
 and on each math answer box, the drawing checklist and (from grade 6) rubric scores under the comment, and
 the student's summary on their last page. Your transcriptions, drawing descriptions, and notes aren't
 printed. They're for the teacher and for checking.
+
+## Cards, games, and foldables
+
+For review that isn't a worksheet: "make flashcards", "a review game for Friday", "something hands-on for
+centers", or anything a teacher would otherwise do with Quizlet, Kahoot, or Blooket.
+
+1. Read `references/pieces-format.md`, then the closest example in `references/examples/` (`*-pieces.json`).
+   Write one file of question-and-answer cards, with a level from 1 to 3 on each, and the pieces to make:
+   - fold-over cards (no two-sided printing), and blank cards for students to write their own;
+   - board games for any checker or chess board and a die: Snake Race, Question Checkers, Four in a Row,
+     Chess Quiz;
+   - a printable board, a paper die, a spinner, and tent pawns;
+   - a fortune teller, an eight-page mini-book from one sheet, ABCD answer cards for the whole class, and
+     bingo.
+2. Run `PL pieces "<folder>/<name>-pieces.json" --out "<folder>/<name>-pieces"`. Fix every `Check:` line it
+   prints, then look at the pages with `PL preview "<folder>/<name>-pieces/pieces.pdf" --sheet`.
+3. Give the teacher `pieces.pdf`. Its first page lists what's in it, what to print on, prep time, and
+   materials.
+
+Cards work best when every card makes students recall an answer before they check it, so write questions,
+not facts to read. Making their own cards is good practice too.
+
+## A Paper Loop sample
+
+Teachers can print sample worksheets from the Paper Loop website and fill them in to try it out. When a
+teacher shares a photo or scan of a page with a "Try Paper Loop" box, the box and the footer name the
+sample (such as `sample-ratios-gr6`):
+
+1. Rebuild it: run `PL make "<this skill's folder>/references/samples/<sample id>.json" --out "<folder>/<sample
+   id>"`. The `<folder>` is the teacher's worksheets folder, or a "Paper Loop samples" folder. This makes
+   the same sheet and its answer key.
+2. Mark the photo as in "Marking a scan", with that folder as the assignment. A phone photo works when all
+   four corner squares are in it. Any number in the ID boxes will do.
+3. Give the teacher the marked page, and in a few lines say what Paper Loop did at each step:
+   - it lined the page up;
+   - it read the circled letters itself;
+   - you read the rest and wrote the comments;
+   - it flagged anything you were unsure of.
+
+   Then offer to make a worksheet for their own class.
+
+If the sample id isn't in `references/samples/`, it comes from a newer version of the plugin: say so, and
+offer to make a worksheet like it instead.
+
+## Progress across worksheets
+
+When the teacher asks how the class or a student is doing over time, or wants something for families:
+
+1. Run `PL progress "<folder>"`, where the folder holds the class's worksheets and their marking folders.
+   Add `--roster "<ids.csv>"` for one class period, and `--class-name "Period 3 Math"`. It reads every
+   marked class under the folder and writes `<folder>/progress/`:
+   - `dashboard.html`: the teacher's dashboard, one file that opens in any browser and needs no internet.
+     It shows each skill, student by student (got it, getting there, still practicing), groups for the
+     next lesson, how each worksheet went, and what marking noticed.
+   - `parents.docx`: a page for each family in plain words. It covers what the class is learning, how
+     their child is doing on each skill, their latest feedback, and something to try at home. A line for
+     the teacher to write the name.
+   - `progress.csv`: the latest score on each skill, for a gradebook.
+2. If it lists a `progress-todo.md`, fill in what it asks, then run it again:
+   - `skills.json` in the folder: each skill in everyday words, and a ten-minute thing to try at home with
+     nothing a family might not have.
+   - Family pages in another language: `families.json` maps a class ID to a language code, such as
+     `{"0412": "es"}`. List only families who asked for school letters in another language (the home
+     language survey records this), and ask which language they *read*. Write `parents.<code>.json` with the
+     translated labels, skills, and each student's latest feedback, in the shape `progress-todo.md` shows.
+     A bilingual adult (not a student or a sibling) reads it before it goes home. After they have, add
+     `"reviewed_by"` with their role. `families.json` records a family's language, so it belongs where the
+     teacher keeps student records. Delete it when it's no longer needed.
+3. Tell the teacher what the dashboard shows that matters: the skills most students are still practicing,
+   and the groups for the next lesson.
+   - Scores on questions that printed help (hints, worked examples, steps, or fewer choices) are marked
+     "with help on the page".
+   - Each status comes from the skill's most recent new evidence: a later worksheet, or a practice sheet
+     with new numbers. Practicing the very same question again doesn't change a status.
+   - Family pages don't replace IEP progress reports; the case manager writes those.
 
 ## Reporting back
 

@@ -1,0 +1,152 @@
+{
+  "assignment_id": "math6-ratios-hw-01",
+  "title": "Ratios at Home",
+  "subject": "math",
+  "grade": 6,
+  "grade_band": "6th grade",
+  "compact": true,
+  "instructions": "Your numbers are different from your neighbor's. Show your work. Write your ID number, not your name.",
+  "variants": {
+    "count": 30,
+    "seed": 4,
+    "shuffle_choices": true
+  },
+  "questions": [
+    {
+      "type": "math",
+      "q": 1,
+      "vars": {
+        "n": {
+          "choose": [
+            4,
+            5,
+            6,
+            8
+          ]
+        },
+        "p": {
+          "min": 1.5,
+          "max": 3,
+          "step": 0.25,
+          "base": 2.5
+        }
+      },
+      "prompt": "Unit Price: {{n}} smoothies cost {{money(n*p)}}. How much does 1 smoothie cost?",
+      "answer": "{{money(p)}}",
+      "accept": [
+        "{{dec(p, 2)}}",
+        "{{p}}"
+      ],
+      "key": "Divides {{money(n*p)}} by {{n}} to get {{money(p)}} for one smoothie.",
+      "work_height": 60
+    },
+    {
+      "type": "table",
+      "q": 2,
+      "vars": {
+        "a": {
+          "min": 2,
+          "max": 5
+        },
+        "b": {
+          "min": 3,
+          "max": 9
+        }
+      },
+      "where": "a < b and gcd(a, b) == 1",
+      "prompt": "Recipe Ratio: A smoothie uses {{a}} cups of mango for every {{b}} cups of yogurt. Fill in the table.",
+      "columns": [
+        "Batches",
+        "Mango (cups)",
+        "Yogurt (cups)"
+      ],
+      "rows": [
+        [
+          "1",
+          "{{a}}",
+          "{{b}}"
+        ],
+        [
+          "2",
+          {
+            "answer": "{{2*a}}"
+          },
+          "{{2*b}}"
+        ],
+        [
+          "3",
+          "{{3*a}}",
+          {
+            "answer": "{{3*b}}"
+          }
+        ],
+        [
+          "5",
+          {
+            "answer": "{{5*a}}"
+          },
+          {
+            "answer": "{{5*b}}"
+          }
+        ]
+      ]
+    },
+    {
+      "type": "choice",
+      "q": 3,
+      "columns": 2,
+      "vars": {
+        "a": {
+          "min": 2,
+          "max": 5
+        },
+        "b": {
+          "min": 3,
+          "max": 7
+        }
+      },
+      "where": "a < b and gcd(a, b) == 1",
+      "prompt": "Same Taste? Which recipe tastes the same as {{a}} cups mango to {{b}} cups yogurt?",
+      "answer": "A",
+      "options": [
+        {
+          "letter": "A",
+          "text": "{{3*a}} mango : {{3*b}} yogurt",
+          "why": "Yes: {{a}} : {{b}} times 3 is {{3*a}} : {{3*b}}."
+        },
+        {
+          "letter": "B",
+          "text": "{{a+3}} mango : {{b+3}} yogurt",
+          "why": "Adding the same amount changes the ratio."
+        },
+        {
+          "letter": "C",
+          "text": "{{b}} mango : {{a}} yogurt",
+          "why": "That flips the ratio: more mango than yogurt."
+        },
+        {
+          "letter": "D",
+          "text": "{{2*a}} mango : {{3*b}} yogurt",
+          "why": "Multiply both numbers by the same amount."
+        }
+      ]
+    },
+    {
+      "type": "short",
+      "q": 4,
+      "lines": 3,
+      "prompt": "Explain: Leo makes paint with 2 cups blue for every 5 cups white. He uses 6 cups blue. How much white does he need? Explain how you know.",
+      "key": "15 cups white: 2 to 6 is times 3, so 5 times 3 is 15. Full credit needs 15 and the times-3 reason; 15 alone is partial.",
+      "pool": [
+        {
+          "prompt": "Explain: A trail mix has 3 scoops nuts for every 4 scoops raisins. Ana uses 9 scoops nuts. How many scoops of raisins? Explain how you know.",
+          "key": "12 scoops: 3 to 9 is times 3, so 4 times 3 is 12. Full credit needs 12 and the times-3 reason; 12 alone is partial."
+        },
+        {
+          "prompt": "Explain: A class has 4 boys for every 5 girls. There are 20 girls. How many boys? Explain how you know.",
+          "key": "16 boys: 5 to 20 is times 4, so 4 times 4 is 16. Full credit needs 16 and the times-4 reason; 16 alone is partial."
+        }
+      ]
+    }
+  ]
+}

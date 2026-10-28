@@ -565,7 +565,7 @@ class Builder:
                             border="9AA0A6", align="left")
         x = placed[0] + placed[2] + 44
         n = len(ws.questions)
-        pages = len(ws.layout["pages"])
+        pages = len(S.form_pages(ws.layout))
         points = ["Write your **class ID number** in the boxes at the top, not your name.",
                   f"{n} question{'s' if n != 1 else ''}" + (f" on {pages} pages" if pages > 1 else "")
                   + ". Answer each one in its box."]

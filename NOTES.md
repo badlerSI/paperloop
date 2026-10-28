@@ -301,6 +301,30 @@ The plugin now makes and marks worksheets for any subject from grade 2 to 12: re
 
 The plugin now plans the lesson around a worksheet and goes over it afterward, on the same free Claude for Teachers account. From one lesson file Claude writes, `lesson` makes a Word lesson plan, a PowerPoint deck to teach from (with speaker notes), a go-over deck that shows each worksheet question as printed and then answered and explained, and an answer key. After marking, `goover` makes a go-over deck from the class's results, most-missed questions first, with no student identifiable. Five example lessons (grades 3, 5, 6, 10, 11) build clean; the files pass the validator from Anthropic's own pptx and docx skills. Four fresh-agent trials (grade 4 math, grade 8 history, grade 9 biology, and a go-over from a marked class), an instructional coach's review, and a code review (17 bugs, all fixed) shaped the result. The log is [docs/lessons.md](docs/lessons.md).
 
+## The next level: every student, the same high bar (Oct 27)
+
+One worksheet now prints in versions for the students who need them, all marked from one stack:
+- scaffolds and IEP accommodations, including large print at 18pt;
+- home languages, about 35 of them, with right-to-left Arabic script shaped in pure Python and Word pages
+  for scripts the PDF can't shape;
+- a different copy for each student.
+
+After marking, there are four more outputs:
+- practice sheets of each student's misses, with new numbers and their ID printed;
+- a progress dashboard;
+- family pages, in the family's language when the teacher asks;
+- the next day's lesson, opening with the go-over.
+
+Also new:
+- enrichment comes from Wikipedia, Wikisource, and Gutenberg, with license credit lines;
+- cards, board games for any checker or chess board, and foldables;
+- four QR-coded sample worksheets for the website.
+
+Three trials, a special-education and ESL review, and a code review (16 bugs) shaped it; 151 tests pass. The
+log, with what each review changed and what's still open, is [docs/next-level.md](docs/next-level.md). The
+walkthrough for teachers and the podcast is
+[Paper Loop: One Worksheet, Every Student](https://claude.ai/artifact/8bB8CAgaNFiG82pyRR4miV).
+
 ## Top three for Day 2
 
 0. **Try the plugin in real Cowork, on a Claude for Teachers account.** Check that it installs from the marketplace, that the cloud sandbox has numpy, scipy, Pillow, pypdfium2, reportlab, and python-pptx (0.6.22 or later), and that a scan can come in from Google Drive. Open a generated slides.pptx in PowerPoint and in Google Slides. Then mark a full class set (print 25-30 copies) and measure how much of the plan's usage it takes, with and without a subagent per question.

@@ -4,7 +4,7 @@ Print worksheets, scan the class stack on the school copier, and get marked-up p
 
 It comes two ways: a Claude Cowork plugin, where Claude marks the work within a teacher's Claude account, and a command-line version that calls the API with your own key. The command-line version is the test bench for accuracy.
 
-Status: v0.1. [SPEC.md](SPEC.md) is the plan, [NOTES.md](NOTES.md) is where things stand.
+Status: v0.3. [SPEC.md](SPEC.md) is the plan, [NOTES.md](NOTES.md) is where things stand.
 
 ## For teachers: use it inside Claude, no setup
 
@@ -24,10 +24,22 @@ Paper Loop is also a plugin for Claude Cowork. Claude does the marking itself, s
    - diagrams to label, maps (your own image), coordinate grids, number lines, fraction models, clocks, timelines, bar charts, music on a staff or a rhythm line, and drawings judged on a checklist.
 
    Grades 2-3 get big print, primary-ruled lines, and 2-digit class numbers. Math symbols, chemical formulas, and accents print as written.
+
+   **Every student, the same high bar:**
+   - **Versions.** Ask for versions of the same sheet for the students who need them: scaffolds (plain wording, a hint, steps, a worked example, sentence starters, a word bank), large print, more room to write, fewer per page, graph paper, a multiplication chart, or the student's home language. Translations cover the 30-plus most common home languages of US English learners; Bengali, Nepali, Burmese and other scripts the PDF can't shape go on a Word page. Each version looks like everyone else's sheet, and they're all marked from one scan.
+   - **Homework.** Ask for "a different copy for each student" and every copy gets its own numbers, items, and choice order, so copying a neighbor stops working.
+   - **Enrichment.** Ask for a reading on anything and Claude adapts one from Wikipedia, Simple English Wikipedia, Project Gutenberg, or a government source. The credit line the license asks for prints under it.
 4. Students write their class ID number in the boxes, never their name.
 5. Scan the stack on the copier (to Google Drive, email, or USB), in any order and orientation. Give Claude the PDF: "Mark this scan of Water's Wild Ride."
 6. Claude reads every answer, asks you about anything it isn't sure of, and gives you one PDF to print and hand back.
-7. **Go over it**: "Make slides to go over what they missed." The deck starts with how the class did on each question, then takes the most-missed questions first: how the class answered (a chart of the letters chosen, the wrong answers two or more students gave), then the answer worked through. Nothing on it identifies a student.
+7. **Go over it**: "Make slides to go over what they missed." The deck starts with how the class did on each question, then takes the most-missed questions first: how the class answered (a chart of the letters chosen, the wrong answers two or more students gave), then the answer worked through, and ends with students fixing one mistake on their marked copy. Nothing on it identifies a student. Planning tomorrow's lesson? It can open with these slides.
+8. **Practice what they missed**: "Make practice sheets." Each student gets a sheet of the questions they missed, with new numbers and last time's comment above each one, and their ID already printed. Scan them back the same way.
+9. **See progress**: "How is my class doing?" You get:
+   - a dashboard that opens in any browser (skills student by student, groups for the next lesson, what marking noticed);
+   - a progress page for each family, in their language if you like;
+   - a gradebook file.
+
+   Students are known only by class ID; the family page has a line for you to write the name.
 
 Privacy: Claude only looks at the cropped answers and the ID boxes, never the whole page, and never sees names. On your own Claude for Teachers account, keep student work de-identified (class ID numbers, no names) unless your school or district has authorized Claude for student records. See [Anthropic's terms for teachers](https://support.claude.com/en/articles/15926041-claude-for-teachers-your-data-and-our-terms).
 

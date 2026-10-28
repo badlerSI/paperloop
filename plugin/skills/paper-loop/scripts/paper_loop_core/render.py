@@ -32,10 +32,10 @@ class Pen:
     """Fonts and sizes for one rendering. Grades 2-3 get upright print as big as the questions (slanted
     letters are harder for early readers); older grades get italic, which sets comments apart from print."""
 
-    def __init__(self, fonts: F.Fonts, primary: bool, grade: int):
+    def __init__(self, fonts: F.Fonts, primary: bool, grade: int, scale: float = 1.0):
         self.f, self.primary, self.grade = fonts, primary, grade
         self.comment = fonts.regular if primary else fonts.oblique
-        self.size = 13.0 if primary else COMMENT_SIZE
+        self.size = min(16.0, (13.0 if primary else COMMENT_SIZE) * scale)  # large print: comments grow too
         self.leading = self.size * COMMENT_LEADING / COMMENT_SIZE
 
 
@@ -88,6 +88,29 @@ def _mark_on(c: canvas.Canvas, rect, state: str, size: float = 8.0) -> None:
     _draw_mark(c, state, x, y, size)
 
 
+def _split(text: str, font: str, size: float, width: float, f: F.Fonts) -> tuple[list[str], str, bool]:
+    """(lines, font, right to left) for text in any language: the pen's own font when it can print it,
+    else Arabic script shaped, or a font for the text's script."""
+    from . import script as SC
+    from . import sheet as S
+    if not SC.has_rtl(text) and (F.covers(font, text) or not f.unicode and not F.needs_unicode([text])):
+        return simpleSplit(f.text(text), font, size, width), font, False
+    shaped = SC.shape(text, lambda ch: F.covers(f.regular, ch))
+    use, _ = F.font_for(shaped, f)
+    return S.wrap_text(text, use, size, width), use, SC.has_rtl(text)
+
+
+def _put(c: canvas.Canvas, line: str, x: float, right: float, y: float, font: str, size: float, rtl: bool) -> float:
+    """Draw one line, flush right in display order when it's right-to-left. Returns where its ink starts."""
+    from . import script as SC
+    c.setFont(font, size)
+    if rtl:
+        line = SC.visual(line, True)
+        x = right - c.stringWidth(line, font, size)
+    c.drawString(x, y, line)
+    return x
+
+
 def _draw_comment(c: canvas.Canvas, pen: Pen, rect, verdict: str, comment: str,
                   checks: list[tuple[str | None, str]]) -> None:
     """Comment at the top of the gutter, then one line per drawing checklist item or rubric criterion, with
@@ -105,7 +128,7 @@ def _draw_comment(c: canvas.Canvas, pen: Pen, rect, verdict: str, comment: str,
     room = (y1 - y0) + 6 - sum(map(len, wrapped)) * CHECK_LEADING - (4 if checks else 0)
     for size in (pen.size, pen.size - 1, 9.0, 8.0):
         leading = size * COMMENT_LEADING / COMMENT_SIZE
-        lines = simpleSplit(f.text(comment), font, size, x1 - x - 2)
+        lines, use, rtl = _split(comment, font, size, x1 - x - 2, f)
         if len(lines) * leading <= room:
             break
     else:
@@ -116,14 +139,13 @@ def _draw_comment(c: canvas.Canvas, pen: Pen, rect, verdict: str, comment: str,
     top = y1
     y = y1 - size - 2
     for n, line in enumerate(lines):
-        _wash(c, x0 + 3 if n == 0 else x - 2, x + c.stringWidth(line, font, size) + 2,
+        _wash(c, x0 + 3 if n == 0 else x - 2, x1 - 2 if rtl else x + c.stringWidth(line, use, size) + 2,
               y - n * leading, size, leading)
     if verdict == "correct":
         _draw_mark(c, "correct", x0 + 6, y - 1, 10)
     c.setFillColorRGB(*PEN)
-    c.setFont(font, size)
     for line in lines:
-        c.drawString(x, y, line)
+        _put(c, line, x, x1 - 4, y, use, size, rtl)
         y -= leading
     if checks:
         y -= 4
@@ -193,17 +215,17 @@ def _draw_summary(c: canvas.Canvas, pen: Pen, rect, summary: dict | None, score:
     y = y1 - 13 - size
     for label, text in entries:
         indent = c.stringWidth(label + " ", f.bold, size)
-        for n, line in enumerate(simpleSplit(f.text(text), f.regular, size, right - left - indent)):
+        lines, use, rtl = _split(text, f.regular, size, right - left - indent, f)
+        for n, line in enumerate(lines):
             if y < y0 + 3:
                 return
             _wash(c, left - 2 if n == 0 else left + indent - 2,
-                  left + indent + c.stringWidth(line, f.regular, size) + 2, y, size, leading)
+                  right + 2 if rtl else left + indent + c.stringWidth(line, use, size) + 2, y, size, leading)
             c.setFillColorRGB(*PEN)
             if n == 0:
                 c.setFont(f.bold, size)
                 c.drawString(left, y, label)
-            c.setFont(f.regular, size)
-            c.drawString(left + indent, y, line)
+            _put(c, line, left + indent, right, y, use, size, rtl)
             y -= leading
 
 
@@ -233,24 +255,27 @@ def render(work: Path, pages: list[dict], summary_by_student: dict, grade: str =
     texts = [b["comment"] for p in pages for b in p["boxes"]] + [
         t for s in summary_by_student.values() for t in [s.get("strength", ""), *s.get("fixes", [])]]
     fonts, _ = F.choose(texts + [d.get("item", "") for p in pages for b in p["boxes"] for d in b["details"]])
-    pen = Pen(fonts, layout.get("style") == "primary", int(key.get("grade", 7)))
+    pens: dict[float, Pen] = {}
     returned = out_dir / "returned.pdf"
     c = canvas.Canvas(str(returned), pagesize=(S.PAGE_W, S.PAGE_H))
     c.setTitle(f"{manifest['assignment_id']}: marked")
     sheets, totals = 0, {}
-    whole = sum(b["points"] for p in layout["pages"] for b in p["boxes"])
     missing = {}
     for student_id in sorted(by_student):
         student_pages = sorted(by_student[student_id], key=lambda p: p["page"])
+        form_pages = S.form_pages(layout, layout_pages[student_pages[0]["page"]].get("form", ""))
         earned = sum(b["points_awarded"] for p in student_pages for b in p["boxes"])
-        possible = whole  # out of the whole worksheet, even if a page is missing from the scan
-        absent = sorted(set(layout_pages) - {p["page"] for p in student_pages})
+        possible = sum(b["points"] for p in form_pages for b in p["boxes"])  # even if a page is missing
+        absent = sorted({p.get("form_page", p["page"]) for p in form_pages}
+                        - {layout_pages[p["page"]].get("form_page", p["page"]) for p in student_pages})
         if absent:
             missing[student_id] = absent
         totals[student_id] = (earned, possible)
-        last_page = student_pages[-1]["page"]
+        last_page = layout_pages[student_pages[-1]["page"]].get("form_page", student_pages[-1]["page"])
         for page in student_pages:
             page_layout = layout_pages[page["page"]]
+            k = page_layout.get("print_scale", 1.0)
+            pen = pens.setdefault(k, Pen(fonts, layout.get("style") == "primary", int(key.get("grade", 7)), k))
             c.drawImage(_jpeg(images[page["scan_index"]], out_dir), 0, 0, S.PAGE_W, S.PAGE_H)
             results = {b["q"]: b for b in page["boxes"]}
             for box in page_layout["boxes"]:
@@ -268,15 +293,16 @@ def render(work: Path, pages: list[dict], summary_by_student: dict, grade: str =
                           score, last_page)
             c.showPage()
             sheets += 1
-        if len(layout["pages"]) > 1 and len(student_pages) % 2:
+        if len(form_pages) > 1 and len(student_pages) % 2:
             c.showPage()  # blank back, so each student starts on a new sheet when printed double-sided
             sheets += 1
     c.save()
     out = {"returned": returned, "sheets": sheets, "students": len(by_student),
-           "double_sided": len(layout["pages"]) > 1, "missing": missing}
+           "double_sided": any(p.get("form_pages", len(S.form_pages(layout))) > 1 for p in layout["pages"]),
+           "missing": missing}
 
     if grade == "csv":
-        questions = [b["q"] for p in layout["pages"] for b in p["boxes"] if b.get("part", 1) == 1]
+        questions = [b["q"] for p in S.form_pages(layout) for b in p["boxes"] if b.get("part", 1) == 1]
         out["grades"] = out_dir / "grades.csv"
         with out["grades"].open("w", newline="") as f:
             writer = csv.writer(f)

@@ -66,13 +66,40 @@ def load_png(path: Path) -> np.ndarray:
 
 
 def template(assignment_dir: Path, page: int) -> np.ndarray:
-    """The blank page as printed, rendered once and kept beside the worksheet."""
-    path = Path(assignment_dir) / f"template-p{page}.png"
-    pdf = Path(assignment_dir) / "worksheet.pdf"
-    if not path.exists() or (pdf.exists() and pdf.stat().st_mtime > path.stat().st_mtime):
-        for n, img in enumerate(render_pdf(Path(assignment_dir) / "worksheet.pdf"), start=1):
-            save_png(img, Path(assignment_dir) / f"template-p{n}.png")
-    return load_png(path)
+    """The blank page as printed, rendered once and kept beside the worksheet. A page of another form (a
+    version, a student's own copy) is rendered from that form's PDF."""
+    assignment_dir = Path(assignment_dir)
+    path = assignment_dir / f"template-p{page}.png"
+    entry = _page_entry(assignment_dir, page)
+    pdf = assignment_dir / entry.get("pdf", "worksheet.pdf")
+    if path.exists() and not (pdf.exists() and pdf.stat().st_mtime > path.stat().st_mtime):
+        return load_png(path)
+    if entry.get("pdf") is None:  # an older layout: the whole worksheet at once
+        for n, img in enumerate(render_pdf(pdf), start=1):
+            save_png(img, assignment_dir / f"template-p{n}.png")
+        return load_png(path)
+    doc = pdfium.PdfDocument(str(pdf))
+    try:
+        img = np.array(doc[entry["pdf_page"] - 1].render(scale=S.DPI / 72).to_pil().convert("L"))
+    finally:
+        doc.close()
+    save_png(img, path)
+    return img
+
+
+_LAYOUTS: dict[Path, tuple[float, dict]] = {}
+
+
+def _page_entry(assignment_dir: Path, page: int) -> dict:
+    layout_path = assignment_dir / "layout.json"
+    if not layout_path.exists():
+        return {}
+    mtime = layout_path.stat().st_mtime
+    cached = _LAYOUTS.get(layout_path)
+    if not cached or cached[0] != mtime:
+        cached = (mtime, {p["page"]: p for p in S.read_json(layout_path)["pages"]})
+        _LAYOUTS[layout_path] = cached
+    return cached[1].get(page, {})
 
 
 def crop(img: np.ndarray, rect, inset_pt: float = 0.0, dpi: int = S.DPI) -> np.ndarray:

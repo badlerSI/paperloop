@@ -67,7 +67,7 @@ def main(work: Path, truth_path: Path) -> None:
     for page in manifest["pages"]:
         if page["status"] != "ok":
             continue
-        for q, item in items.items():
+        for q, item in S.form_items(key, page.get("form", "")).items():
             a = answers.get(page["student_id"], {}).get(str(q))
             if a and str(q) in page["answers"]:
                 marks[q][str(page["scan_index"])] = mark(item, a)
