@@ -143,6 +143,8 @@ def _supports(form: dict) -> list[str]:
         out.append(f"{form['max_choices']} answer choices at most")
     if form.get("grid"):
         out.append("graph paper for work")
+    if form.get("work_optional"):
+        out.append("work optional: full credit from a correct answer (calculator or scribe)")
     if form.get("only"):
         out.append("shortened: questions " + ", ".join(map(str, form["only"])))
     if form.get("language"):

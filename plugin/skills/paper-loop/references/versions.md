@@ -82,6 +82,7 @@ stays as written.
 | `comment_language` | The language marking comments are written in for these students (default: the translation's). |
 | `notes` | For the teacher, not printed ("read the questions aloud on request"). `make` prints it back. |
 | `copies` | How many to print, if the teacher said. |
+| `work_optional` | `true` for a student whose plan gives a calculator or a scribe: on math questions a correct answer earns full credit, work or no work (the work area still prints). Where the computation is what's being measured, a calculator changes what the score means: that's the plan's call. |
 
 **A record for case managers.** `PL progress` writes `progress/supports.csv`: each class ID that had a version,
 with the date, the worksheet, the version, its supports (in plain words, with any `notes` such as

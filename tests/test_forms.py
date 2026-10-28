@@ -366,3 +366,15 @@ def test_second_review_regressions_in_versions_keys_and_practice(tmp_path):
     plants = S.read_json(ROOT / "examples" / "sci3-plants-01.json")
     L = S.Layout(S.normalize({**plants, "print": {"scale": 1.6}}), F.choose(["x"])[0], tmp_path)
     assert L.header_top < 716
+
+
+def test_work_optional_lets_a_correct_answer_earn_full_credit(tmp_path):
+    from paper_loop_core import progress as PGM
+    defn = S.read_json(VERSIONS)
+    defn["versions"] = [{"id": "calc", "name": "Calculator", "work_optional": True}]
+    S.make_worksheet(defn, tmp_path / "w", base=VERSIONS.parent)
+    key = S.read_json(tmp_path / "w" / "key.json")
+    base_q2, calc_q2 = S.form_items(key, "")[2], S.form_items(key, "calc")[2]
+    assert (calc_q2["answer_points"], calc_q2["work_points"]) == (base_q2["answer_points"] + base_q2["work_points"], 0)
+    assert calc_q2["points"] == base_q2["points"]  # same total, so scores stay comparable
+    assert "work optional" in "; ".join(PGM._supports({"work_optional": True}))

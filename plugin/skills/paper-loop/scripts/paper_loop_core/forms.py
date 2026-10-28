@@ -63,7 +63,7 @@ MODIFICATIONS = {"hint": "hints", "example": "a worked example", "steps": "the s
 
 _VERSION_FIELDS = {"id", "name", "label", "scaffolds", "large_print", "space", "per_page", "max_choices", "grid", "only",
                    "language", "language_mode", "translation", "reference", "formulas", "notes", "copies",
-                   "comment_language"}
+                   "comment_language", "work_optional"}
 _VARIANT_FIELDS = {"count", "seed", "shuffle_choices"}
 
 
@@ -532,6 +532,9 @@ def _version(raw: dict, version: dict, index: int, base_dir: Path) -> tuple[dict
                                "text": _translated(entry, q, frames=bool(q.get("frame")), bank=_prints_bank(q, asides))})
         if version.get("grid") and kind == "math":
             q["grid"] = True
+        if version.get("work_optional") and kind == "math":  # a calculator or a scribe: the answer earns it all
+            q["answer_points"] = q.get("answer_points", 1) + q.get("work_points", 1)
+            q["work_points"] = 0
         if asides:
             q["asides"] = asides
         if help_:
@@ -565,6 +568,7 @@ def _version(raw: dict, version: dict, index: int, base_dir: Path) -> tuple[dict
             "scaffolds": scaffolds, "large_print": version.get("_pt") if scale > 1 else None,
             "space": space if space > 1 else None,
             "per_page": per_page, "max_choices": keep, "grid": bool(version.get("grid")), "only": only,
+            "work_optional": bool(version.get("work_optional")),
             "language": lang, "language_mode": mode, "language_name": name, "reference": reference,
             "formulas": version.get("formulas", []), "glossary_terms": list(dict.fromkeys(terms)),
             "notes": version.get("notes", ""),

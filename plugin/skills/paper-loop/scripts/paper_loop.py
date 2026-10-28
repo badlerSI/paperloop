@@ -137,6 +137,8 @@ def _forms_report(layout: dict, out: Path) -> None:
             what.append(f"{f['max_choices']} choices at most")
         if f.get("grid"):
             what.append("graph paper for work")
+        if f.get("work_optional"):
+            what.append("work optional on math (the answer earns full credit)")
         if f.get("language"):
             what.append(f"{f['language_name']} ({f['language_mode']})")
         copies = f" Print {f['copies']}." if f.get("copies") else ""

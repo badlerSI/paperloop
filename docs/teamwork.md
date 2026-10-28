@@ -225,11 +225,17 @@ The trials' worksheet bugs are fixed too:
 - **Help fading on the dashboard.** "Help on the page, over time" shows each student who had help,
   worksheet by worksheet, so the teacher can see it come off as scores hold.
 - **Snake Race for young readers.** Plainer rules, and a teacher tip for card levels in similar groups.
+- **Go-over slides** don't chart letters across copies whose choices differ.
+- **`work_optional`** for a student with a calculator or a scribe: a correct math answer earns full credit, and
+  the supports log records it.
+- **A second code review** of everything from the evening on found 21 bugs, all fixed with tests. The worst:
+  - team points used only the newest marking of an exit sheet, so a make-up made everyone else absent on the
+    posted page;
+  - a missed stretch question crashed a practice of a practice;
+  - one malformed `key_draw` lost the whole answer key.
 
 ## Still open
 
-- `work_optional` for a calculator or scribe.
-- Go-over picks for a `pool` question whose alternatives change the options.
 - A printed path or arrows on the Snake Race board beyond the numbers.
 - Copies of the website's grade 3 and Spanish samples printed before Day 2 still mark (their answer areas
   didn't move), but the website PDFs should be replaced with the rebuilt ones in `samples/`.

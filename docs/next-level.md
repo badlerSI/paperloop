@@ -149,8 +149,7 @@ What changed because of them:
 Done on Day 2 (see [teamwork.md](teamwork.md)): practice for every student, the accommodation log, writing
 areas that grow, the review option, matching without item numbers, and practice of a practice.
 
-- `work_optional` for a calculator or scribe. (Bilingual word banks and frames, and the view of supports
-  fading, were done on Day 2.)
-- Go-over picks for a `pool` question whose alternatives change the options.
+- (Bilingual word banks and frames, the view of supports fading, `work_optional`, and go-over for `pool`
+  questions were done on Day 2.)
 - Not yet tried in real Cowork on a Claude for Teachers account, or opened in Word, PowerPoint, or Google
   Docs. Not yet tried with real handwriting in a home language.
