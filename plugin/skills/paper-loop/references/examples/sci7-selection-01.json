@@ -51,21 +51,21 @@
         [
           "3",
           "2",
-          "40",
+          "46",
           {
-            "answer": "42"
+            "answer": "48"
           },
           {
-            "answer": "95%",
+            "answer": "96%",
             "accept": [
-              "95",
-              "95.2%",
-              "95.2"
+              "96",
+              "95.8%",
+              "95.8"
             ]
           }
         ]
       ],
-      "notes": "Generation 3: 40/42 = 95.2%; accept 95%. Generation 2 is given (28/32 = 87.5%, rounded)."
+      "notes": "Generation 3: 46/48 = 95.8%; accept 96%. Generation 2 is given (28/32 = 87.5%, rounded)."
     },
     {
       "type": "choice",

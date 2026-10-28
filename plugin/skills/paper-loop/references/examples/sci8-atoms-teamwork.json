@@ -6,7 +6,7 @@
   "group_size": 4,
   "minutes": 30,
   "rounds": 6,
-  "rotate_every": 2,
+  "rotate_every": 1,
   "goal": "Build atoms and ions from protons, neutrons, and electrons, and explain which number decides the element.",
   "abilities": [
     "building carefully",
@@ -24,7 +24,7 @@
     "Draw a big circle on scrap paper: the nucleus goes in the middle, electrons around the outside.",
     "Roll for your atom (the table below). Build it: protons and neutrons in the nucleus, electrons outside.",
     "The Skeptic checks it against the periodic table: the number of protons decides the element.",
-    "Roll again. Odd: take away one electron (now it's an ion). Even: add one neutron (now it's another isotope).",
+    "Roll again. Odd: take away one electron (now it's an ion). Even: add one neutron (now it's another isotope). (Helium-5 and lithium-8 fall apart in under a second: not every isotope is stable.)",
     "The Recorder writes the row: what it is now, protons, neutrons, electrons, mass number, and charge. Take it apart and start again."
   ],
   "dice": {

@@ -172,7 +172,7 @@ def test_a_lab_table_is_blank_and_tokens_come_in_sizes(tmp_path):
     task = next(p for p in pages if p.startswith("Group task"))
     assert "Our forest" in task and task.count("Generation") == 2 and "Hares" in task
     tokens = [p for p in pages if p.startswith("Tokens for one group")]
-    assert len(tokens) == 1 and tokens[0].count("hare") == 60 and tokens[0].count("LYNX") == 6
+    assert len(tokens) == 1 and tokens[0].count("hare") == 60 and tokens[0].count("LYNX") == 2
     data = S.read_json(ROOT / "examples" / "sci7-predators-teamwork.json")
     data["table"]["rows"] = 40  # more than the page holds
     S.write_json(tmp_path / "big.json", data)
@@ -185,7 +185,8 @@ def test_a_jigsaw_gives_each_expert_a_letter_and_a_sheet(tmp_path):
     cards = "".join(pages[1:3])
     assert all(f"Expert {x}: your job" in cards for x in "ABCD") and "Listener" not in cards
     assert "Your part: The transit method." in cards
-    sheets = [p for p in pages if "Teach box" in p and "(Plain English)" not in p and "(Español)" not in p]
+    sheets = [p for p in pages if "Teach box" in p and "· Plain English" not in p]
+    assert any("Para enseñar" in p and "Asegúrate de enseñar" in p and "· Español" in p for p in pages)  # its own words
     assert len(sheets) == 4 and all(sheets[k].startswith(f"Expert {x}: ") for k, x in enumerate("ABCD"))
     assert "Its answer" in sheets[0] and "A picture I'll draw" in sheets[0]
     assert any(p.startswith("Home group notes") for p in pages)

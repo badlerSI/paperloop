@@ -5,8 +5,8 @@
   "structure": "lab",
   "group_size": 4,
   "minutes": 30,
-  "rounds": 6,
-  "rotate_every": 2,
+  "rounds": 4,
+  "rotate_every": 1,
   "goal": "Find each mystery block's material from its density, predict whether it floats, and explain why cutting a block doesn't change its density.",
   "abilities": [
     "calculating carefully",
@@ -46,7 +46,7 @@
       ],
       [
         "5",
-        "mass 227 g, volume 20 cm³"
+        "mass 226 g, volume 20 cm³"
       ],
       [
         "6",

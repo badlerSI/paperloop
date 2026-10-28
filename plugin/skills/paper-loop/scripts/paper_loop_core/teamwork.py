@@ -363,7 +363,38 @@ def normalize(data: dict) -> dict:
     return out
 
 
-VERSION_FIELDS = ("id", "name", "language", "parts", "roles", "steps", "goal", "reviewed_by")
+VERSION_FIELDS = ("id", "name", "language", "parts", "roles", "steps", "goal", "labels", "reviewed_by")
+
+# The words the pages themselves print for students, so a version's pages can say them in its language.
+LABELS = {
+    "en": {"intro": "1. Read your part with the other experts on it. 2. Agree on what matters most. 3. Fill the "
+                    "teach box: you'll teach your home group in about 3 minutes.",
+           "make_sure": "Make sure you teach: ", "teach_box": "Teach box", "teacher_checked": "Teacher checked",
+           "ideas": "The most important ideas, in my words:", "example": "An example:",
+           "check": "My check question for the group: ", "answer": "Its answer:",
+           "picture": "A picture I'll draw to show it:", "your_job": "{name}: your job", "say_it": "Say it like this",
+           "read_together": "Read together",
+           "read_intro": "First, the {last} looks at the title and guesses what the reading is about. Take turns "
+                         "reading each part aloud, going left. After each part, stop and talk.",
+           "stop": "Stop and talk, in this order: {order}. Pass the cards left.",
+           "last_stop": "Last stop: {order}. Then sum up the whole reading together."},
+    "es": {"intro": "1. Lee tu parte con los otros expertos. 2. Pónganse de acuerdo en lo más importante. 3. Llena "
+                    "el cuadro para enseñar: le vas a enseñar a tu grupo en unos 3 minutos.",
+           "make_sure": "Asegúrate de enseñar: ", "teach_box": "Para enseñar", "teacher_checked": "Revisado",
+           "ideas": "Las ideas más importantes, en mis palabras:", "example": "Un ejemplo:",
+           "check": "Mi pregunta para el grupo: ", "answer": "Su respuesta:",
+           "picture": "Un dibujo para mostrarlo:", "your_job": "{name}: tu trabajo", "say_it": "Dilo así",
+           "read_together": "Leer juntos",
+           "read_intro": "Primero, el {last} mira el título y adivina de qué trata la lectura. Túrnense para leer "
+                         "cada parte en voz alta, hacia la izquierda. Después de cada parte, paren y hablen.",
+           "stop": "Paren y hablen, en este orden: {order}. Pasen las tarjetas a la izquierda.",
+           "last_stop": "Última parada: {order}. Luego resuman juntos toda la lectura."},
+}
+
+
+def _label(A: dict, key: str, **fill) -> str:
+    text = (A.get("ui") or LABELS["en"]).get(key) or LABELS["en"][key]
+    return text.format(**fill) if fill else text
 
 
 def _versions(raw, A: dict) -> list[dict]:
@@ -390,7 +421,12 @@ def _versions(raw, A: dict) -> list[dict]:
         lang = _text(v, "language", where)
         known = LANGUAGES.get(lang)
         name = _text(v, "name", where) or (known[1] if known else lang) or "Plain English"
+        labels = v.get("labels") or {}
+        if not isinstance(labels, dict) or any(k not in LABELS["en"] or not isinstance(t, str) for k, t in labels.items()):
+            raise TeamworkError(f"{where}: \"labels\" gives the page's own words in the version's language, by key: "
+                                + ", ".join(LABELS["en"]))
         V = {"id": vid, "name": name, "language": lang, "reviewed_by": _text(v, "reviewed_by", where),
+             "ui": {**LABELS["en"], **LABELS.get(lang, {}), **labels},
              "quality": (known[2] if known else "unknown") if lang else "", "english_name": known[0] if known else lang,
              "goal": _text(v, "goal", where) or A["goal"], "steps": _texts(v, "steps", where) or A["steps"]}
         parts = v.get("parts")
@@ -402,8 +438,8 @@ def _versions(raw, A: dict) -> list[dict]:
             for n, (base, change) in enumerate(zip(A["parts"], parts), start=1):
                 if not isinstance(change, dict):
                     raise TeamworkError(f"{where}, part {n}: one object with the fields it changes")
-                keep = {f: base[f] for f in ("title", "text", "teach", "check", "words", "quote", "quote_source")
-                        if base.get(f)}
+                keep = {f: base[f] for f in ("title", "text", "teach", "check", "words", "quote", "quote_source",
+                                             "source") if base.get(f)}
                 merged.append(_part({**keep, **change}, n, A["kind"] == "jigsaw"))
             V["parts"] = merged
         else:
@@ -430,7 +466,7 @@ def _versions(raw, A: dict) -> list[dict]:
 def _version_activity(A: dict, V: dict) -> dict:
     """The activity as this version prints it."""
     return {**A, "parts": V["parts"], "roles": V["roles"] or A["roles"], "steps": V["steps"], "goal": V["goal"],
-            "tag": V["name"]}
+            "tag": V["name"], "ui": V["ui"]}
 
 
 def _version_word(A: dict, V: dict, path: Path) -> Path:
@@ -482,7 +518,7 @@ def _size(A: dict, size: float) -> float:
 def _header(pen: Pen, A: dict, what: str) -> float:
     c = pen.c
     if A.get("tag"):
-        what = f"{what} ({A['tag']})"
+        what = f"{what} · {A['tag']}"
     c.setFillGray(INK)
     size = 16.0
     while size > 9 and pen.width(what, pen.f.bold, size) > PAGE_W - 2 * MARGIN:
@@ -555,6 +591,17 @@ def teacher_page(pen: Pen, A: dict, worksheet_note: str, pages: dict[str, str]) 
         y -= 7
 
 
+def _checker(A: dict) -> str:
+    """Who asks "can everyone explain it?": the Skeptic, or whichever card checks, or the group."""
+    names = [r[0] for r in A["roles"]]
+    if "Skeptic" in names:
+        return "the Skeptic"
+    for name, jobs, _ in A["roles"]:
+        if any("check" in j.lower() for j in jobs):
+            return f"the {name}"
+    return "someone in the group"
+
+
 def _rotation(A: dict) -> tuple[str, list[str]]:
     kind = A["kind"]
     if kind == "jigsaw":
@@ -566,11 +613,16 @@ def _rotation(A: dict) -> tuple[str, list[str]]:
     sizes = group_sizes(A["class_size"], A["group_size"], *group_range(kind, A["group_size"])) if A["class_size"] else []
     extra = (f" In a group of {max(sizes)}, two students share a job card." if sizes and max(sizes) > len(A["roles"])
              and kind in ("lab", "reciprocal") else "")
+    turns = (len(A["parts"]) if kind == "reciprocal" else A["rounds"] // max(1, A["rotate_every"]))
+    every = turns >= len(A["roles"])
     return ("Jobs rotate", [("Halfway, partners switch, so each is the coach once." if kind == "pairs" else
                              "Pass the role cards one seat to the left " + (
                                  "after each stop" if kind == "reciprocal" else "each round" if A["rotate_every"] == 1
                                  else f"every {A['rotate_every']} rounds")
-                             + ", so every student does every job.") + " No one is always the helper or the helped."
+                             + (", so every student does every job." if every else
+                                f", so jobs change hands {turns} time{'s' if turns != 1 else ''}; next time, start the "
+                                "cards with different students."))
+                            + " No one is always the helper or the helped."
                             + extra])
 
 
@@ -640,7 +692,7 @@ def _during(A: dict) -> list[str]:
         rounds = f" Do {A['rounds']} rounds." if A["rounds"] > 1 else ""
         asker = "the Reporter" if A["group_size"] >= 4 else "the Facilitator"
         return [f"Groups follow the task card.{rounds} Circulate; answer group questions, from {asker}, only "
-                "after the group has tried.", "Before a group moves on, ask the Skeptic: “Can everyone explain "
+                "after the group has tried.", f"Before a group moves on, ask {_checker(A)}: “Can everyone explain "
                 "it?” Then pick someone else to explain."]
     if kind == "jigsaw":
         home = 4 * len(A["parts"])
@@ -720,16 +772,17 @@ def role_cards(pen: Pen, A: dict) -> None:
                    sum(pen.para_height(f"“{t}”", x1 - sx - 14, size, pen.f.oblique) + 3 for t in stems)) > room:
                 pen.warnings.append(f"the {name} card's jobs or sentence starters don't fit even at 9pt: shorten them")
             hsize = _size(A, 14)
-            while hsize > 9 and pen.width(f"{name}: your job", pen.f.bold, hsize) > jw + 4:
+            heading = _label(A, "your_job", name=name)
+            while hsize > 9 and pen.width(heading, pen.f.bold, hsize) > jw + 4:
                 hsize -= 0.5
             c.setFont(pen.f.bold, hsize)
-            c.drawString(x0 + 14, yy, pen.f.text(f"{name}: your job"))
+            c.drawString(x0 + 14, yy, pen.f.text(heading))
             yy -= 6
             for job in jobs:
                 yy = pen.para(f"• {job}", x0 + 18, yy, jw, size) - 2
             yy2 = mid - 16
             c.setFont(pen.f.bold, _size(A, 11))
-            c.drawString(sx, yy2, "Say it like this")
+            c.drawString(sx, yy2, pen.f.text(_label(A, "say_it")))
             yy2 -= 6
             for stem in stems:
                 yy2 = pen.para(f"“{stem}”", sx, yy2, x1 - sx - 14, size, pen.f.oblique) - 3
@@ -821,7 +874,7 @@ def task_card(pen: Pen, A: dict) -> None:
         pen.warnings.append("the group task card runs off the page: shorten the steps or the dice rows, or use fewer "
                             "table rows")
     c.setFillGray(0.35)
-    pen.para("Before you move on, the Skeptic checks: can everyone explain it? Then you each do the worksheet on "
+    pen.para(f"Before you move on, {_checker(A)} checks: can everyone explain it? Then you each do the worksheet on "
              "your own.", MARGIN, max(y, 56), PAGE_W - 2 * MARGIN, 10, pen.f.oblique, gray=0.35)
     c.setFillGray(INK)
 
@@ -1145,29 +1198,27 @@ def expert_sheets(pen: Pen, A: dict):
     for k, part in enumerate(A["parts"]):
         letter = chr(65 + k)
         y = _header(pen, A, f"Expert {letter}: {part['title']}")
-        y = pen.para("1. Read your part with the other experts on it. 2. Agree on what matters most. 3. Fill the "
-                     "teach box: you'll teach your home group in about 3 minutes.", MARGIN, y, PAGE_W - 2 * MARGIN,
-                     10.5, pen.f.oblique) - 10
+        y = pen.para(_label(A, "intro"), MARGIN, y, PAGE_W - 2 * MARGIN, _size(A, 10.5), pen.f.oblique) - 10
         words = len(str(part["text"]).split()) + len(str(part.get("quote", "")).split())
         if words > 220:
             pen.warnings.append(f"part {letter} has {words} words: about 150-200 fit beside the teach box; shorten it")
         y = pen.para(part["text"], MARGIN, y, PAGE_W - 2 * MARGIN, _size(A, 11.5)) - 6
         y = _part_extras(pen, A, part, y, PAGE_W - 2 * MARGIN)
         if part.get("teach"):
-            y = pen.para("Make sure you teach: " + "; ".join(part["teach"]), MARGIN, y, PAGE_W - 2 * MARGIN,
+            y = pen.para(_label(A, "make_sure") + "; ".join(part["teach"]), MARGIN, y, PAGE_W - 2 * MARGIN,
                          _size(A, 10.5), pen.f.bold) - 8
         if y < 250:
             pen.warnings.append(f"expert sheet {letter} leaves too little room for the teach box: shorten part "
                                 f"{letter}'s text (about 150 words fits)")
         c.setFillGray(INK)
         c.setFont(pen.f.bold, 12)
-        c.drawString(MARGIN, y - 12, "Teach box")
+        c.drawString(MARGIN, y - 12, pen.f.text(_label(A, "teach_box")))
         c.setFont(pen.f.regular, 9.5)
-        c.drawRightString(PAGE_W - MARGIN - 20, y - 11, "Teacher checked")
+        c.drawRightString(PAGE_W - MARGIN - 20, y - 11, pen.f.text(_label(A, "teacher_checked")))
         c.setStrokeGray(0.3)
         c.rect(PAGE_W - MARGIN - 14, y - 14, 12, 12, stroke=1, fill=0)
         y -= 20
-        prompts = ["The most important ideas, in my words:", "1.", "2.", "3.", "An example:"]
+        prompts = [_label(A, "ideas"), "1.", "2.", "3.", _label(A, "example")]
         for item in prompts:
             if y < 70:
                 break
@@ -1178,20 +1229,20 @@ def expert_sheets(pen: Pen, A: dict):
             c.drawString(MARGIN, y - 16, pen.f.text(item))
             y -= 26
         if part.get("check") and y > 90:
-            y = pen.para("My check question for the group: " + part["check"], MARGIN, y - 6, PAGE_W - 2 * MARGIN,
+            y = pen.para(_label(A, "check") + part["check"], MARGIN, y - 6, PAGE_W - 2 * MARGIN,
                          10.5) - 4
             c.setStrokeGray(0.75)
             c.line(MARGIN, y - 20, PAGE_W - MARGIN, y - 20)
             c.setFillGray(INK)
             c.setFont(pen.f.regular, 10.5)
-            c.drawString(MARGIN, y - 14, "Its answer:")
+            c.drawString(MARGIN, y - 14, pen.f.text(_label(A, "answer")))
             y -= 26
         if y <= 170:
             pen.warnings.append(f"expert sheet {letter} has no room for the sketch box: shorten part {letter}")
         if y > 170:  # a sketch is a second way in, for the teacher and for the group
             c.setFillGray(INK)
             c.setFont(pen.f.bold, 10.5)
-            c.drawString(MARGIN, y - 14, "A picture I'll draw to show it:")
+            c.drawString(MARGIN, y - 14, pen.f.text(_label(A, "picture")))
             c.setStrokeGray(0.6)
             c.rect(MARGIN, 64, PAGE_W - 2 * MARGIN, y - 24 - 64)
         yield
@@ -1279,10 +1330,8 @@ def reading_sheets(pen: Pen, A: dict):
     names = [r[0] for r in A["roles"]]
     size = _size(A, 11.5)
     width = min(PAGE_W - 2 * MARGIN, size * 36)  # about 70 letters a line, easier to track
-    y = _header(pen, A, "Read together")
-    y = pen.para(f"First, the {names[-1]} looks at the title and guesses what the reading is about. Take turns "
-                 "reading each part aloud, going left. After each part, stop and talk.", MARGIN, y,
-                 width, _size(A, 10.5)) - 10
+    y = _header(pen, A, _label(A, "read_together"))
+    y = pen.para(_label(A, "read_intro", last=names[-1]), MARGIN, y, width, _size(A, 10.5)) - 10
     for k, part in enumerate(A["parts"], start=1):
         need = pen.para_height(part["text"], width, size) + _extras_height(pen, A, part, width) \
             + (24 if part.get("title") else 6) + 40
@@ -1290,7 +1339,7 @@ def reading_sheets(pen: Pen, A: dict):
             pen.warnings.append(f"part {k} is longer than a page: split it into two parts")
         if y - need < 60 and y < PAGE_H - MARGIN - 40:
             yield
-            y = _header(pen, A, "Read together")
+            y = _header(pen, A, _label(A, "read_together"))
         if part.get("title"):
             c.setFillGray(INK)
             c.setFont(pen.f.bold, 12)
@@ -1300,9 +1349,9 @@ def reading_sheets(pen: Pen, A: dict):
         y = _part_extras(pen, A, part, y, width) + 2
         last = k == len(A["parts"])
         if not last:
-            stop = f"Stop and talk, in this order: {', '.join(names)}. Pass the cards left."
+            stop = _label(A, "stop", order=", ".join(names))
         else:  # nothing left to predict: the last job sits out
-            stop = f"Last stop: {', '.join(names[:-1] or names)}. Then sum up the whole reading together."
+            stop = _label(A, "last_stop", order=", ".join(names[:-1] or names))
         stop_size = _size(A, 10.5)
         h = pen.para_height(stop, width - 16, stop_size, pen.f.bold) + 8
         c.setFillGray(0.92)

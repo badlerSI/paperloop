@@ -5,7 +5,7 @@
   "structure": "lab",
   "group_size": 4,
   "minutes": 35,
-  "rounds": 6,
+  "rounds": 7,
   "goal": "Find out how a pile of atoms decays when each atom's decay is pure chance, and explain what a half-life is.",
   "abilities": [
     "counting carefully",

@@ -6,7 +6,7 @@
   "group_size": 4,
   "minutes": 40,
   "rounds": 8,
-  "rotate_every": 4,
+  "rotate_every": 2,
   "goal": "Find out how gases in the air that absorb infrared change how much energy escapes to space and how much comes back to the ground.",
   "abilities": [
     "following rules carefully",
@@ -15,14 +15,14 @@
     "explaining with evidence"
   ],
   "materials": [
-    "one die",
+    "two dice (roll for two tokens at once)",
     "scissors for the tokens"
   ],
   "steps": [
     "Each round, the Sun sends 4 sunlight tokens straight down through the air to the Ground. Sunlight passes through the air. At the Ground, swap each one for an infrared token: the warm ground gives off infrared.",
     "Move each infrared token up one layer at a time. At each air layer, roll the die and use the table below.",
     "An absorbed token is given off again: roll once more. Even, it moves up a layer; odd, it moves down a layer.",
-    "A token that reaches Space has escaped: count it and set it aside. A token that comes back down to the Ground warms it: count it, and send it up again next round.",
+    "A token that reaches Space has escaped: the Recorder counts it, then it goes back in the infrared pile. A token that comes back down to the Ground warms it: count it, and send it up again next round.",
     "Rounds 1-4 are low CO₂; rounds 5-8 are high CO₂. The Recorder writes each round's numbers."
   ],
   "dice": {
@@ -82,7 +82,7 @@
     "Comparing rounds by eye. Ask the Recorder for totals at low and at high CO₂."
   ],
   "debrief": [
-    "Total the class's escaped and returned tokens at low and at high CO₂. What changed?",
+    "Total the class's escaped and returned tokens at low and at high CO₂. What changed? Escaped drops when CO₂ rises, then climbs back as more infrared bounces around: the ground is getting more energy.",
     "Show NOAA's measurements of CO₂ at Mauna Loa (the worksheet's graph). Ask: what does the graph show since 1960, and how does that connect to the game?"
   ],
   "sources": [

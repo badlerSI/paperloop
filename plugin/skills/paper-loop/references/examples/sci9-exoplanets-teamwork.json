@@ -75,7 +75,7 @@
       "name": "Plain English",
       "parts": [
         {
-          "text": "Sometimes a planet passes in front of its star. Then the star looks a little dimmer. A telescope sees a small dip in the star's light. The dip comes back every time the planet goes around. The time between dips is the planet's year. A bigger planet blocks more light, so it makes a deeper dip. A planet as big as Jupiter blocks about 1% of a star like the Sun. A planet as big as Earth blocks only about 0.01%. NASA's Kepler and TESS telescopes found thousands of planets this way. But we only see the dip if the planet passes between us and the star.",
+          "text": "Sometimes a planet passes in front of its star. Then the star looks a little dimmer. A telescope sees a small dip in the star's light. The dip comes back every time the planet goes around. The time between dips is the planet's year. A bigger planet blocks more light, so it makes a deeper dip. The dip depends on the planet's area: a planet twice as wide blocks four times as much light. A planet as big as Jupiter blocks about 1% of a star like the Sun. A planet as big as Earth blocks only about 0.01%. NASA's Kepler and TESS telescopes found thousands of planets this way. But we only see the dip if the planet passes between us and the star.",
           "words": [
             {
               "word": "dip",

@@ -141,13 +141,13 @@
       "diagram": {
         "width": 344,
         "height": 96,
-        "description": "An empty frame with a small circle (the nucleus, about 50 points across) in the middle.",
+        "description": "An empty frame with a circle (the nucleus, about 70 points across) in the middle.",
         "shapes": [
           {
             "shape": "circle",
             "x": 172,
             "y": 48,
-            "r": 24,
+            "r": 34,
             "stroke": 0.5
           }
         ]

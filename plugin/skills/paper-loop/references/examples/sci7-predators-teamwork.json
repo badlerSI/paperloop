@@ -19,9 +19,9 @@
     "scissors for the cards"
   ],
   "steps": [
-    "One sheet of paper is the forest. Spread 4 hares on it, not touching, and put 1 lynx beside it. Record generation 0.",
-    "The lynx hunt: drop each lynx card on the forest from about a foot up. Every hare it touches is eaten. Take those hares off.",
-    "A lynx that ate 3 or more hares survives and has one young: add a lynx. A lynx that ate fewer starves: take it away. If no lynx are left, 1 moves in from another forest.",
+    "One sheet of paper is the forest. Spread 30 hares on it, not touching, and put 1 lynx beside it. Record generation 0.",
+    "The lynx hunt: for each lynx your group has, drop the lynx card on the forest from about a foot up and take off every hare it touches. One card does for every lynx (keep the count in the table); a drop that lands off the paper is dropped again. Tally each drop's catch.",
+    "A lynx whose drop caught 3 or more hares survives and has one young: add one to the lynx count. A lynx that caught fewer starves: take one away. If no lynx are left, 1 moves in from another forest.",
     "Every hare left has one young: double the hares, up to 60 (the forest can't feed more). Spread them out again.",
     "Record the hares and lynx, then do the next generation."
   ],
@@ -46,7 +46,7 @@
     },
     {
       "label": "LYNX",
-      "count": 6,
+      "count": 2,
       "pattern": "dots",
       "size": 2.5
     }

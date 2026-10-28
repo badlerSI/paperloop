@@ -67,29 +67,29 @@
       "type": "choice",
       "q": 2,
       "skill": "I can explain density",
-      "prompt": "Half a Block: You cut block P in half. What is the density of each half?",
+      "prompt": "Half a Block: A block with a mass of 80 g and a volume of 20 cm³ is cut in half. What is the density of each half?",
       "answer": "B",
       "columns": 2,
       "options": [
         {
           "letter": "A",
-          "text": "1.35 g/cm³",
+          "text": "2 g/cm³",
           "why": "Mass and volume both halve: the ratio stays."
         },
         {
           "letter": "B",
-          "text": "2.7 g/cm³",
+          "text": "4 g/cm³",
           "why": "Yes: same material, same density."
         },
         {
           "letter": "C",
-          "text": "5.4 g/cm³",
+          "text": "8 g/cm³",
           "why": "Nothing got packed tighter by cutting."
         },
         {
           "letter": "D",
           "text": "It depends on the cut",
-          "why": "Any piece of aluminum has the same density."
+          "why": "Any piece of one material has the same density."
         }
       ]
     },

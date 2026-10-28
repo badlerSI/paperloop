@@ -6,7 +6,7 @@
   "group_size": 4,
   "minutes": 35,
   "rounds": 6,
-  "rotate_every": 2,
+  "rotate_every": 1,
   "goal": "Build circuits from cards, predict how bright each bulb is, and explain why bulbs in one loop are dimmer than bulbs on separate branches.",
   "abilities": [
     "building carefully",
@@ -21,7 +21,7 @@
     "a battery, two bulbs, and wires if you have them, to test one prediction"
   ],
   "steps": [
-    "Roll for your challenge (below). Lay the cards on the desk to build it: wire cards must touch end to end to make a loop.",
+    "Roll for your challenge (below). Already done it? Take the next one down that you haven't done (after 6, go back to 1). Lay the cards on the desk to build it: wire cards must touch end to end to make a loop.",
     "Before deciding anything, the Skeptic traces the loop with a finger from + all the way around to −. No complete loop, no light.",
     "Use the rules. Bulbs in one loop share the battery's push, so each is dimmer than one bulb alone. Bulbs on separate branches each get the full push, so each is as bright as one bulb alone.",
     "Predict what happens if you unscrew one bulb. Record the row, and draw the circuit on scrap paper with circuit symbols.",
@@ -68,7 +68,7 @@
   },
   "tokens": [
     {
-      "label": "battery + −",
+      "label": "+ battery −",
       "count": 2,
       "pattern": "solid",
       "size": 1.0

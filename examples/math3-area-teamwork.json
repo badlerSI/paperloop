@@ -5,8 +5,8 @@
   "structure": "lab",
   "group_size": 4,
   "minutes": 30,
-  "rounds": 8,
-  "rotate_every": 2,
+  "rounds": 4,
+  "rotate_every": 1,
   "goal": "Make rectangles, find their area by counting and by rows times columns, and claim the most squares.",
   "abilities": [
     "drawing carefully",
@@ -64,17 +64,20 @@
     "Draw your rectangle on the grid, along the lines, anywhere it fits. Put your initial in it.",
     "Count the squares inside. That's the area. Write it in your rectangle.",
     "The Checker checks: rows times the number in each row. Does it match your count?",
-    "No room? Pass. When no one can fit a rectangle, add up your areas. The most area wins."
+    "No room? Pass. After 4 rounds (everyone has had 4 turns), add up your areas. The most area wins."
   ],
   "board": {
     "kind": "grid",
     "title": "Claim your rectangles",
-    "cols": 18,
-    "rows": 22
+    "cols": 14,
+    "rows": 18
   },
   "table": {
-    "title": "Our rectangles",
+    "title": "Our rectangles (write your initial with each)",
     "columns": [
+      "Turn",
+      "Sides",
+      "Area (squares)",
       "Turn",
       "Sides",
       "Area (squares)"

@@ -17,14 +17,14 @@
   ],
   "steps": [
     "Part 1, the Andes. Plot each earthquake depth from the first table on the board: distance east of the ocean trench across, depth down.",
-    "Connect your points. The Skeptic asks: what shape do the earthquakes make, and which way does it slope?",
+    "Connect your points. The Skeptic asks: what shape do the earthquakes make, and which way does it slope? (The depth axis is stretched about 2 times, so the real slope is gentler, about 30°.)",
     "Together, sketch the sinking plate on the board. Label the ocean trench, the South American Plate, and the Nazca Plate going under it.",
-    "Part 2, Hawaii. The Big Island sits over a hot spot. Use the second table: how far each island is from the hot spot, and how old its rocks are.",
-    "Work out the plate's speed: distance ÷ age. Turn km per million years into cm per year (1 km per million years = 0.1 cm per year)."
+    "Pass the role cards left. Part 2, Hawaii. The Big Island sits over a hot spot. Use the second table: how far each island is from the hot spot, and how old its lava is.",
+    "Work out the plate's speed from Kauai: distance ÷ age. Turn km per million years into cm per year (1 km per million years = 0.1 cm per year). Record it in the table."
   ],
   "data": [
     {
-      "title": "Earthquakes under the Andes, 20-24° S (USGS, magnitude 5 and up, 2000-2025: the middle depth in each band)",
+      "title": "Earthquakes under the Andes, 20-24° S (USGS, magnitude 5 and up, 2000-2025: the middle depth in each band); shallow quakes inside the South American Plate, 650-750 km east, are left out",
       "columns": [
         "Distance east of the trench (km)",
         "Middle depth (km)"
@@ -89,7 +89,7 @@
       ]
     },
     {
-      "title": "The Hawaiian Islands (USGS ages of the oldest lava)",
+      "title": "The Hawaiian Islands (USGS ages of each island's main lava)",
       "columns": [
         "Island",
         "Distance from Kīlauea (km)",
@@ -99,17 +99,22 @@
         [
           "Kauai",
           "about 540",
-          "about 5"
+          "about 5.6 to 3.8"
         ],
         [
           "Oahu",
           "about 380",
-          "about 3"
+          "about 3.4 to 2.2"
+        ],
+        [
+          "Molokai",
+          "about 260",
+          "about 1.8 to 1.3"
         ],
         [
           "Maui",
           "about 180",
-          "about 1"
+          "about 1.3 to 0.8"
         ],
         [
           "Hawaiʻi (Big Island)",
@@ -140,9 +145,21 @@
   ],
   "debrief": [
     "Ask: why are there deep earthquakes on only one side of the trench?",
-    "Ask: 10 cm a year is about how fast fingernails grow, times ten. How far has your town moved since you were born?"
+    "Ask: 10 cm a year is about two to three times as fast as fingernails grow. How far has Honolulu moved since you were born?"
   ],
   "sources": [
     "Earthquakes: USGS earthquake catalog (earthquake.usgs.gov), events of magnitude 5 and up between 20° and 24° S, 2000-2025, grouped in 50 km bands. Island ages: USGS. The idea is also explored in PhET's Plate Tectonics and the Concord Consortium's Seismic Explorer. The activity and questions were written for Paper Loop."
-  ]
+  ],
+  "rounds": 2,
+  "table": {
+    "title": "Plate speed",
+    "columns": [
+      "Island",
+      "Distance (km)",
+      "Age (million years)",
+      "km per million years",
+      "cm per year"
+    ],
+    "rows": 3
+  }
 }

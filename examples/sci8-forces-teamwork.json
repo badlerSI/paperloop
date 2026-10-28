@@ -6,7 +6,7 @@
   "group_size": 4,
   "minutes": 35,
   "rounds": 6,
-  "rotate_every": 2,
+  "rotate_every": 1,
   "goal": "Find out how the net force on a cart and the cart's mass change how fast it speeds up.",
   "abilities": [
     "calculating carefully",
@@ -19,7 +19,7 @@
     "a calculator if you like"
   ],
   "steps": [
-    "Every cart has 10 N of friction pushing back. Net force = push − 10 N.",
+    "In this game every cart has 10 N of friction pushing back (on a real floor, a heavier cart has more). Net force = push − 10 N.",
     "Rounds 1-3: the cart's mass is 20 kg. Roll for the push (table below).",
     "Rounds 4-6: the push is 50 N. Use a mass of 10 kg, then 20 kg, then 40 kg. Before round 4, predict: does a heavier cart speed up faster or slower?",
     "Everyone works out the net force and the acceleration (net force ÷ mass, in m/s²), and the Skeptic checks. Then the speed after 3 seconds from rest: acceleration × 3.",

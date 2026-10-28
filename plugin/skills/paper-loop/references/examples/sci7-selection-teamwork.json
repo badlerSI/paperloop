@@ -4,7 +4,7 @@
   "subject": "science",
   "structure": "lab",
   "group_size": 4,
-  "minutes": 40,
+  "minutes": 20,
   "rounds": 3,
   "goal": "Find out what happens to a beetle population when birds eat the beetles they can see best.",
   "abilities": [
@@ -51,12 +51,12 @@
   "tokens": [
     {
       "label": "green",
-      "count": 40,
+      "count": 32,
       "pattern": "plain"
     },
     {
       "label": "brown",
-      "count": 40,
+      "count": 48,
       "pattern": "dots"
     }
   ],

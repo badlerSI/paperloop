@@ -11,7 +11,7 @@
       "type": "draw",
       "q": 1,
       "skill": "I can read population data",
-      "prompt": "Peaks: Real records! Each year, trappers in Canada sold hare and lynx furs to the Hudson's Bay Company. Circle the first hare peak and the first lynx peak. How many years after the hare peak does the lynx peak come?",
+      "prompt": "Peaks: Real records! Ecologists compiled counts of hare and lynx furs from Canada's fur trade (Hudson's Bay Company records and trapper reports). Circle the first hare peak and the first lynx peak. How many years after the hare peak does the lynx peak come?",
       "diagram": {
         "width": 344,
         "height": 140,
@@ -30,7 +30,7 @@
             "xstep": 2,
             "ystep": 20,
             "label_every": 1,
-            "xlabel": "year",
+            "xlabel": "",
             "ylabel": "furs (thousands)"
           },
           {
@@ -384,6 +384,14 @@
             "text": "Data: Hudson's Bay Company fur records",
             "size": 6,
             "align": "right"
+          },
+          {
+            "shape": "text",
+            "x": 181,
+            "y": 6,
+            "text": "year",
+            "size": 7,
+            "align": "center"
           }
         ]
       },

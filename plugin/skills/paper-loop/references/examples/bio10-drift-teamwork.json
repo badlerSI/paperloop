@@ -5,7 +5,7 @@
   "structure": "lab",
   "group_size": 4,
   "minutes": 40,
-  "rounds": 10,
+  "rounds": 12,
   "rotate_every": 3,
   "goal": "Find out how chance alone changes a small population's genes from one generation to the next, and how that differs from natural selection.",
   "abilities": [
@@ -17,13 +17,14 @@
   "materials": [
     "two cups (one per pair)",
     "one die",
+    "scrap paper",
     "scissors for the tokens"
   ],
   "steps": [
     "Split into two pairs. Each pair has a population of 10 gene copies: put 5 A and 5 a tokens in your cup. Record generation 0.",
+    "Pair 1 is drift only. Pair 2 adds selection: each time you draw an a, roll the die; on 1 or 2 that copy doesn't survive, so put it back and draw again.",
     "Make the next generation: draw one token without looking, write down its letter, and put it back. Do this 10 times.",
     "Set your cup to match: as many A tokens as you drew A's, and a tokens for the rest. Record the number of A.",
-    "Pair 1 is drift only. Pair 2 adds selection: each time you draw an a, roll the die; on 1 or 2 that copy doesn't survive, so put it back and draw again.",
     "Repeat for up to 12 generations, or until a cup is all A or all a. Then compare the two pairs."
   ],
   "table": {

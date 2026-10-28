@@ -148,11 +148,13 @@
         "97.3",
         "about 97",
         "100",
-        "about 100"
+        "about 100",
+        "90",
+        "about 90"
       ],
       "units": "ppm",
       "answer_points": 1,
-      "notes": "414.21 − 316.91 = 97.3 ppm. Values read off the graph from 95 to 100 are right. Look for 414 or 317 (a reading, not the rise)."
+      "notes": "414.21 − 316.91 = 97.3 ppm. Values read off the graph from 90 to 100 are right. Look for 414 or 317 (a reading, not the rise)."
     },
     {
       "type": "choice",
@@ -219,7 +221,7 @@
       "q": 4,
       "lines": 4,
       "skill": "I can explain the greenhouse effect",
-      "prompt": "Without It: With no greenhouse gases at all, Earth's average surface temperature would be about −18 °C instead of about 15 °C. Use the game to explain why.",
+      "prompt": "Without It: With no greenhouse gases at all, Earth's average surface temperature would be about −18 °C instead of about 15 °C. Use the game to explain why.",
       "rubric": [
         {
           "criterion": "Absorb: says gases in the air absorb infrared given off by the ground (not sunlight).",
