@@ -30,7 +30,7 @@ GOT_IT = 0.85  # this share of full credit or more: on the "got it" slide, not g
 def stats(results: dict, ws: WK.Worksheet) -> dict[int, dict]:
     """Per question: students, full and partial credit, blanks, and the answers given."""
     out = {q: {"n": 0, "full": 0, "partial": 0, "blank": 0, "picks": Counter(), "wrong": Counter(),
-               "boxes": Counter(), "crops": []} for q in ws.questions}
+               "boxes": Counter(), "crops": [], "mixed_letters": _mixed_choices(ws, q)} for q in ws.questions}
     seen = set()
     for page in results["pages"]:
         for b in page["boxes"]:
@@ -62,6 +62,19 @@ def stats(results: dict, ws: WK.Worksheet) -> dict[int, dict]:
                     if d.get("n") is not None:
                         st["boxes"][d["n"]] += 1
     return out
+
+
+def _mixed_choices(ws: WK.Worksheet, q: int) -> bool:
+    """A choice question whose copies offered different choices (another pool item), not just a new order:
+    then the letters picked mean different things on different copies, and can't be tallied together."""
+    if ws.items[q].get("type") != "choice" or not ws.items[q].get("varies"):
+        return False
+    sets = set()
+    for form in (ws.key.get("forms") or {}).values():
+        item = next((i for i in form.get("items", []) if i["q"] == q), None)
+        if item and item.get("options"):
+            sets.add(tuple(sorted(o["text"] for o in item["options"])))
+    return len(sets) > 1
 
 
 def _norm(text: str) -> str:
@@ -241,7 +254,7 @@ def _todo(path: Path, ws: WK.Worksheet, st: dict, go_over: list[int], walk: dict
                   for (n, read), c in s["wrong"].most_common(5) if c >= 2]
         if common:
             lines += ["Wrong answers two or more gave: " + "; ".join(common), ""]
-        if s["picks"]:
+        if s["picks"] and not s.get("mixed_letters"):
             lines += ["Letters chosen: " + ", ".join(f"{k} {v}" for k, v in sorted(s["picks"].items())), ""]
         if walk.get(q, {}).get("saw"):
             lines += [f"Already in goover.json: {walk[q]['saw']}", ""]
@@ -286,7 +299,7 @@ def class_panel(b: DK.Builder, ws: WK.Worksheet, q: int, st: dict, spec: dict, s
     size = b.sz["dense"]
     item = ws.items[q]
     bottom = y + h
-    if item["type"] == "choice":  # one color: the answer comes on the next slide
+    if item["type"] == "choice" and not st.get("mixed_letters"):  # one color: the answer comes on the next slide
         letters = [o["letter"] for o in item["options"]]
         labels = letters + (["blank"] if st["picks"].get("blank") else [])
         values = [st["picks"].get(lbl, 0) for lbl in labels]
@@ -311,7 +324,10 @@ def class_panel(b: DK.Builder, ws: WK.Worksheet, q: int, st: dict, spec: dict, s
                           space_after=size * 0.5))
     if spec.get("saw"):
         lines.append(Para(K.runs(f"**What I noticed:** {spec['saw']}", MUTED)))
-    if item.get("varies"):
+    if st.get("mixed_letters"):
+        lines.append(Para(K.runs("Copies offered different choices, so the letters picked aren't compared. This "
+                                 "is one version.", MUTED)))
+    elif item.get("varies"):
         lines.append(Para(K.runs("Everyone had their own numbers. This is one version.", MUTED)))
     end = (y + chart_h) if wide else ty
     if lines:

@@ -268,7 +268,8 @@ When the teacher asks how the class or a student is doing over time, or wants so
    marked class under the folder and writes `<folder>/progress/`:
    - `dashboard.html`: the teacher's dashboard, one file that opens in any browser and needs no internet.
      It shows each skill, student by student (got it, getting there, still practicing), groups for the
-     next lesson, how each worksheet went, and what marking noticed.
+     next lesson, how each worksheet went, what marking noticed, and, for students who had help on the
+     page, whether it's fading as their scores hold.
    - `parents.docx`: a page for each family in plain words. It covers what the class is learning, how
      their child is doing on each skill, their latest feedback, and something to try at home. A line for
      the teacher to write the name.

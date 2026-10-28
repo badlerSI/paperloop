@@ -377,3 +377,18 @@ def test_the_next_lesson_opens_with_the_last_worksheet_gone_over(tmp_path):
     S.write_json(tmp_path / "bad.json", lesson)
     with pytest.raises(DK.LessonError, match="has no results.json"):
         LS.build(tmp_path / "bad.json", tmp_path / "bad")
+
+
+def test_go_over_doesnt_compare_letters_across_copies_with_different_choices(tmp_path):
+    from paper_loop_core import goover as G
+    defn = {"assignment_id": "mix-01", "title": "Mix", "grade": 6, "variants": {"count": 4},
+            "questions": [
+                {"type": "choice", "q": 1, "prompt": "Which is even?", "answer": "A",
+                 "options": [{"letter": "A", "text": "4", "why": "Even."}, {"letter": "B", "text": "5", "why": "Odd."}],
+                 "pool": [{"prompt": "Which is odd?", "options": [{"letter": "A", "text": "7", "why": "Odd."},
+                                                                  {"letter": "B", "text": "8", "why": "Even."}]}]},
+                {"type": "choice", "q": 2, "prompt": "Which is bigger?", "answer": "A", "shuffle_choices": True,
+                 "options": [{"letter": "A", "text": "9", "why": "Yes."}, {"letter": "B", "text": "3", "why": "No."}]}]}
+    S.make_worksheet(defn, tmp_path / "mix")
+    ws = WK.Worksheet(tmp_path / "mix")
+    assert G._mixed_choices(ws, 1) and not G._mixed_choices(ws, 2)  # another item vs. just a new order

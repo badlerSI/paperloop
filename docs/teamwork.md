@@ -215,14 +215,22 @@ The trials' worksheet bugs are fixed too:
 
 243 tests pass.
 
+## Day 2, continued
+
+- **Bilingual sentence starters and word banks.** A home-language version's translation can carry the
+  question's starters and bank; they print under the question's translation, shaped for right-to-left
+  scripts. The Word companion page printed a choice question's translation as raw data; fixed.
+- **Drawn answer keys.** `key_draw` draws the expected answer in red on `answer-key.pdf`: plotted points,
+  number-line marks, circles, and bars on a bar chart.
+- **Help fading on the dashboard.** "Help on the page, over time" shows each student who had help,
+  worksheet by worksheet, so the teacher can see it come off as scores hold.
+- **Snake Race for young readers.** Plainer rules, and a teacher tip for card levels in similar groups.
+
 ## Still open
 
-- Bilingual word banks and sentence frames on worksheets.
-- A view of supports fading over time, and `work_optional` for a calculator or scribe.
+- `work_optional` for a calculator or scribe.
 - Go-over picks for a `pool` question whose alternatives change the options.
-- Answer keys for draw questions show the checklist, not the drawn answer (bars, plotted points).
-- Cards-and-games: levels for similar groups (a 1-2 dot pile), a printed Snake Race path, and plainer
-  rules for young readers.
-- Copies of the website's grade 3 and Spanish samples printed before today still mark (their answer areas
+- A printed path or arrows on the Snake Race board beyond the numbers.
+- Copies of the website's grade 3 and Spanish samples printed before Day 2 still mark (their answer areas
   didn't move), but the website PDFs should be replaced with the rebuilt ones in `samples/`.
 - Not yet run in a real classroom, or in real Cowork on a Claude for Teachers account.
