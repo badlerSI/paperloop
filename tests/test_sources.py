@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -78,13 +79,18 @@ def test_wikipedia_text_comes_with_its_revision_and_without_formula_wreckage(mon
     assert got["license"] == "CC BY-SA 4.0" and got["author"] == "Simple English Wikipedia contributors"
 
 
-def test_gutenberg_text_loses_its_license_header(monkeypatch):
-    raw = ("The Project Gutenberg eBook of Tales\n\nTitle: Tales\nAuthor: A. Writer\n\n"
-           "*** START OF THE PROJECT GUTENBERG EBOOK TALES ***\nOnce upon a time.\n"
+def test_gutenberg_text_loses_its_license_header_and_is_never_fetched(monkeypatch, tmp_path):
+    raw = ("The Project Gutenberg eBook of Tales\n\nTitle: Tales\nAuthor: A. Writer\n\nRelease date: May 1, 2004 "
+           "[eBook #42]\n\n*** START OF THE PROJECT GUTENBERG EBOOK TALES ***\nOnce upon a time.\n"
            "*** END OF THE PROJECT GUTENBERG EBOOK TALES ***\nLicense text...")
-    monkeypatch.setattr(SR, "_get", lambda url: raw.encode())
-    got = SR.gutenberg(42)
+    (tmp_path / "pg42.txt").write_text(raw)
+    monkeypatch.setattr(SR, "_get", lambda url: pytest.fail("Gutenberg's site is for people, not scripts"))
+    got = SR.gutenberg(tmp_path / "pg42.txt")
     assert got["text"] == "Once upon a time." and got["author"] == "A. Writer" and got["license"] == "public domain"
+    assert got["url"] == "https://www.gutenberg.org/ebooks/42" and "check" not in got
+    run = subprocess.run([sys.executable, str(ROOT / "plugin/skills/paper-loop/scripts/paper_loop.py"), "source", "gutenberg", "42", "--out",
+                          str(tmp_path / "x.json")], capture_output=True, text=True)
+    assert run.returncode == 1 and "https://www.gutenberg.org/ebooks/42" in run.stdout and "Plain Text" in run.stdout
 
 
 def test_a_wikisource_page_with_no_scan_behind_it_says_so(monkeypatch):
@@ -121,3 +127,20 @@ def test_a_rate_limited_fetch_tries_once_more(monkeypatch):
     monkeypatch.setattr(SR.time, "sleep", lambda s: None)
     assert SR._get("https://en.wikipedia.org/w/api.php") == b"ok" and len(calls) == 2
     assert "@" not in SR.AGENT  # no one's email goes out with a request
+
+
+def test_a_rate_limited_fetch_waits_as_long_as_the_site_asks(monkeypatch):
+    import urllib.error
+    calls, waits = [], []
+
+    def fake(request, timeout):
+        calls.append(1)
+        raise urllib.error.HTTPError(request.full_url, 429, "Too Many Requests", {"Retry-After": "10"}, None)
+    monkeypatch.setattr(SR.urllib.request, "urlopen", fake)
+    monkeypatch.setattr(SR.time, "sleep", waits.append)
+    try:
+        SR._get("https://en.wikipedia.org/w/api.php")
+    except urllib.error.HTTPError as e:
+        assert e.code == 429
+    assert len(calls) == 3 and waits == [10.0, 10.0]
+    assert SR._wait("600", 0) == 30.0 and SR._wait(None, 1) == 10.0

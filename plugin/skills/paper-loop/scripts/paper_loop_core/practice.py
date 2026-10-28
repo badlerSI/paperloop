@@ -15,9 +15,10 @@ toward the same skills.
 
 from __future__ import annotations
 
+import json
 import random
-import zlib
 import re
+import zlib
 from datetime import date
 from pathlib import Path
 
@@ -32,6 +33,23 @@ def _assignment(work: Path, manifest: dict) -> Path:
         if (candidate / "layout.json").exists():
             return candidate
     raise LessonError(f"can't find the worksheet folder for {work} (it was {folder})")
+
+
+def _version_of(meta: dict) -> dict:
+    """What a practice sheet keeps from the version a student had: its print size, its languages, its home-language
+    Word page, and its reference page."""
+    if meta.get("kind") != "version":
+        return {}
+    kept = {k: meta[k] for k in ("print", "comment_language", "blank_comments", "language", "language_name",
+                                 "language_english", "language_mode", "translation", "reference", "formulas",
+                                 "glossary_terms") if meta.get(k)}
+    return {**kept, "version_name": meta.get("name") or meta.get("id", "")} if kept else {}
+
+
+def _choices(options) -> list[str]:
+    """A choice question's options, whatever their order or letters."""
+    return sorted(json.dumps(o.get("text", o) if isinstance(o, dict) else o, sort_keys=True, ensure_ascii=False)
+                  for o in options or [])
 
 
 def _fresh(question: dict, avoid: str, seed: str) -> dict:
@@ -139,14 +157,11 @@ def build(work: Path, out: Path | None = None, most: int = 3) -> dict:
         missed = missed[:most]
         if not missed:  # full credit: a stretch, so every student gets a sheet
             all_right.append(sid)
-            extra = _stretch_for(sid, stretch, raw_questions, results, key, title)
+            meta = metas.get(st["form"], {})
+            mine = meta.get("stretch") if meta.get("kind") == "version" and meta.get("stretch") else stretch
+            extra = _stretch_for(sid, mine, raw_questions, results, key, title)  # in their version's words and help
             if extra:
-                sheet = {"student_id": sid, "questions": extra}
-                meta = metas.get(st["form"], {})
-                if meta.get("kind") == "version":
-                    sheet.update({k: meta[k] for k in ("print", "comment_language", "language", "language_name",
-                                                        "language_english") if meta.get(k)})
-                sheets.append(sheet)
+                sheets.append({"student_id": sid, "questions": extra, **_version_of(meta)})
             continue
         defn = forms.get(st["form"]) or forms[""]
         printed = {q["q"]: q for q in defn["questions"] if q.get("type", "short") not in ("passage", "note")}
@@ -161,19 +176,23 @@ def build(work: Path, out: Path | None = None, most: int = 3) -> dict:
             else:  # a version: the same question, with the version's supports
                 q = dict(printed[b["q"]])
             changed = q.get("prompt") != old["prompt"]
-            if not changed and q.get("type") == "choice":
-                changed = q.get("options") != old.get("options")
+            if not changed and q.get("type") == "choice":  # the same choices in a new order is the same question
+                changed = _choices(q.get("options")) != _choices(old.get("options"))
             if not changed:  # the same question again: a retry, which progress reports don't count as new
                 q["retry"] = True
             q.pop("support", None)
             # Practice counts toward the same skill: the question's own, or the worksheet's title.
             q["skill"] = old.get("skill") or q.get("skill") or title
-            pid = q.get("passage")
-            if pid and pid not in passages:
-                passage = next((p for p in defn["questions"] if p.get("type") == "passage" and p.get("id") == pid), None)
-                if passage:
-                    questions.append(passage)
-                    passages.add(pid)
+            for pid in (q.get("passage") if isinstance(q.get("passage"), list) else [q.get("passage")]):
+                if pid and pid not in passages:  # a question may use two sources
+                    at = next((k for k, p in enumerate(defn["questions"])
+                               if p.get("type") == "passage" and p.get("id") == pid), None)
+                    if at is not None:
+                        questions.append(defn["questions"][at])
+                        after = defn["questions"][at + 1] if at + 1 < len(defn["questions"]) else {}
+                        if after.get("type") == "passage" and after.get("lang"):  # its translation, on a bilingual sheet
+                            questions.append(after)
+                        passages.add(pid)
             last = b.get("comment") or ("No answer yet." if b["verdict"] == "blank" else "")
             mine = (written.get(sid) or {}).get(str(b["q"]))
             if mine:
@@ -183,11 +202,7 @@ def build(work: Path, out: Path | None = None, most: int = 3) -> dict:
                 if changed and re.search(r"\d", last):
                     todo.append((sid, b["q"], last, q.get("prompt", "")))
             questions.append(q)
-        sheet = {"student_id": sid, "questions": questions}
-        if meta.get("kind") == "version":  # practice on the version they had: its print size and languages
-            sheet.update({k: meta[k] for k in ("print", "comment_language", "language", "language_name",
-                                                "language_english") if meta.get(k)})
-        sheets.append(sheet)
+        sheets.append({"student_id": sid, "questions": questions, **_version_of(meta)})
     if not sheets:
         raise LessonError("every student got full credit on every question (or left it all blank): no practice "
                           "to make")
@@ -208,7 +223,7 @@ def build(work: Path, out: Path | None = None, most: int = 3) -> dict:
     earlier = out / "source.json"
     if earlier.exists() and S.read_json(earlier).get("practice_of") != str(work.resolve()):
         raise LessonError(f"{out} holds practice sheets from another marking; choose another --out")
-    S.make_worksheet(practice, out, base=assignment)
+    extras = S.make_worksheet(practice, out, base=assignment).get("version_notes", [])  # Word and reference pages
     todo_path = work / "practice-todo.md"
     if todo:
         lines = ["# Practice notes", "",
@@ -223,5 +238,5 @@ def build(work: Path, out: Path | None = None, most: int = 3) -> dict:
         todo_path.unlink()
     return {"out": out, "sheets": len(sheets), "all_right": all_right, "absent": absent, "left_off": left_off,
             "stretched": [s["student_id"] for s in sheets if s["student_id"] in all_right], "notes": notes,
-            "todo": todo_path if todo else None,
+            "todo": todo_path if todo else None, "extras": extras,
             "questions": {s["student_id"]: [q["q"] for q in s["questions"] if "q" in q] for s in sheets}}

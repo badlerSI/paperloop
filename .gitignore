@@ -14,3 +14,7 @@ roster.csv
 
 # Generated worksheets (rebuild with `paperloop make`)
 assignments/
+
+# macOS folder files, and the skill zip `devtools/release.py` builds
+.DS_Store
+dist/

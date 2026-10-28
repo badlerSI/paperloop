@@ -16,7 +16,8 @@ import csv
 import html
 import json
 import re
-from collections import defaultdict
+import string
+from collections import Counter, defaultdict
 from datetime import date, datetime
 from pathlib import Path
 
@@ -71,8 +72,18 @@ def _assignment_dir(work: Path, manifest: dict) -> Path | None:
     return None
 
 
+def class_digits(folder: Path) -> int:
+    """How many digits this class's IDs have, from its worksheets (grades 2-3 write 2), so a roster saved by a
+    spreadsheet ("7" for "07") reads right."""
+    counts = Counter(S.read_json(k).get("id_digits") for k in Path(folder).rglob("key.json"))
+    counts.pop(None, None)
+    return counts.most_common(1)[0][0] if counts else 4
+
+
 def collect(folder: Path, roster: set[str] | None = None) -> list[dict]:
-    """Every marked class under folder, oldest first: its title, date, key, and each student's answers."""
+    """Every marked worksheet under folder, oldest first: its title, date, key, and each student's answers.
+    Every marking of one printed worksheet (one assignment folder) counts as one: two scans, a make-up, a
+    re-mark. A student's latest marking wins. The same worksheet made again in another folder is another."""
     runs = []
     for results_path in sorted(Path(folder).rglob("results.json")):
         work = results_path.parent
@@ -84,6 +95,11 @@ def collect(folder: Path, roster: set[str] | None = None) -> list[dict]:
             continue
         key = S.read_json(assignment / "key.json")
         results = S.read_json(results_path)
+        source = S.read_json(assignment / "source.json") if (assignment / "source.json").exists() else {}
+        title = manifest.get("title", "")
+        # A practice sheet's questions count toward the worksheet's own skills, never "Practice: ..."
+        base_title = re.sub(r"^(Practice: )+", "", title)
+        base_skill = {i["q"]: i.get("skill") for i in key["items"]}
         students: dict[str, dict] = {}
         for page in results["pages"]:
             sid = page["student_id"]
@@ -94,10 +110,20 @@ def collect(folder: Path, roster: set[str] | None = None) -> list[dict]:
             st = students.setdefault(sid, {"form": form, "support": False, "answers": {}})
             for b in page["boxes"]:
                 item = items.get(b["q"], {})
+                if item.get("stretch"):
+                    continue  # beyond the worksheet's bar: a miss there says nothing about the skill
                 helped = bool(item.get("scaffolded"))  # help on this very question that changes what it measures
                 st["support"] = st["support"] or helped
                 st["answers"][b["q"]] = {"earned": float(b["points_awarded"]), "possible": float(b["points_possible"]),
-                                         "verdict": b["verdict"], "support": helped, "retry": bool(item.get("retry"))}
+                                         "verdict": b["verdict"], "support": helped, "retry": bool(item.get("retry")),
+                                         "skill": item.get("skill") or base_skill.get(b["q"]) or base_title}
+        # Every answer blank: absent, or the work went on another sheet. Not a zero.
+        absent = sorted(sid for sid, st in students.items()
+                        if all(a["verdict"] == "blank" for a in st["answers"].values()))
+        students = {sid: st for sid, st in students.items() if sid not in absent}
+        for st in students.values():  # questions with no page marked (a page still in the review pile)
+            form_items = S.form_items(key, st["form"])
+            st["missing"] = sorted(q for q, i in form_items.items() if q not in st["answers"] and not i.get("stretch"))
         if not students:
             continue
         summaries = S.read_json(work / "summaries.json") if (work / "summaries.json").exists() else {}
@@ -106,19 +132,33 @@ def collect(folder: Path, roster: set[str] | None = None) -> list[dict]:
             for spec in S.read_json(work / "goover.json").get("questions", []):
                 if spec.get("saw"):
                     saw.append({"q": spec["q"], "saw": spec["saw"]})
-        source = S.read_json(assignment / "source.json") if (assignment / "source.json").exists() else {}
         raw = {str(v.get("id")): v for v in source.get("versions", []) if isinstance(v, dict)}
         versions = {fid: {**raw.get(fid, {}), **f} for fid, f in (key.get("forms") or {}).items()
                     if f.get("kind") == "version"}
-        runs.append({"work": str(work), "assignment_id": key["assignment_id"], "title": manifest.get("title", ""),
+        marked = results_path.stat().st_mtime
+        runs.append({"work": str(work), "works": [str(work)], "assignment_id": key["assignment_id"], "title": title,
+                     "assignment_dir": str(assignment.resolve()),
+                     "practice": bool(source.get("practice_of")), "marked": marked, "first_marked": marked,
                      "versions": {fid: {"name": f.get("name") or fid, "supports": _supports(f),
                                         "help": list(f.get("modifies") or [])} for fid, f in versions.items()},
                      "date": _date(work), "subject": key.get("subject", ""), "grade_band": key.get("grade_band", ""),
-                     "items": [{"q": i["q"], "skill": i.get("skill") or manifest.get("title", ""),
+                     "items": [{"q": i["q"], "skill": i.get("skill") or base_title,
                                 "points": i["points"], "prompt": i["prompt"]} for i in key["items"]],
                      "students": students, "summaries": summaries, "saw": saw})
-    runs.sort(key=lambda r: (r["date"], r["title"]))
-    return runs
+    runs.sort(key=lambda r: (r["date"], r["marked"]))
+    merged: dict[str, dict] = {}
+    for run in runs:  # in marking order, so a re-mark replaces what it re-marked
+        first = merged.get(run["assignment_dir"])
+        if first is None:
+            merged[run["assignment_dir"]] = run
+            continue
+        first["students"].update(run["students"])
+        first["summaries"].update(run["summaries"])
+        first["saw"] = run["saw"] or first["saw"]
+        first["versions"].update(run["versions"])
+        first["works"].append(run["work"])
+        first["work"], first["marked"] = run["work"], run["marked"]
+    return list(merged.values())
 
 
 def _supports(form: dict) -> list[str]:
@@ -182,35 +222,40 @@ def analyze(runs: list[dict]) -> dict:
     attempts: dict[str, dict[str, list[dict]]] = defaultdict(lambda: defaultdict(list))
     worksheets = []
     for run in runs:
-        by_q = {i["q"]: i for i in run["items"]}
-        for item in run["items"]:
-            if item["skill"] not in skills:
-                skills.append(item["skill"])
+        by_q = {i["q"]: i["skill"] for i in run["items"]}
+        for skill in [i["skill"] for i in run["items"] if not run.get("practice")] + \
+                [_skill(q, a, by_q) for st in run["students"].values() for q, a in st["answers"].items()]:
+            if skill and skill not in skills:
+                skills.append(skill)
         for sid, st in run["students"].items():
             per_skill: dict[str, list] = defaultdict(lambda: [0.0, 0.0, 0, False, True])
             for q, a in st["answers"].items():
-                if q in by_q:
-                    acc = per_skill[by_q[q]["skill"]]
-                    acc[0] += a["earned"]
-                    acc[1] += a["possible"]
-                    acc[2] += 1
-                    acc[3] = acc[3] or a["support"]
-                    acc[4] = acc[4] and a["retry"]
+                if not _skill(q, a, by_q):
+                    continue
+                acc = per_skill[_skill(q, a, by_q)]
+                acc[0] += a["earned"]
+                acc[1] += a["possible"]
+                acc[2] += 1
+                acc[3] = acc[3] or a["support"]
+                acc[4] = acc[4] and a["retry"]
             for skill, (earned, possible, questions, support, retry) in per_skill.items():
                 if possible:
                     attempts[sid][skill].append({"date": run["date"], "title": run["title"], "earned": earned,
                                                  "possible": possible, "pct": earned / possible,
                                                  "support": support, "retry": retry, "questions": questions})
-        full = {i["q"]: sum(1 for st in run["students"].values() if st["answers"].get(i["q"], {}).get("verdict")
-                            == "correct") for i in run["items"]}
+        answered = {i["q"]: [st["answers"][i["q"]] for st in run["students"].values() if i["q"] in st["answers"]]
+                    for i in run["items"]}  # out of those who had it: a shortened version or a practice sheet skips some
         n = len(run["students"])
         earned = sum(a["earned"] for st in run["students"].values() for a in st["answers"].values())
         possible = sum(a["possible"] for st in run["students"].values() for a in st["answers"].values())
-        worksheets.append({"title": run["title"], "date": run["date"], "students": n,
+        worksheets.append({"title": run["title"], "date": run["date"], "students": n, "practice": run.get("practice", False),
                            "average": earned / possible if possible else 0,
-                           "questions": [{"q": i["q"], "skill": i["skill"], "full": full[i["q"]] / n if n else 0}
-                                         for i in run["items"]],
-                           "saw": run["saw"], "supported": sum(st["support"] for st in run["students"].values())})
+                           "questions": [{"q": i["q"], "skill": i["skill"],
+                                          "full": (sum(a["verdict"] == "correct" for a in answered[i["q"]])
+                                                   / len(answered[i["q"]])) if answered[i["q"]] else 0}
+                                         for i in run["items"] if answered[i["q"]] or not run.get("practice")],
+                           "saw": run["saw"], "supported": sum(st["support"] for st in run["students"].values()),
+                           "on_version": sum(st["form"] in run.get("versions", {}) for st in run["students"].values())})
     students = {}
     for sid in sorted(attempts):
         cells = {}
@@ -222,13 +267,13 @@ def analyze(runs: list[dict]) -> dict:
             trend = 0 if len(counted) < 2 else (1 if last["pct"] > counted[-2]["pct"] + 0.05
                                                 else -1 if last["pct"] < counted[-2]["pct"] - 0.05 else 0)
             cells[skill] = {"status": _status(last["pct"]), "pct": last["pct"], "support": last["support"],
-                            "trend": trend, "attempts": tries,
+                            "trend": trend, "attempts": tries, "latest": last,
                             "questions": sum(t.get("questions", 1) for t in counted)}  # how much it rests on
         students[sid] = cells
     groups = {skill: {status: [sid for sid, cells in students.items() if skill in cells
                                and cells[skill]["status"] == status] for status in STATUS} for skill in skills}
     trends = {skill: [{"date": run["date"], "got": _share_got(run, skill)} for run in runs
-                      if any(i["skill"] == skill for i in run["items"])] for skill in skills}
+                      if not run.get("practice") and any(i["skill"] == skill for i in run["items"])] for skill in skills}
     latest = {}
     for run in runs:
         for sid, summary in run["summaries"].items():
@@ -251,14 +296,20 @@ def analyze(runs: list[dict]) -> dict:
             "dates": [runs[0]["date"], runs[-1]["date"]] if runs else ["", ""]}
 
 
+def _skill(q: int, answer: dict, by_q: dict) -> str | None:
+    """The skill an answer counts toward: its own (a practice sheet's question keeps the worksheet's), or its
+    question's."""
+    return answer.get("skill") or by_q.get(q)
+
+
 def _share_got(run: dict, skill: str) -> float:
-    qs = [i["q"] for i in run["items"] if i["skill"] == skill]
+    by_q = {i["q"]: i["skill"] for i in run["items"]}
     shares = []
     for st in run["students"].values():
-        earned = sum(st["answers"].get(q, {}).get("earned", 0) for q in qs)
-        possible = sum(st["answers"].get(q, {}).get("possible", 0) for q in qs)
+        mine = [a for q, a in st["answers"].items() if _skill(q, a, by_q) == skill]
+        possible = sum(a["possible"] for a in mine)
         if possible:
-            shares.append(earned / possible >= GOT)
+            shares.append(sum(a["earned"] for a in mine) / possible >= GOT)
     return sum(shares) / len(shares) if shares else 0.0
 
 
@@ -267,7 +318,7 @@ def build(folder: Path, out: Path | None = None, roster_path: Path | None = None
     translation) in out (default: FOLDER/progress). Returns a report with what's still missing."""
     from . import prepare as P
     folder = Path(folder)
-    roster = P.load_roster(roster_path) if roster_path else None
+    roster = P.load_roster(roster_path, class_digits(folder)) if roster_path else None
     runs = collect(folder, roster)
     if not runs:
         raise ProgressError(f"no marked classes under {folder}: progress reads each marking folder's "
@@ -295,6 +346,8 @@ def build(folder: Path, out: Path | None = None, roster_path: Path | None = None
             todo.append((lang, ids))
             continue
         tr = S.read_json(tr_path)
+        for label, text in (tr.get("labels") or {}).items():
+            _same_blanks(label, text, tr_path.name)
         if not tr.get("reviewed_by"):
             unreviewed.append(lang)
         labels = {**LABELS, **tr.get("labels", {})}
@@ -313,6 +366,26 @@ def build(folder: Path, out: Path | None = None, roster_path: Path | None = None
     return {"out": out, "runs": len(runs), "students": len(data["students"]), "skills": data["skills"],
             "missing": missing, "languages": todo, "made": made, "groups": data["groups"],
             "in_language": sorted(in_language), "unreviewed": unreviewed, "supported": supported}
+
+
+def _blanks(text: str) -> set[str]:
+    return {name for _, name, _, _ in string.Formatter().parse(text) if name is not None}
+
+
+def _same_blanks(label: str, text, where: str) -> None:
+    """A translated label keeps the English one's {start}, {end}... exactly: they're filled in, not read."""
+    english = LABELS.get(label)
+    if not isinstance(english, str) or not isinstance(text, str):
+        return
+    try:
+        ours = _blanks(text)
+    except ValueError:
+        ours = None
+    want = _blanks(english)
+    if ours != want:
+        keep = ", ".join("{" + b + "}" for b in sorted(want)) or "no {...} at all"
+        raise ProgressError(f"{where}: the label \"{label}\" has to keep {keep} exactly as written in English "
+                            f"(it has: {text!r}); translate the words around them")
 
 
 def _csv(data: dict, path: Path) -> None:
@@ -385,7 +458,7 @@ def parents_docx(data: dict, descriptions: dict, labels: dict, path: Path, ids: 
             if skill not in cells:
                 continue
             cell = cells[skill]
-            last = cell["attempts"][-1]
+            last = cell.get("latest") or cell["attempts"][-1]  # the attempt the status comes from, not a retry
             what = (descriptions.get(skill) or {}).get("family") or skill
             status = labels[cell["status"]] + (f" ({labels['support']})" if cell["support"] else "")
             score = (labels["latest_one"] if last["possible"] == 1 else labels["latest"]).format(
@@ -520,11 +593,11 @@ const when = iso => { const d = new Date(iso + "T12:00:00"); return isNaN(d) ? i
 
 document.getElementById("title").textContent = D.class + ": progress";
 document.getElementById("subtitle").textContent = `${ids.length} students, ${D.worksheets.length} worksheet${D.worksheets.length === 1 ? "" : "s"} marked, ${when(D.dates[0])} to ${when(D.dates[1])}`;
-const latest = D.worksheets[D.worksheets.length - 1];
+const latest = D.worksheets.filter(w => !w.practice).pop() || D.worksheets[D.worksheets.length - 1];
 const needs = ids.filter(id => Object.values(D.students[id]).some(c => c.status === "practicing")).length;
 const cell = (id, s) => own(D.students[id], s);
 const cards = [[pct(latest.average), `class average on ${latest.title}`], [D.skills.length, "skills tracked"],
-  [needs, "students still practicing at least one skill"], [latest.supported, "used a support version last time"]];
+  [needs, "students still practicing at least one skill"], [latest.on_version ?? latest.supported, "worked on a version last time"]];
 for (const [n, label] of cards) document.getElementById("cards").append(el("div", {class: "card"}, el("div", {class: "big"}, n), el("div", {class: "label"}, label)));
 
 let sortSkill = null;

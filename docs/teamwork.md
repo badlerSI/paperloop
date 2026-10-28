@@ -236,7 +236,6 @@ The trials' worksheet bugs are fixed too:
 
 ## Still open
 
-- A printed path or arrows on the Snake Race board beyond the numbers.
-- Copies of the website's grade 3 and Spanish samples printed before Day 2 still mark (their answer areas
-  didn't move), but the website PDFs should be replaced with the rebuilt ones in `samples/`.
+- (Day 3: the Snake Race board now prints a path with arrows. The samples in `samples/` go out with the
+  public repository; see [publishing.md](publishing.md).)
 - Not yet run in a real classroom, or in real Cowork on a Claude for Teachers account.

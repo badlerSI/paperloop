@@ -11,6 +11,7 @@ area over a printed scaffold, judged against a checklist).
 
 from __future__ import annotations
 
+import json
 import math
 from dataclasses import dataclass
 from pathlib import Path
@@ -424,6 +425,12 @@ def make_worksheet(defn: WorksheetDef, out_dir: Path) -> tuple[Path, Layout, Ans
     save(key, out_dir / "key.json")
     save(defn, out_dir / "worksheet.json")
     return pdf_path, layout, key
+
+
+def made_by_plugin(assignment_dir: Path) -> bool:
+    """The Paper Loop plugin's pages carry a bit strip instead of a QR code, which `ingest` can't read."""
+    raw = json.loads((Path(assignment_dir) / "layout.json").read_text())
+    return "style" in raw or any("code" in p for p in raw.get("pages", []))
 
 
 def load_assignment(assignment_dir: Path) -> tuple[Layout, AnswerKey]:

@@ -23,22 +23,28 @@ SKILLS = {1: "I can make equivalent ratios", 2: "I can find a unit rate", 3: "I 
 
 
 def _marked(folder: Path, name: str, day: str, scores: dict[str, dict[int, float]], form: dict[str, str] = None,
-            source: Path = ROOT / "examples" / "math6-ratios-02.json") -> None:
-    """A worksheet made in folder/name and a marked class of it, from points per student and question."""
+            source: Path = ROOT / "examples" / "math6-ratios-02.json", blank: tuple[str, ...] = (),
+            work_name: str | None = None, pages_of: dict[str, list[int]] | None = None, skills: bool = True) -> Path:
+    """A worksheet made in folder/name and a marked class of it, from points per student and question.
+    blank: students whose every answer is blank. pages_of: the only questions marked for a student."""
     defn = S.read_json(source)
     for q in defn["questions"]:
-        if q.get("q") in SKILLS:
+        if q.get("q") in SKILLS and skills:
             q["skill"] = SKILLS[q["q"]]
-    S.make_worksheet(defn, folder / name, base=source.parent)
+    if not (folder / name / "key.json").exists():
+        S.make_worksheet(defn, folder / name, base=source.parent)
     key = S.read_json(folder / name / "key.json")
-    work = folder / name / f"marking-{day}"
+    work = folder / name / (work_name or f"marking-{day}")
     work.mkdir(parents=True)
     pages = []
     for k, (sid, points) in enumerate(scores.items()):
         boxes = []
         for item in key["items"]:
-            got = points.get(item["q"], item["points"])
-            verdict = "correct" if got == item["points"] else "incorrect" if got == 0 else "partial"
+            if pages_of and sid in pages_of and item["q"] not in pages_of[sid]:
+                continue
+            got = 0 if sid in blank else points.get(item["q"], item["points"])
+            verdict = "blank" if sid in blank else "correct" if got == item["points"] else \
+                "incorrect" if got == 0 else "partial"
             boxes.append({"q": item["q"], "type": item["type"], "verdict": verdict, "points_awarded": got,
                           "points_possible": item["points"], "details": []})
         pages.append({"scan_index": k + 1, "student_id": sid, "page": 1, "form": (form or {}).get(sid, ""),
@@ -47,6 +53,7 @@ def _marked(folder: Path, name: str, day: str, scores: dict[str, dict[int, float
     S.write_json(work / "results.json", {"pages": pages})
     S.write_json(work / "summaries.json", {sid: {"strength": f"Strong table work, {sid}.", "fixes": ["Check units."]}
                                            for sid in scores})
+    return work
 
 
 def test_progress_follows_each_skill_and_marks_support(tmp_path):
@@ -165,3 +172,172 @@ def test_a_missed_stretch_question_is_practiced_again_with_the_worksheet_s_skill
                    "points_possible": items[11]["points"], "comment": "Say what happens to both parts.", "details": []}]}]})
     second = PR.build(again, tmp_path / "practice2")  # was a KeyError: 11
     assert second["questions"]["0901"] == [11]
+
+
+# --- Regressions from the third code review -------------------------------------------------------
+
+def test_a_blank_sheet_is_absent_not_a_zero(tmp_path):
+    from paper_loop_core import teamwork as TW
+    cls = tmp_path / "P"
+    _marked(cls, "week1", "2026-10-20", {"0101": {}, "0102": {1: 0, 2: 0}, "0103": {}, "0104": {1: 0}})
+    _marked(cls, "week2", "2026-10-27", {"0101": {}, "0102": {}, "0103": {}, "0104": {}}, blank=("0101",))
+    data = PG.analyze(PG.collect(cls))
+    assert all(c["status"] == "got" for c in data["students"]["0101"].values())  # not "still practicing 0%"
+    assert [w["students"] for w in data["worksheets"]] == [4, 3]
+    similar = TW.form_groups(cls, size=2, structure="pairs", similar=True)
+    assert {sid for sid, _ in similar["groups"][0]} == {"0101", "0103"}  # still ranked by the work they did
+
+
+def test_a_spreadsheet_roster_of_two_digit_ids(tmp_path):
+    from paper_loop_core import teamwork as TW
+    source = S.read_json(ROOT / "examples" / "math6-ratios-02.json")
+    source["id_digits"] = 2
+    source.pop("versions")
+    S.write_json(tmp_path / "src.json", source)
+    cls = tmp_path / "Room 12"
+    _marked(cls, "week1", "2026-10-20", {"07": {1: 0}, "08": {}}, source=tmp_path / "src.json")
+    roster = tmp_path / "ids.csv"
+    roster.write_text("id\n7\n8\n11\n")  # a spreadsheet drops the leading zero
+    assert PG.class_digits(cls) == 2
+    report = PG.build(cls, roster_path=roster)
+    assert report["students"] == 2
+    groups = TW.form_groups(cls, size=3, roster_path=roster)
+    assert sorted(sid for g in groups["groups"] for sid, _ in g) == ["07", "08", "11"]
+
+
+def test_a_re_marked_scan_counts_once_and_the_latest_marking_wins(tmp_path):
+    cls = tmp_path / "P"
+    _marked(cls, "week1", "2026-10-20", {"0101": {1: 0}, "0102": {}})
+    _marked(cls, "week1", "2026-10-20", {"0101": {}, "0102": {}}, work_name="marking-2026-10-20-redo")
+    _marked(cls, "week1", "2026-10-21", {"0103": {2: 0}}, work_name="marking-makeup")  # a make-up joins it
+    runs = PG.collect(cls)
+    assert len(runs) == 1 and sorted(runs[0]["students"]) == ["0101", "0102", "0103"]
+    data = PG.analyze(runs)
+    cell = data["students"]["0101"]["I can make equivalent ratios"]
+    assert cell["status"] == "got" and len(cell["attempts"]) == 1 and cell["questions"] == 2
+
+
+def test_practice_counts_toward_the_worksheet_s_skills(tmp_path):
+    from paper_loop_core import practice as PR
+    source = S.read_json(ROOT / "examples" / "math6-ratios-02.json")
+    source.pop("versions")
+    for q in source["questions"]:
+        q.pop("skill", None)
+    S.write_json(tmp_path / "src.json", source)
+    cls = tmp_path / "P"
+    work = _marked(cls, "week1", "2026-10-20", {"0101": {1: 0, 2: 0}, "0102": {}}, source=tmp_path / "src.json",
+                   skills=False)
+    PR.build(work, cls / "practice")
+    key = S.read_json(cls / "practice" / "key.json")
+    items = S.form_items(key, "p0101")
+    mark = cls / "practice" / "marking-2026-10-22"
+    mark.mkdir()
+    S.write_json(mark / "manifest.json", {"assignment_dir": str(cls / "practice"), "pages": [],
+                                          "title": S.read_json(cls / "practice" / "layout.json")["title"]})
+    S.write_json(mark / "results.json", {"pages": [{"scan_index": 1, "student_id": "0101", "page": 1, "form": "p0101",
+        "boxes": [{"q": q, "type": i["type"], "verdict": "correct", "points_awarded": i["points"],
+                   "points_possible": i["points"], "details": []} for q, i in items.items()]}]})
+    data = PG.analyze(PG.collect(cls))
+    assert data["skills"] == ["Smoothie Stand Ratios"]  # the worksheet's title, never "Practice: ..."
+    cell = data["students"]["0101"]["Smoothie Stand Ratios"]
+    assert [a["date"] for a in cell["attempts"]] == ["2026-10-20", "2026-10-22"]
+
+
+def test_the_family_page_shows_the_attempt_the_status_comes_from():
+    item = {"q": 1, "skill": "I can find a unit rate", "points": 2, "prompt": "?"}
+    run = lambda day, earned, retry: {"date": day, "title": "T", "items": [item], "saw": [], "summaries": {},  # noqa: E731
+                                      "students": {"0101": {"form": "", "support": False, "answers": {1: {
+                                          "earned": earned, "possible": 2.0, "verdict": "x", "support": False,
+                                          "retry": retry}}}}}
+    cell = PG.analyze([run("2026-10-20", 0.0, False), run("2026-10-21", 2.0, True)])["students"]["0101"]
+    assert cell["I can find a unit rate"]["latest"]["earned"] == 0.0  # not the retry's 2 of 2
+
+
+def test_a_translated_label_must_keep_its_blanks(tmp_path):
+    import pytest
+    cls = tmp_path / "P"
+    _marked(cls, "week1", "2026-10-20", {"0104": {}})
+    S.write_json(cls / "families.json", {"0104": "es"})
+    S.write_json(cls / "parents.es.json", {"labels": {"dates": "Trabajo del {inicio} al {fin}"}})
+    with pytest.raises(PG.ProgressError, match=r"keep \{end\}, \{start\}"):
+        PG.build(cls)
+
+
+def test_the_same_choices_in_a_new_order_are_a_retry(tmp_path):
+    from paper_loop_core import practice as PR
+    source = S.read_json(ROOT / "examples" / "math6-ratios-02.json")
+    source.pop("versions")
+    S.write_json(tmp_path / "src.json", source)
+    work = _marked(tmp_path / "P", "week1", "2026-10-20", {"0101": {4: 0}, "0102": {}}, source=tmp_path / "src.json")
+    PR.build(work, tmp_path / "practice")
+    item = S.form_items(S.read_json(tmp_path / "practice" / "key.json"), "p0101")[4]
+    assert item.get("retry") is True  # no new numbers: progress shows it but doesn't count it as new evidence
+
+
+def test_practice_on_a_version_keeps_its_pages_and_its_language(tmp_path):
+    import shutil
+    from paper_loop_core import practice as PR
+    for lang in ("es", "ar", "bn"):
+        shutil.copy(ROOT / "examples" / f"math6-ratios-02.{lang}.json", tmp_path)
+    source = S.read_json(ROOT / "examples" / "math6-ratios-02.json")
+    source["stretch"] = [{"type": "short", "q": 11, "prompt": "Why does doubling both parts keep a ratio?",
+                          "key": "Each part grows by the same factor."}]
+    S.write_json(tmp_path / "math6-ratios-02.json", source)
+    es = S.read_json(tmp_path / "math6-ratios-02.es.json")
+    es["questions"]["11"] = "¿Por qué duplicar ambas partes mantiene la razón?"
+    S.write_json(tmp_path / "math6-ratios-02.es.json", es)
+    work = _marked(tmp_path / "P", "week1", "2026-10-20", {"0102": {1: 0}, "0106": {1: 0}, "0104": {}},
+                   form={"0102": "support", "0106": "bn", "0104": "es"}, source=tmp_path / "math6-ratios-02.json")
+    report = PR.build(work, tmp_path / "practice")
+    extras = " ".join(report["extras"])
+    assert "versions/p0102-reference.pdf" in extras and "versions/p0106.docx" in extras  # were dropped
+    assert report["stretched"] == ["0104"]
+    sheet = next(s for s in S.read_json(tmp_path / "practice" / "source.json")["personal"] if s["student_id"] == "0104")
+    assert "¿Por qué duplicar" in json.dumps(sheet["questions"], ensure_ascii=False)  # the stretch, in Spanish too
+
+
+def test_a_bilingual_practice_sheet_keeps_the_translated_passage(tmp_path):
+    from paper_loop_core import practice as PR
+    source = S.read_json(ROOT / "examples" / "ela4-garden-01.json")
+    source["versions"] = [{"id": "es", "language": "es"}]
+    S.write_json(tmp_path / "ela4-garden-01.json", source)
+    S.write_json(tmp_path / "ela4-garden-01.es.json", {"language": "es", "title": "El jardín en la azotea",
+                                                       "passages": {"story": "Amara plantó frijoles en la azotea."},
+                                                       "questions": {"3": "¿Por qué crecieron los frijoles?"}})
+    folder = tmp_path / "P"
+    S.make_worksheet(source, folder / "garden", base=tmp_path)
+    key = S.read_json(folder / "garden" / "key.json")
+    work = folder / "garden" / "marking"
+    work.mkdir()
+    boxes = [{"q": i["q"], "type": i["type"], "verdict": "incorrect" if i["q"] == 3 else "correct",
+              "points_awarded": 0 if i["q"] == 3 else i["points"], "points_possible": i["points"], "details": []}
+             for i in S.form_items(key, "es").values()]
+    S.write_json(work / "manifest.json", {"assignment_dir": str(folder / "garden"), "title": "Garden", "pages": []})
+    S.write_json(work / "results.json", {"pages": [{"scan_index": 1, "student_id": "0423", "page": 1, "form": "es",
+                                                    "boxes": boxes}]})
+    PR.build(work, tmp_path / "practice")
+    sheet = S.read_json(tmp_path / "practice" / "source.json")["personal"][0]
+    texts = [q.get("text", "") for q in sheet["questions"] if q.get("type") == "passage"]
+    assert any("Amara plantó frijoles" in t for t in texts) and len(texts) == 2  # the story, and its translation
+
+
+def test_a_missed_stretch_question_doesn_t_count_against_the_skill(tmp_path):
+    from paper_loop_core import practice as PR
+    source = S.read_json(ROOT / "examples" / "math6-ratios-02.json")
+    source.pop("versions")
+    source["stretch"] = [{"type": "short", "q": 11, "prompt": "Why does doubling both parts keep a ratio?",
+                          "key": "Each part grows by the same factor."}]
+    S.write_json(tmp_path / "src.json", source)
+    cls = tmp_path / "P"
+    work = _marked(cls, "week1", "2026-10-20", {"0901": {}, "0902": {1: 0}}, source=tmp_path / "src.json")
+    PR.build(work, cls / "practice")
+    items = S.form_items(S.read_json(cls / "practice" / "key.json"), "p0901")
+    assert items[11].get("stretch") is True
+    mark = cls / "practice" / "marking"
+    mark.mkdir()
+    S.write_json(mark / "manifest.json", {"assignment_dir": str(cls / "practice"), "title": "Practice", "pages": []})
+    S.write_json(mark / "results.json", {"pages": [{"scan_index": 1, "student_id": "0901", "page": 1, "form": "p0901",
+        "boxes": [{"q": 11, "type": "short", "verdict": "incorrect", "points_awarded": 0,
+                   "points_possible": items[11]["points"], "details": []}]}]})
+    cells = PG.analyze(PG.collect(cls))["students"]["0901"]
+    assert all(c["status"] == "got" and len(c["attempts"]) == 1 for c in cells.values())  # beyond the bar

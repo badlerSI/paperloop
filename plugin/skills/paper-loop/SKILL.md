@@ -1,6 +1,6 @@
 ---
 name: paper-loop
-description: Turns the school copier into a feedback machine for any subject, grades 2-12. Makes printable worksheets that can be marked from a scan (passages, written answers and essays, multiple choice, tables, show-your-work math, labeled diagrams, graphs, drawings, chemical equations, music), in versions with scaffolds, IEP accommodations, or home-language translations, a different copy for each student, or enrichment from free sources like Wikipedia. Plans lessons with a Word plan and PowerPoint slides. Makes group work where students teach each other (labs, jigsaws, peer tutoring, with role cards) and paper review games. Marks scanned class sets: reads every answer, writes a comment beside it, and returns marked pages to hand back, then a go-over deck, practice sheets, a progress dashboard, and family pages. Use when a teacher wants a worksheet, lesson, slides, differentiated copies, group activity, review game, or progress report, or has a scan of completed Paper Loop worksheets to mark or grade.
+description: "Turns the school copier into a feedback machine for any subject, grades 2-12. Makes printable worksheets that can be marked from a scan (passages, written answers and essays, multiple choice, tables, show-your-work math, labeled diagrams, graphs, drawings, chemical equations, music), in versions with scaffolds, IEP accommodations, or home-language translations, a different copy for each student, or enrichment from free sources like Wikipedia. Plans lessons with a Word plan and PowerPoint slides. Makes group work where students teach each other (labs, jigsaws, peer tutoring, with role cards) and paper review games. Marks scanned class sets: reads every answer, writes a comment beside it, and returns marked pages to hand back, then a go-over deck, practice sheets, a progress dashboard, and family pages. Use when a teacher wants a worksheet, lesson, slides, differentiated copies, group activity, review game, or progress report, or has a scan of completed Paper Loop worksheets to mark or grade."
 ---
 
 # Paper Loop
@@ -13,7 +13,8 @@ letters, and laying out the PDF. You do the reading and judging.
 Run the scripts as `python3 <this skill's folder>/scripts/paper_loop.py <command>`, written `PL` below.
 They need numpy, scipy, Pillow, pypdfium2, and reportlab, and python-pptx for slides, which Claude's
 sandboxes include. If an import fails, `pip install` the missing one. `PL source` needs the internet; if the
-sandbox can't reach the site, use your web tool and save the text yourself.
+sandbox can't reach the site, use your web tool and save the text yourself. `PL preview` puts page images in a
+`preview` folder beside the file, for you to check; delete those folders before you give the teacher the files.
 
 ## Privacy: always
 
@@ -201,7 +202,8 @@ Cards work best when every card makes students recall an answer before they chec
 not facts to read. Making their own cards is good practice too.
 
 To group students for a card game (similar skills at a center, say), run `PL groups "<class folder>"
---structure game --size 4 --similar`: groups with no jobs, never more players than the game takes. When the
+--structure game --size 4 --similar`: groups with no jobs, never more players than the game takes (for a
+two-player game, an odd one out joins a pair, and the three take turns). When the
 teacher also wants an exit sheet, roles, or a game on its own board (a number line, a grid), build it as a
 lab under "Group work and labs", with a `board`.
 

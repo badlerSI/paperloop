@@ -622,8 +622,9 @@ class Builder:
 
     def walk_question(self, ws: WK.Worksheet, q: int, spec: dict, chip: str | None = None,
                       chip_fill: str | None = None, notes: str = "", side: list[Para] | None = None,
-                      side_extra=None, words: int | None = None) -> None:
-        """A worksheet question as printed, with something to think about before the answer."""
+                      side_extra=None, words: int | None = None, panel_min: float = 0) -> None:
+        """A worksheet question as printed, with something to think about before the answer. panel_min: the
+        height the side panel needs below a strip-shaped question, so the picture leaves room for it."""
         s = self.new(f"Question {q}", notes)
         top = self.heading(s, f"Question {q}", chip, chip_fill=chip_fill or self.t.dark)
         think = spec.get("think", "")
@@ -632,7 +633,7 @@ class Builder:
         size = ws.crop(q, path)
         alt = f"Question {q} as printed: {' '.join(ws.items[q]['prompt'].split())}"
         if (side or side_extra) and size[0] / size[1] >= 3:  # a strip (a prompt alone): across the top
-            k = min((X1 - X0) / size[0], 2.4)
+            k = min((X1 - X0) / size[0], 2.4, max(bottom - top - GAP - panel_min, size[1] * 0.5) / size[1])
             placed = self.place(s, path, size, X0, top, X1 - X0, size[1] * k, alt, k)
             x, y0, w = X0, placed[1] + placed[3] + GAP, X1 - X0
         elif side or side_extra:

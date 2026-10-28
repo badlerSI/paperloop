@@ -699,10 +699,18 @@ def _counts(A: dict) -> str:
         letters = len(A["parts"])
         if max(sizes) > letters:
             out += f" In a group of {max(sizes)}, two students share a letter."
-        if min(sizes) < letters:
-            out += (f" A group of {min(sizes)} has no Expert {chr(64 + letters)}: it reads that expert sheet "
-                    "together.")
+        for k in sorted({k for k in sizes if k < letters}, reverse=True):  # every part with no expert, every size
+            out += (f" A group of {k} has no {_no_experts(k, letters)}: it reads "
+                    + ("that expert sheet" if letters - k == 1 else "those expert sheets") + " together.")
     return out
+
+
+def _no_experts(have: int, letters: int) -> str:
+    """The parts a jigsaw group of `have` students has no expert for: "Expert E", or "Experts D and E"."""
+    missing = [chr(65 + n) for n in range(have, letters)]
+    if len(missing) == 1:
+        return f"Expert {missing[0]}"
+    return "Experts " + ", ".join(missing[:-1]) + " and " + missing[-1]
 
 
 def _grouping(A: dict) -> str:
@@ -841,7 +849,8 @@ def role_cards(pen: Pen, A: dict) -> None:
                 yy2 = pen.para(f"“{stem}”", sx, yy2, x1 - sx - 14, size, pen.f.oblique) - 3
             c.setFillGray(0.25)
             c.setFont(pen.f.regular, _size(A, 9.5))
-            more = {"lab": (_label(A, "footer_lab") if A["rotate_every"] == 1 else
+            one_turn = bool(A.get("rounds")) and A["rounds"] <= A["rotate_every"]  # the jobs never change hands
+            more = {"lab": ("" if one_turn else _label(A, "footer_lab") if A["rotate_every"] == 1 else
                             _label(A, "footer_lab_every", every=A["rotate_every"])),
                     "reciprocal": _label(A, "footer_reciprocal"), "pairs": _label(A, "footer_pairs")}.get(A["kind"], "")
             c.drawString(x0 + 14, top - h + 8, pen.f.text(_label(A, "footer") + (" " + more if more else "")))
@@ -1614,7 +1623,7 @@ def form_groups(folder: Path, size: int | None = None, skill: str | None = None,
     folder = Path(folder)
     if not folder.is_dir():
         raise TeamworkError(f"no folder {folder}: give the class's folder (where its worksheets are)")
-    roster = P.load_roster(roster_path) if roster_path else None
+    roster = P.load_roster(roster_path, PG.class_digits(folder)) if roster_path else None
     if roster_path and not roster:
         raise TeamworkError(f"{roster_path} has no class ID numbers: one ID a line, or an \"id\" column")
     runs = PG.collect(folder, roster)
@@ -1698,8 +1707,10 @@ def form_groups(folder: Path, size: int | None = None, skill: str | None = None,
     for k, g in enumerate(plan, start=1):
         missing = ""
         if structure == "jigsaw" and len(g) < size:  # a part with no expert: the group reads it together
-            missing = " (no " + ", ".join(f"Expert {chr(65 + n)}" for n in range(len(g), size)) + \
-                ": read that expert sheet together)"
+            missing = (f" (no {_no_experts(len(g), size)}: read "
+                       + ("that expert sheet" if size - len(g) == 1 else "those expert sheets") + " together)")
+        if structure == "game" and size == 2 and len(g) == 3:
+            missing = " (three at a two-player game: take turns, and whoever sits out reads the cards)"
         lines.append(f"- Group {k}: " + ", ".join(f"{sid} ({role})" if role else sid for sid, role in g) + missing)
     if unplaced and runs:
         lines += ["", "No marked work " + (f"on “{skill}” " if skill else "") + "yet, so placed in the middle: "
@@ -1747,32 +1758,36 @@ def team_points(folder: Path, worksheet: str, groups_path: Path | None = None, o
         teams = [[{"id": str(m["id"])} if isinstance(m, dict) else {"id": str(m)} for m in team] for team in teams]
     except (KeyError, TypeError, ValueError):
         raise TeamworkError(f"{groups_path} isn't a groups file: make one with `groups`") from None
-    runs = PG.collect(folder)
+    runs = PG.collect(folder)  # every marking of one printed sheet is one run: two scans, a make-up, a re-mark
     exits = [r for r in runs if r["assignment_id"] == worksheet]
     if not exits:
         found = sorted({r["assignment_id"] for r in runs})
         raise TeamworkError(f"no marked class of {worksheet!r} under {folder}"
                             + (f"; marked worksheets: {', '.join(found)}" if found else ""))
-    # Every marking of the exit sheet counts (two periods, a make-up); the latest page for each student.
+    # The exit sheet printed in more than one folder (two periods): every one counts, a student's latest wins.
     exit_run = {**exits[0], "students": {sid: st for r in exits for sid, st in r["students"].items()},
                 "date": exits[-1]["date"]}
 
     def pct(run: dict, sid: str) -> float | None:
-        answers = run["students"].get(sid, {}).get("answers", {})
-        new = [a for a in answers.values() if not a.get("retry")]
+        st = run["students"].get(sid)
+        if not st or st.get("missing"):
+            return None  # absent (every answer blank), or a page not marked yet: not a score to compare
+        new = [a for a in st["answers"].values() if not a.get("retry")]
         possible = sum(a["possible"] for a in new)
-        if not possible or all(a.get("verdict") == "blank" for a in new):
-            return None  # nothing on the page: absent, not zero
-        return 100 * sum(a["earned"] for a in new) / possible
+        return 100 * sum(a["earned"] for a in new) / possible if possible else None
 
-    earlier = [r for r in runs if (r["date"], r["title"]) < (exits[0]["date"], exits[0]["title"])
-               and r["assignment_id"] != worksheet]
-    rows, posted = [], []
+    # A student's usual: worksheets before the exit sheet. Practice sheets hold only what they missed (or
+    # stretch questions), so they'd drag the usual down.
+    earlier = [r for r in runs if not r.get("practice") and r["assignment_id"] != worksheet
+               and (r["date"], r["first_marked"]) < (exit_run["date"], exit_run["first_marked"])]
+    rows, posted, unfinished = [], [], []
     for k, team in enumerate(teams, start=1):
         members = []
         for member in team:
             sid = member["id"]
             score = pct(exit_run, sid)
+            if score is None and exit_run["students"].get(sid, {}).get("missing"):
+                unfinished.append(sid)
             past = [v for v in (pct(r, sid) for r in earlier) if v is not None]
             base = sum(past) / len(past) if past else None
             points = improvement_points(base, score) if score is not None else None
@@ -1784,20 +1799,25 @@ def team_points(folder: Path, worksheet: str, groups_path: Path | None = None, o
     out = Path(out or progress_dir)
     out.mkdir(parents=True, exist_ok=True)
     lines = ["# Team points (for the teacher; post team-points.pdf, not this)", "",
-             f"Exit sheet: {exit_run['title']} ({exit_run['date']}). Each student's usual is their average on "
+             f"Teams from {Path(groups_path).name}. Exit sheet: {exit_run['title']} ({exit_run['date']}). "
+             "Each student's usual is their average on "
              f"{len(earlier)} earlier marked worksheet{'s' if len(earlier) != 1 else ''}. Points: 30 for a perfect paper "
              "or more than 10 above their usual; 20 for their usual to 10 above (or no earlier work); 10 for up to 10 "
              "below; 5 for further below. Absent students don't count against the team. A team with only one exit sheet "
              "posts \"-\" (a single score would show that student's).", ""]
     for k, members, average in rows:
         lines.append(f"- Team {k}: " + (f"{average:.0f} points" if average is not None else "no exit sheets") + " ("
-                     + "; ".join(f"{sid}: " + ("absent" if score is None else
+                     + "; ".join(f"{sid}: " + ("a page isn't marked yet" if score is None and sid in unfinished else
+                                               "absent" if score is None else
                                                f"{score:.0f}% vs usual {'none yet' if base is None else f'{base:.0f}%'}"
                                                f", {points}") for sid, base, score, points in members) + ")")
+    if unfinished:
+        lines += ["", f"Not counted yet: {', '.join(unfinished)}. A page of their exit sheet isn't marked (it may be "
+                  "in the review pile). Finish the marking, then run teampoints again."]
     (out / "team-points.md").write_text("\n".join(lines) + "\n")
     _team_points_page(out / "team-points.pdf", exit_run["title"], posted)
     return {"teams": rows, "md": out / "team-points.md", "pdf": out / "team-points.pdf", "earlier": len(earlier),
-            "groups": Path(groups_path)}
+            "groups": Path(groups_path), "unfinished": unfinished}
 
 
 def _team_points_page(path: Path, title: str, posted: list[tuple[int, float | None]]) -> None:

@@ -141,19 +141,32 @@ def _forms_report(layout: dict, out: Path) -> None:
             what.append("work optional on math (the answer earns full credit)")
         if f.get("language"):
             what.append(f"{f['language_name']} ({f['language_mode']})")
+        if f.get("only"):
+            what.append(f"only Q{', Q'.join(map(str, f['only']))}")
         copies = f" Print {f['copies']}." if f.get("copies") else ""
         print(f"  Version {f['label']}, {f['name']}: {out / f['pdf']}, {len(f['pages'])} page"
               f"{'s' if len(f['pages']) > 1 else ''}. {'; '.join(what) or 'as written'}.{copies}")
-        if f.get("only"):
-            what.append(f"only Q{', Q'.join(map(str, f['only']))}")
         pages_over = len(f["pages"]) - layout["base_pages"]
-        if pages_over > 0 and not (f.get("large_print") or f.get("space") or f.get("per_page")):
+        if pages_over > 0 and f.get("language_mode") == "bilingual":  # a translation under each question takes room
+            print(f"    Version {f['label']} runs to {len(f['pages'])} pages, {pages_over} more than the base sheet: "
+                  "its translations take the room. That's expected for a bilingual sheet; nothing to cut.")
+        elif pages_over > 0 and not (f.get("large_print") or f.get("space") or f.get("per_page")):
             print(f"  Check: version {f['label']} runs to {len(f['pages'])} pages, {pages_over} more than everyone "
                   "else's, so it stands out. Shorten it (or the base sheet) until they match"
                   + (f": cut about {f['shortfall']:.0f}pt." if f.get("shortfall") else "."))
             for k, (free, blocks) in enumerate(zip(f.get("free_by_page", []), f.get("blocks_by_page", [])), start=1):
                 print(f"    version {f['label']} page {k}: {', '.join(f'{name} {h:.0f}pt' for name, h in blocks)} "
                       f"({free:.0f}pt free)")
+        for note in f.get("print_notes", []):
+            print(f"  Check: version {f['label']}: {note}.")
+        if f.get("untranslated_comments"):
+            print(f"  Check: comments for version {f['label']} are in {f['comment_language']}, but the translation has "
+                  f"no words for {', '.join(f['untranslated_comments'])}, so those print in English only. Add them "
+                  "(see \"Comments in a home language\" in references/versions.md).")
+        if f.get("comment_language_dropped"):
+            print(f"    Comments for these students will be in {f['comment_language']}: "
+                  f"{f['comment_language_dropped']} can't print on the marked page here. Their Word page carries "
+                  "the translation.")
         if f.get("modifies"):
             print(f"    Help that changes what's measured: {', '.join(f['modifies'])}. Scores on those questions show "
                   "what students do with help, and progress reports mark them \"with help on the page\". For "
@@ -231,8 +244,13 @@ def cmd_ids(args) -> int:
 
 
 def cmd_todo(args) -> int:
-    paths = P.todo(args.work)
     manifest = S.read_json(Path(args.work) / "manifest.json")
+    unread = [p for p in manifest["pages"] if p["status"] == "ok" and not p["student_id"]]
+    if unread:  # `ids` hasn't run: no page belongs to a student yet, so every work order would be empty
+        print(f"The IDs on {len(unread)} page{'s' if len(unread) > 1 else ''} haven't been read yet. Read the ID "
+              "strips into ids.json and run `ids` (SKILL.md, step 2), then run `todo` again.")
+        return 1
+    paths = P.todo(args.work)
     settled = P.settled_count(manifest)
     _blank_notes(manifest)
     if not paths:
@@ -241,9 +259,10 @@ def cmd_todo(args) -> int:
     print(f"{settled} answers settled from the scan (blank, or one clear circle). Work orders to mark:")
     for path in paths:
         print(f"  {path}")
-    key = S.read_json(Path(manifest["assignment_dir"]) / "key.json")
+    assignment = Path(manifest["assignment_dir"])
+    items = P.scanned_items(manifest, S.read_json(assignment / "key.json"), S.read_json(assignment / "layout.json"))
     marked = {int(path.stem[1:]) for path in paths}
-    settled_qs = [str(item["q"]) for item in key["items"] if item["q"] not in marked]
+    settled_qs = [str(q) for q in items if q not in marked]
     if settled_qs:
         print(f"Settled from the scan for every student, no work order: Q{', Q'.join(settled_qs)}.")
     return 0
@@ -278,9 +297,12 @@ def cmd_preview(args) -> int:
     # A shorter remake mustn't leave old pages behind. A full run replaces everything it makes; one page
     # (--page) replaces only itself, as a page image even with --sheet.
     for old in out.glob(f"{pdf.stem}-*.png"):
-        number = re.fullmatch(re.escape(pdf.stem) + r"-p(\d+)\.png", old.name)
-        stale = number and int(number.group(1)) > len(doc)
-        if stale or (not args.page and (args.sheet and "-sheet" in old.name or not args.sheet)):
+        # Only this PDF's own pages and sheets: copies.pdf's previews, not copies-key.pdf's.
+        number = re.fullmatch(re.escape(pdf.stem) + r"-(p|sheet)(\d+)\.png", old.name)
+        if not number:
+            continue
+        stale = number.group(1) == "p" and int(number.group(2)) > len(doc)
+        if stale or (not args.page and (args.sheet and number.group(1) == "sheet" or not args.sheet)):
             old.unlink()
     if args.page:
         args.sheet = False
@@ -375,8 +397,12 @@ def cmd_lesson(args) -> int:
 
 def cmd_source(args) -> int:
     from paper_loop_core import sources as SR
+    if args.site == "gutenberg" and not Path(args.name).is_file():
+        book = args.name.strip() if args.name.strip().isdigit() else "<book number>"
+        print(f"Can't get it: {SR.GUTENBERG.format(book=book)}.")
+        return 1
     try:
-        got = SR.gutenberg(int(args.name)) if args.site == "gutenberg" else SR.wikipedia(
+        got = SR.gutenberg(Path(args.name)) if args.site == "gutenberg" else SR.wikipedia(
             args.name, simple=args.site == "simple", site="en.wikisource.org" if args.site == "wikisource" else None)
     except (S.WorksheetError, ValueError) as e:
         print(f"Can't get it: {e}")
@@ -438,9 +464,13 @@ def cmd_teamwork(command: str, argv: list[str]) -> int:
         return 1
     if command == "teampoints":
         print(f"Wrote {report['pdf']} (to post: teams and points only) and {report['md']} (for you: each class ID's "
-              f"points, against their average on {report['earlier']} earlier worksheets).")
+              f"points, against their average on {report['earlier']} earlier worksheets). Teams from "
+              f"{report['groups'].name}.")
         for k, members, average in report["teams"]:
             print(f"  Team {k}: " + (f"{average:.0f}" if average is not None else "no exit sheets"))
+        if report["unfinished"]:
+            print(f"  Check: a page of {', '.join(report['unfinished'])}'s exit sheet isn't marked yet (the review "
+                  "pile?), so they aren't counted. Finish the marking and run teampoints again.")
         return 0
     if command == "teamwork":
         print(f"Wrote {report['pdf']}: {report['structure']}, groups of {report['group_size']}.")
@@ -472,6 +502,8 @@ def cmd_practice(args) -> int:
           "they got last time above each one.")
     for sid, qs in report["questions"].items():
         print(f"  ID {sid}: Q{', Q'.join(map(str, qs))}")
+    for note in report.get("extras", []):
+        print(f"  Also print: {note}.")
     for note in report.get("notes", []):
         print(f"  Check: {note}.")
     if report["stretched"]:
@@ -487,8 +519,9 @@ def cmd_practice(args) -> int:
     if report["todo"]:
         print(f"Check: some last-time comments name the old copy's numbers; they print as \"Last time (other "
               f"numbers)\". For clearer sheets, write the notes {report['todo']} asks for, then run `practice` again.")
-    print(f"Print copies.pdf and hand each student the sheet with their ID. To mark them, scan them like any worksheet "
-          f"with --assignment \"{out}\": the IDs are printed, so there's nothing to read.")
+    print(f"Print copies.pdf and hand each student the sheet with their ID; {out / 'copies-key.pdf'} has every "
+          f"student's answers. To mark them, scan them like any worksheet with --assignment \"{out}\": the IDs are "
+          "printed, so there's nothing to read.")
     return 0
 
 
@@ -719,7 +752,8 @@ def main() -> int:
     p = sub.add_parser("source")
     p.add_argument("site", choices=["wikipedia", "simple", "wikisource", "gutenberg"],
                    help="wikipedia, simple (Simple English Wikipedia), wikisource (primary sources), or gutenberg")
-    p.add_argument("name", help="the article's title, or the Gutenberg book number")
+    p.add_argument("name", help="the article's title, or for gutenberg the book's plain-text file the teacher "
+                                "downloaded")
     p.add_argument("--out", type=Path, required=True, help="where to save it (a .json file)")
     p.set_defaults(func=cmd_source)
     p = sub.add_parser("progress")

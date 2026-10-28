@@ -488,6 +488,73 @@ def draw_diagram(c: canvas.Canvas, diagram: dict, x0: float, y0: float, f: Fonts
                 draw(x0 + s["x"], y0 + s["y"] - n * s["size"] * 1.2, line)
 
 
+def outlines(diagram: dict, text_width) -> list[tuple[int, str, tuple]]:
+    """Roughly where each shape puts ink, for keeping label boxes and enlarged words clear of it: (the shape's
+    index, "seg", (x0, y0, x1, y1)) for a printed line, "area" for a filled or busy rectangle (text, a chart, a
+    picture), and "poly" for a filled polygon's points. text_width(text, bold, size) measures a line of text."""
+    out = []
+    for k, s in enumerate(diagram["shapes"]):
+        kind = s["shape"]
+        if kind in ("line", "arrow", "polyline", "polygon") and len(s["points"]) >= 2:
+            pts = [tuple(map(float, pt)) for pt in s["points"]]
+            ends = pts + ([pts[0]] if kind == "polygon" else [])
+            out += [(k, "seg", (*a, *b)) for a, b in zip(ends, ends[1:])]
+            if kind == "polygon" and s["fill"] is not None:
+                out.append((k, "poly", tuple(pts)))
+        elif kind in ("rect", "circle"):
+            x0, y0 = (s["x"], s["y"]) if kind == "rect" else (s["x"] - s["r"], s["y"] - s["r"])
+            x1, y1 = (x0 + s["w"], y0 + s["h"]) if kind == "rect" else (s["x"] + s["r"], s["y"] + s["r"])
+            if s["fill"] is not None:
+                out.append((k, "area", (x0, y0, x1, y1)))
+            out += [(k, "seg", e) for e in ((x0, y0, x1, y0), (x1, y0, x1, y1), (x1, y1, x0, y1), (x0, y1, x0, y0))]
+        elif kind == "text":
+            lines = s["text"].split("\n") if not s["wrap"] else [s["text"]]
+            w = s["wrap"] or max(text_width(line, s["bold"], s["size"]) for line in lines)
+            x0 = s["x"] - {"left": 0, "center": w / 2, "right": w}[s["align"]]
+            out.append((k, "area", (x0, s["y"] - s["size"] * 0.25 - (len(lines) - 1) * s["size"] * 1.2,
+                                   x0 + w, s["y"] + s["size"] * 0.8)))
+        else:  # a chart, a clock, a picture: all of its rectangle, with room for its labels
+            r = s.get("r") or 0
+            x0, y0 = (s["x"] - r, s["y"] - r) if r else (s["x"], s["y"])
+            w, h = (2 * r, 2 * r) if r else (s.get("w") or 0, s.get("h") or 0)
+            out.append((k, "area", (x0 - 6, y0 - 16, x0 + w + 6, y0 + max(h, 8) + 6)))
+    return out
+
+
+def touches(rect: tuple, outline: tuple) -> bool:
+    """Whether a rectangle (x0, y0, x1, y1) meets one of outlines' pieces."""
+    x0, y0, x1, y1 = rect
+    _, kind, shape = outline
+    if kind == "area":
+        return shape[0] < x1 and x0 < shape[2] and shape[1] < y1 and y0 < shape[3]
+    if kind == "poly":  # a corner of the rectangle inside the polygon (its edges are "seg" pieces of their own)
+        return any(_inside((cx, cy), shape) for cx in (x0, x1) for cy in (y0, y1))
+    ax, ay, bx, by = shape  # a segment: clipped to the rectangle (Liang-Barsky), anything left touches it
+    lo, hi = 0.0, 1.0
+    for p, q in ((-(bx - ax), ax - x0), (bx - ax, x1 - ax), (-(by - ay), ay - y0), (by - ay, y1 - ay)):
+        if p == 0:
+            if q < 0:
+                return False
+            continue
+        t = q / p
+        if p < 0:
+            lo = max(lo, t)
+        else:
+            hi = min(hi, t)
+        if lo > hi:
+            return False
+    return True
+
+
+def _inside(point: tuple, polygon: tuple) -> bool:
+    x, y = point
+    inside = False
+    for (ax, ay), (bx, by) in zip(polygon, polygon[1:] + polygon[:1]):
+        if (ay > y) != (by > y) and x < ax + (y - ay) * (bx - ax) / (by - ay):
+            inside = not inside
+    return inside
+
+
 def diagram_texts(diagram: dict) -> list[str]:
     """Every string a diagram prints, for choosing a font."""
     out = []

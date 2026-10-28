@@ -14,6 +14,7 @@ from pathlib import Path
 import numpy as np
 
 from . import scan as L
+from . import script as SC
 from . import sheet as S
 
 PAGE_MATCH_MIN = 0.75  # pages without a page code must look this much like the template
@@ -40,9 +41,10 @@ def answer_ink(ink: np.ndarray, box: dict) -> int:
 
 
 def outside_ink(ink: np.ndarray, box: dict) -> tuple[int, tuple]:
-    """Student ink in the question's block (prompt to bottom, left margin to the gutter) but outside its answer
-    areas: an answer written beside the box, or a correction moved outside it. Returns (pixels, block rect)."""
-    block = (S.LEFT - S.OPTION_REACH, box["rect"][1] - BELOW_PT, S.BOX_RIGHT + 8, box["feedback_rect"][3])
+    """Student ink in the question's block (prompt to bottom, left margin to the right edge of the comment column)
+    but outside its answer areas: an answer written beside the box, in the empty column where comments print
+    later, or a correction moved outside it. Returns (pixels, block rect)."""
+    block = (S.LEFT - S.OPTION_REACH, box["rect"][1] - BELOW_PT, S.GUTTER_RIGHT + 8, box["feedback_rect"][3])
     left, top, right, bottom = S.rect_to_px(block)
     h, w = ink.shape
     region = ink[max(top, 0):min(bottom, h), max(left, 0):min(right, w)].copy()
@@ -440,12 +442,17 @@ def _key_lines(item: dict) -> list[str]:
     elif kind == "match":
         if item.get("choices"):
             lines += ["**Choices printed on the page:**", *[f"- {c['letter']}. {c['text']}" for c in item["choices"]],
-                      ""]
+                      "", "The items print with no number of their own, top to bottom; the item numbers below are "
+                          "for your file. In a comment, name an item by its words.", ""]
         else:
             lines += ["No choices are printed: the student writes a number or word in each box (an order, T/F, "
                       "and so on). The items are lettered on the page; the box numbers below are for your file.", ""]
+
+        def printed(e: dict) -> str:  # with choices, an item prints as its words alone (sheet.py)
+            return e["text"] if item.get("choices") else f"{e.get('name', e['n'])}. {e['text']}"
+
         lines += ["**Each item's box should hold:**",
-                  *[f"- Item {e['n']} (printed as \"{e.get('name', e['n'])}. {e['text']}\"): {e['answer']}"
+                  *[f"- Item {e['n']} (printed as \"{printed(e)}\"): {e['answer']}"
                     + (f" (also accept: {', '.join(e['accept'])})" if e.get("accept") else "") for e in item["labels"]]]
     elif kind == "table":
         lines += ["**The table as printed** (cells to fill shown as [n]):", "",
@@ -458,6 +465,9 @@ def _key_lines(item: dict) -> list[str]:
         lines += [f"**Answer:** {item['answer']}{units}{accept}",
                   f"**What the work should show:** {item['key'] or 'any correct method'}",
                   f"**Points:** {item['answer_points']} for the answer, {item['work_points']} for the work"]
+        if not item["work_points"]:  # a version's work_optional: a calculator or a scribe, as the student's plan says
+            lines.append("**The work is optional here:** a right answer earns full credit with or without work. Still "
+                         "judge any work shown, but when the answer is right, don't ask for the steps.")
     else:
         lines += [f"**What's printed:** {item['diagram']}", "**Checklist:**",
                   *[f"{n}. {c['item']}" for n, c in enumerate(item["checklist"], start=1)]]
@@ -469,7 +479,8 @@ def _key_lines(item: dict) -> list[str]:
     return lines
 
 
-_EXPECTS = ("key", "answer", "accept", "labels", "options", "checklist", "rubric", "text", "rows", "units")
+_EXPECTS = ("key", "answer", "accept", "labels", "options", "checklist", "rubric", "text", "rows", "units",
+            "answer_points", "work_points")  # work_optional moves the work's points to the answer
 
 
 def _form_lines(base: dict, item: dict, form: dict, base_language: str, words: int) -> list[str]:
@@ -498,8 +509,21 @@ def _form_lines(base: dict, item: dict, form: dict, base_language: str, words: i
         lines.append(f"- Students with these copies may answer in {form.get('language_english') or form['language']} "
                      "or English: mark what they mean. Spelling counts only where the key says it does.")
     if language != base_language:
-        lines.append(f"- Comments for these students: in {language}, {words} words at most.")
+        each = " in each language" if len(SC.comment_languages(language)) > 1 else ""
+        lines.append(f"- Comments for these students: in {language}, {words} words at most{each}.")
     return lines
+
+
+def scanned_items(manifest: dict, key: dict, layout: dict) -> dict[int, dict]:
+    """Every question on a routed page, by number: the worksheet's own first, then any that only some copies
+    have, such as the stretch questions on a full-credit student's practice sheet."""
+    form_of_page = {p["page"]: p.get("form", "") for p in layout["pages"]}
+    items = {item["q"]: item for item in key["items"]}
+    here = {q for p in manifest["pages"] if p["status"] == "ok" and p["student_id"] for q in p["answers"]}
+    for form in dict.fromkeys(form_of_page.get(p["page"], "") for p in manifest["pages"] if p.get("page")):
+        for q, item in sorted(S.form_items(key, form).items()):
+            items.setdefault(q, item)
+    return {q: item for q, item in items.items() if str(q) in here}
 
 
 def todo(work: Path) -> list[Path]:
@@ -524,7 +548,7 @@ def todo(work: Path) -> list[Path]:
     for old in (work / "todo").glob("q*.md"):
         old.unlink()
     written = []
-    for item in key["items"]:
+    for item in scanned_items(manifest, key, layout).values():
         q = str(item["q"])
         routed = [p for p in manifest["pages"] if p["status"] == "ok" and p["student_id"] and q in p["answers"]]
         essay = {p["page"]: b["part"] for p in layout["pages"] for b in p["boxes"] if b["q"] == item["q"] and b.get("part")}
@@ -557,8 +581,9 @@ def todo(work: Path) -> list[Path]:
                  "match": "matching" if item.get("choices") else "ordering or write-in boxes",
                  "table": "table to fill", "math": "math: work and an answer box"}[kind]
         language = key.get("comment_language", "English")
-        comments = "" if kind == "choice" else (f" Comments: {words} words at most, in {language}; feedback style: "
-                                                 f"{style}.")
+        each = " in each language" if len(SC.comment_languages(language)) > 1 else ""
+        comments = "" if kind == "choice" else (f" Comments: {words} words at most{each}, in {language}; feedback "
+                                                 f"style: {style}.")
         lines = [f"# Question {q}: {title}, {item['points']} point{'s' if item['points'] != 1 else ''}", "",
                  f"{manifest['title']}, a worksheet for {' '.join(filter(None, [band, subject]))}. "
                  f"Write `{(work / 'marks' / f'q{q}.json').resolve()}`. Rules: the \"{rules}\" section of "
@@ -575,9 +600,10 @@ def todo(work: Path) -> list[Path]:
         if item.get("varies"):
             lines += ["", "(Each student had their own copy of this question, with other numbers or another item. "
                           "The copy above is for reference: mark each scan against its own copy, listed below.)"]
-        if kind in ("label", "draw", "table"):
+        printed = work / "crops" / f"blank-q{q}.png"  # the worksheet's own; a question only some copies have has none
+        if kind in ("label", "draw", "table") and printed.exists():
             lines += ["", "**The area as printed, before any student touched it** (look at it first): "
-                          f"`{(work / 'crops' / f'blank-q{q}.png').resolve()}`"]
+                          f"`{printed.resolve()}`"]
 
         # Answers from copies that printed this question differently are listed under their own heading.
         groups: dict[str, list] = defaultdict(list)
@@ -598,7 +624,7 @@ def todo(work: Path) -> list[Path]:
             own = form_of_scan.get(s_, "")
             blank = work / "crops" / f"blank-q{q}-{own}.png"
             if own and kind in ("label", "draw", "table") and blank.exists() and (s_, a) in groups.get("", []):
-                extra += f"; printed larger, so compare with `{blank.resolve()}`"
+                extra += f"; compare with this copy as printed, `{blank.resolve()}`"
             if a.get("outside_crop"):
                 extra += (f"; there's also writing outside the answer area, so look at the whole question: "
                           f"`{(work / a['outside_crop']).resolve()}`")

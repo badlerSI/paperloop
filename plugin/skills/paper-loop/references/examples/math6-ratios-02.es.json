@@ -13,6 +13,12 @@
         "B": "6 de mango : 9 de yogur",
         "C": "4 de mango : 5 de yogur",
         "D": "1 de mango : 2 de yogur"
+      },
+      "why": {
+        "A": "3:4 no es 2:3. Prueba multiplicar los dos números de 2:3.",
+        "B": "Sí: 2:3 por 3 es 6:9.",
+        "C": "Sumar la misma cantidad cambia la razón.",
+        "D": "1:2 tiene más yogur por cada taza de mango."
       }
     },
     "5": {
@@ -28,6 +34,8 @@
       ]
     }
   },
+  "no_answer": "Todavía no hay respuesta.",
+  "no_answer_circled": "No encerraste ninguna respuesta.",
   "glossary": [
     {
       "term": "ratio",

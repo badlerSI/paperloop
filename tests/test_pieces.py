@@ -161,6 +161,21 @@ def test_snake_path_visits_every_square_once():
     assert len(corners) == 14 and all(PC.snake_square(n)[0] in (0, 7) for n in corners)
 
 
+def test_printed_board_draws_the_path_through_every_square(tmp_path):
+    from reportlab.pdfgen import canvas
+    pdf = tmp_path / "path.pdf"
+    c = canvas.Canvas(str(pdf), pagesize=(612, 792))
+    PC.snake_path(c, 36, 100, 67.5, 1.8, 0.5, 10)
+    c.save()
+    img = np.asarray(pdfium.PdfDocument(str(pdf))[0].render(scale=1).to_pil().convert("L"))
+    for n in range(1, 65):
+        col, row = PC.snake_square(n)
+        x, y = 36 + (col + 0.5) * 67.5, 792 - (100 + (row + 0.5) * 67.5)
+        assert img[int(y) - 1:int(y) + 2, int(x) - 1:int(x) + 2].min() < 200, f"no path at square {n}"
+    x, top, bottom = int(36 + 1.5 * 67.5), int(792 - 100 - 1.5 * 67.5), int(792 - 100 - 0.5 * 67.5)
+    assert img[top + 5:bottom - 5, x].min() > 245  # rows join only at the ends
+
+
 def test_die_net_folds_into_a_cube():
     folds, cuts, tabs = PC.net_lines(100, 20, 0, 0)
     assert len(folds) == 5 + 7 and len(tabs) == 7 and len(cuts) == 7  # 12 cube edges: 5 folds, 7 glued

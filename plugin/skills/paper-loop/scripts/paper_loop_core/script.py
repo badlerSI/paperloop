@@ -11,6 +11,7 @@ and Google Docs shape properly.
 
 from __future__ import annotations
 
+import re
 import unicodedata
 from functools import cache
 
@@ -42,15 +43,39 @@ def is_cjk(ch: str) -> bool:
     return _in(ch, CJK)
 
 
+DANDAS = {chr(0x0964), chr(0x0965)}  # Devanagari's full stops, which Bengali, Gurmukhi, and others use too
+
+
 def complex_scripts(text: str) -> list[str]:
-    """Names of scripts in text that need a shaping engine to print (Bengali, Burmese, ...)."""
+    """Names of scripts in text that need a shaping engine to print (Bengali, Burmese, ...). A danda counts as
+    Devanagari only when no other such script is there: "।" ends Bengali sentences too."""
     found = []
     for ch in text:
         o = ord(ch)
         for name, a, b in COMPLEX:
-            if a <= o <= b and name not in found:
+            if a <= o <= b and name not in found and ch not in DANDAS:
                 found.append(name)
+    if not found and any(ch in DANDAS for ch in text):
+        found.append("Devanagari")
     return found
+
+
+# Languages written in those scripts, by their English names: comments in them can't print on a marked page.
+UNPRINTABLE_LANGUAGES = ("Bengali", "Nepali", "Hindi", "Marathi", "Punjabi", "Gujarati", "Odia", "Oriya", "Tamil",
+                         "Telugu", "Kannada", "Malayalam", "Sinhala", "Thai", "Lao", "Tibetan", "Burmese", "Karen",
+                         "Khmer", "Hebrew", "Dhivehi")
+
+
+def comment_languages(name: str | None) -> list[str]:
+    """The languages a comment_language names, in order: "English, then Spanish" is English and Spanish."""
+    parts = re.split(r",|/|\+|;|\bthen\b|\band\b|\bfollowed by\b", name or "", flags=re.I)
+    return [part.strip() for part in parts if part.strip()]
+
+
+def unprintable_language(name: str | None) -> str | None:
+    """The language a comment_language ("Bengali", "English, then Nepali") names that a marked page can't print,
+    or None."""
+    return next((lang for lang in UNPRINTABLE_LANGUAGES if re.search(rf"\b{lang}\b", name or "", re.I)), None)
 
 
 def has_rtl(text: str) -> bool:

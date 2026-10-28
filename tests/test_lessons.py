@@ -392,3 +392,45 @@ def test_go_over_doesnt_compare_letters_across_copies_with_different_choices(tmp
     S.make_worksheet(defn, tmp_path / "mix")
     ws = WK.Worksheet(tmp_path / "mix")
     assert G._mixed_choices(ws, 1) and not G._mixed_choices(ws, 2)  # another item vs. just a new order
+
+
+def test_go_over_finds_a_renamed_worksheet_folder(tmp_path):
+    S.make_worksheet(S.read_json(ROOT / "examples" / "math6-ratios-01.json"), tmp_path / "math6-ratios-01")
+    ws = WK.Worksheet(tmp_path / "math6-ratios-01")
+    work = tmp_path / "math6-ratios-01" / "marking"
+    work.mkdir()
+    S.write_json(work / "manifest.json", {"assignment_dir": str(tmp_path / "math6-ratios-01"), "pages": []})
+    S.write_json(work / "results.json", fake_results(ws))
+    (tmp_path / "math6-ratios-01").rename(tmp_path / "Ratios quiz")  # the teacher renames it, marking and all
+    report = G.build(tmp_path / "Ratios quiz" / "marking")
+    assert report["go_over"]
+
+
+def test_go_over_leaves_an_absent_student_out_of_the_counts(tmp_path):
+    S.make_worksheet(S.read_json(ROOT / "examples" / "math6-ratios-01.json"), tmp_path / "math6-ratios-01")
+    ws = WK.Worksheet(tmp_path / "math6-ratios-01")
+    results = fake_results(ws)
+    results["pages"].append({"scan_index": 11, "student_id": "1010", "page": 1, "boxes": [
+        {"q": q, "type": t, "verdict": "blank", "details": []} for q, t in ((1, "table"), (2, "math"), (3, "draw"))]
+        + [{"q": 4, "type": "choice", "verdict": "blank", "details": [{"selected": None}]}]})
+    st = G.stats(results, ws)
+    assert st[2]["n"] == 10 and st[2]["full"] == 10  # "10 of 10 got it", not 10 of 11
+    assert sum(st[4]["picks"].values()) == 10
+
+
+def test_the_class_chart_never_runs_under_the_think_box(tmp_path):
+    S.make_worksheet(S.read_json(ROOT / "examples" / "math6-ratios-01.json"), tmp_path / "math6-ratios-01")
+    ws = WK.Worksheet(tmp_path / "math6-ratios-01")
+    work = tmp_path / "work"
+    work.mkdir()
+    S.write_json(work / "manifest.json", {"assignment_dir": str(tmp_path / "math6-ratios-01"), "pages": []})
+    S.write_json(work / "results.json", fake_results(ws))
+    S.write_json(work / "goover.json", {"questions": [{"q": q, "saw": "Most mixed up the two rows.",
+                                                       "think": "Which row is the batch you started with?"}
+                                                      for q in ws.questions]})
+    G.build(work)
+    for slide in pptx.Presentation(str(work / "out" / "go-over.pptx")).slides:
+        think = [sh for sh in slide.shapes if sh.has_text_frame and sh.text_frame.text.startswith("Think:")]
+        for chart in (sh for sh in slide.shapes if sh.has_chart):
+            for box in think:
+                assert chart.top + chart.height <= box.top, slide.shapes.title.text

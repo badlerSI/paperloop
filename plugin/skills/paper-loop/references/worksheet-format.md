@@ -109,7 +109,11 @@ For enrichment, or a reading on any topic, start from a real text rather than wr
 with a link to the exact revision. The other sources:
 - `simple` for Simple English Wikipedia;
 - `wikisource "<page title>"` for primary sources: speeches, laws, letters, old books;
-- `gutenberg <book number>` for a book.
+- `gutenberg "<file.txt>"` for a book. Project Gutenberg's site is for people, not scripts, so never
+  download from it yourself: ask the teacher to open the book's page
+  (`https://www.gutenberg.org/ebooks/<number>`), choose "Plain Text UTF-8", and give you the file.
+  `source` removes Gutenberg's license header and footer, as its license asks, and the credit links to the
+  book's page.
 
 A text you fetched another way (with your web tool) needs the same credit: its title, author, address, and
 license go in `cite`.
@@ -358,7 +362,8 @@ them.
 ## Stretch questions for practice
 
 `"stretch": [ ...questions... ]` at the top level holds one or two harder questions on the same skills, with
-their own `q` numbers (say 11 and 12). They don't print on the worksheet. After marking, `practice` gives them
+their own `q` numbers (say 11 and 12). They don't print on the worksheet; `answer-key.pdf` lists them, with
+their keys, after the scoring of the others. After marking, `practice` gives them
 to students who had full credit, so every student gets a practice sheet and getting one says nothing about
 who struggled. Without them, full-credit students get new numbers on the class's two hardest questions (where
 the worksheet has `vars` or a `pool`), or no sheet.

@@ -131,3 +131,18 @@ def test_mock_pipeline_end_to_end(ingested):
 def test_printable_keeps_pdf_fonts_happy():
     assert printable("density → mass ÷ volume ≥ 1 “ok”") == "density -> mass / volume >= 1 “ok”"
     assert printable("emoji 🙂") == "emoji ?"
+
+
+def test_plugin_made_worksheets_get_a_clear_refusal(tmp_path):
+    import subprocess
+    import sys
+    root = Path(__file__).resolve().parent.parent
+    out = tmp_path / "plugin-made"
+    subprocess.run([sys.executable, str(root / "plugin/skills/paper-loop/scripts/paper_loop.py"), "make",
+                    str(root / "examples/sci7-density-03.json"), "--out", str(out)], check=True, capture_output=True)
+    from typer.testing import CliRunner
+    from paperloop.cli import app
+    scan = tmp_path / "scan.pdf"
+    scan.write_bytes(b"")
+    result = CliRunner().invoke(app, ["ingest", str(scan), "--assignment", str(out), "--mock"])
+    assert result.exit_code == 1 and "made by the Paper Loop plugin" in result.output

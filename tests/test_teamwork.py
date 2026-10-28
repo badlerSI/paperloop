@@ -609,3 +609,62 @@ def test_rotation_checker_and_blank_cells_say_the_right_thing(tmp_path):
     assert "with one round, jobs don't change hands" in pages[0]
     assert "ask the Checker" in pages[0]  # by name, not the card whose job mentions "check out"
     assert "None" not in "".join(pages)
+
+
+# --- Regressions from the third code review ----------------------------------------------------
+
+def _exit_sheet(tmp_path: Path, assignment_id: str, **extra) -> Path:
+    data = S.read_json(ROOT / "examples" / "math6-ratios-02.json")
+    data.pop("versions", None)
+    data.update({"assignment_id": assignment_id, **extra})
+    S.write_json(tmp_path / f"{assignment_id}.json", data)
+    return tmp_path / f"{assignment_id}.json"
+
+
+def test_team_points_leave_practice_out_and_wait_for_a_missing_page(tmp_path):
+    sys.path.insert(0, str(Path(__file__).parent))
+    from test_progress import _marked
+    cls = tmp_path / "P5"
+    _marked(cls, "week1", "2026-10-20", {"0501": {}, "0502": {}, "0503": {}})
+    _marked(cls, "practice", "2026-10-22", {"0501": {1: 0, 2: 0, 3: 0, 4: 0}},  # a stretch sheet, missed
+            source=_exit_sheet(tmp_path, "ratios-practice", practice_of=str(tmp_path / "x")))
+    _marked(cls, "exit", "2026-10-27", {"0501": {}, "0502": {}, "0503": {}}, source=_exit_sheet(tmp_path, "exit-03"),
+            pages_of={"0503": [1, 2]})  # 0503's second page is still in the review pile
+    (cls / "progress").mkdir()
+    S.write_json(cls / "progress" / "groups-lab.json", {"groups": [[{"id": s} for s in ("0501", "0502", "0503")]]})
+    report = TW.team_points(cls, "exit-03")
+    assert report["earlier"] == 1  # the practice sheet isn't part of anyone's usual
+    members = {sid: (base, score, pts) for sid, base, score, pts in report["teams"][0][1]}
+    assert members["0501"] == (100, 100, 30) and members["0502"] == (100, 100, 30)
+    assert members["0503"][2] is None and report["unfinished"] == ["0503"]  # not a perfect paper from one page
+    md = report["md"].read_text()
+    assert "Teams from groups-lab.json" in md and "0503: a page isn't marked yet" in md
+
+
+def test_jigsaw_notes_name_every_missing_expert_and_game_trios_take_turns(tmp_path):
+    data = S.read_json(ROOT / "examples" / "sci9-exoplanets-teamwork.json")
+    data.pop("versions")
+    data["parts"] = data["parts"] + [{**data["parts"][0], "title": "Another way"}]
+    data["group_size"] = len(data["parts"])
+    data["class_size"] = 7
+    S.write_json(tmp_path / "j.json", data)
+    teacher = text_of(TW.build(tmp_path / "j.json", tmp_path / "jo")["pdf"])[0]
+    assert "A group of 4 has no Expert E: it reads that expert sheet together." in teacher
+    assert "A group of 3 has no Experts D and E: it reads those expert sheets together." in teacher
+    roster = tmp_path / "ids.csv"
+    roster.write_text("\n".join(f"07{k:02d}" for k in range(7)) + "\n")
+    (tmp_path / "c").mkdir()
+    jig = TW.form_groups(tmp_path / "c", size=5, structure="jigsaw", roster_path=roster).get("path").read_text()
+    assert "(no Experts D and E: read those expert sheets together)" in jig
+    game = TW.form_groups(tmp_path / "c", size=2, structure="game", roster_path=roster, out=tmp_path / "g")
+    assert "three at a two-player game: take turns" in game["path"].read_text()
+
+
+def test_a_one_round_lab_doesn_t_say_to_pass_the_card(tmp_path):
+    data = {"title": "L", "grade": 7, "structure": "lab", "steps": ["Roll."], "rounds": 1}
+    S.write_json(tmp_path / "l.json", data)
+    pages = text_of(TW.build(tmp_path / "l.json", tmp_path / "o")["pdf"])
+    assert not any("pass this card" in p for p in pages)
+    data["rounds"] = 4
+    S.write_json(tmp_path / "l.json", data)
+    assert any("pass this card" in p for p in text_of(TW.build(tmp_path / "l.json", tmp_path / "o4")["pdf"]))

@@ -353,6 +353,48 @@ On the `day-2` branch:
 
 243 tests pass. Details: [docs/teamwork.md](docs/teamwork.md).
 
+## Day 3: ready to publish, and a third review (Oct 28)
+
+- **Publishing.** The plan, from Anthropic's docs as of today, is [docs/publishing.md](docs/publishing.md):
+  - a skill zip for the Free plan (`devtools/release.py` builds it with the 200-character description the
+    upload allows);
+  - the GitHub marketplace for paid plans and Claude for Teachers;
+  - Anthropic's plugin directory.
+
+  The repo now has what the directory checks for: `plugin/README.md` (with every site the scripts
+  contact), `PRIVACY.md`, `SECURITY.md`, and repository links in `plugin.json` (v0.5.0). No key, `.env`,
+  or email address is anywhere in the history. Creating the public repository, the release, and the
+  directory submission are Ben's.
+- **A third review.** Two fresh code reviews (marking and layout; follow-up and groups) confirmed 27 bugs
+  with repro scripts, and a teacher trial (grade 5 social studies, the Erie Canal, 8 students on three
+  versions) found more. The trial marked every ID and all 52 answers right. All of them are fixed, each
+  with a regression test (`tests/test_marking_fixes.py` and the other test files). The ones a teacher or
+  family would have seen:
+  - one student's marked page on the back of another's when a version ran two pages;
+  - an absent student scored 0% on the dashboard, family page, gradebook, and go-over;
+  - an answer written beside its box missed;
+  - stretch questions that couldn't be marked;
+  - team points counting practice sheets in a student's usual;
+  - a re-marked scan counted twice;
+  - large-print layouts that overlapped;
+  - practice sheets that dropped a student's home-language page;
+  - comments in English only on a Spanish student's sheet;
+  - a translated Wikipedia passage printed without its credit line.
+- **Also:**
+  - SKILL.md's description wasn't valid YAML (an unquoted ": " inside it), which the plugin directory blocks
+    and a strict loader rejects. It's quoted now, and a test parses the front matter.
+  - `PL source` no longer downloads from Project Gutenberg, whose site is for people, not scripts: the
+    teacher downloads the book, and `source` reads the file. The scripts now contact only Wikimedia's API,
+    and wait as long as it asks when rate-limited.
+  - PRIVACY.md credits each source (Wikimedia, Project Gutenberg, US agencies) and says whose terms apply;
+    the README has a Credits section.
+  - The Snake Race board prints a path with arrows.
+  - The command-line version names the plugin when given a plugin-made worksheet.
+
+Still open: a large-print summary box doesn't grow with the print (the summary fits, at regular size);
+large print grows a map's label boxes only into free space; and nothing has run in real Cowork or a real
+classroom.
+
 ## Top three for Day 2
 
 0. **Try the plugin in real Cowork, on a Claude for Teachers account.** Check that it installs from the marketplace, that the cloud sandbox has numpy, scipy, Pillow, pypdfium2, reportlab, and python-pptx (0.6.22 or later), and that a scan can come in from Google Drive. Open a generated slides.pptx in PowerPoint and in Google Slides. Then mark a full class set (print 25-30 copies) and measure how much of the plan's usage it takes, with and without a subagent per question.

@@ -71,7 +71,7 @@ stays as written.
 | `id` | Short name, used for the file: `versions/<id>.pdf`. Letters, digits, dashes. |
 | `name`, `label` | What the version prints, in a few words ("Hints and steps", "Large print 18pt"), never "IEP", "SPED", "ELL", or a student's name: names appear in files. `label` (default B, C, D...) prints small in the footer as "form B", and the base copy says "form A". The version's name never prints. |
 | `scaffolds` | Which supports print: any of `plain`, `hint`, `steps`, `example`, `frame`, `word_bank`, `glossary`, or `"all"`. |
-| `large_print` | `true` prints the questions at 18pt, the usual large-print minimum. `"20pt"` (or 20) sets a size, and 1.5 a scale. The answer areas, the directions at the top, the ID boxes, and the comments on the marked page grow too. Match the size the IEP or the vision teacher names. |
+| `large_print` | `true` prints the questions at 18pt, the usual large-print minimum. `"20pt"` (or 20) sets a size, and 1.5 a scale. The answer areas, the directions at the top, the ID boxes, and the comments on the marked page grow too. A diagram grows up to the question column's width (344pt); one drawn wider than 344pt divided by the scale can't grow all the way, so its words and label boxes grow where there's room, and `make` says how narrow to draw it. Match the size the IEP or the vision teacher names. |
 | `space` | More room to write: taller writing lines, work areas, and boxes (1.2 to 2; `true` is 1.4). |
 | `per_page` | At most this many questions on a page. Fewer things on a page makes it less crowded (chunking). |
 | `max_choices` | Keep this many choice options, dropping `drop` ones first and never the answer. Letters stay as printed on the base copy (A, B, D), so marking and results line up. |
@@ -99,10 +99,10 @@ a reading or vocabulary question, plain wording and read-aloud change what's mea
 plain wording there as help.
 
 **Same length as everyone else's.** A version with more pages than the base sheet stands out, so `make` says
-so (unless it has large print, more space, or fewer per page) and prints that version's blocks page by page,
-with its free space and about how much to cut. A one-page exit sheet leaves little room for supports: plan
-for them when you write the base (fewer lines on the base, or glossary terms on a key-words page with
-`reference: ["glossary"]` instead of on the sheet).
+so (unless it has large print, more space, fewer per page, or a bilingual translation, which all need the room)
+and prints that version's blocks page by page, with its free space and about how much to cut. A one-page exit
+sheet leaves little room for supports: plan for them when you write the base (fewer lines on the base, or
+glossary terms on a key-words page with `reference: ["glossary"]` instead of on the sheet).
 
 **Three kinds of support.**
 - **Access.** Large print, space, per_page, graph paper, translated directions, and glossaries change how a
@@ -151,7 +151,7 @@ with `"translation"`, or put it inline in the worksheet as `"translations": {"es
                "4": {"prompt": "¿El mismo sabor? ¿Qué receta sabe igual que 2 tazas de mango por 3 de yogur?",
                      "options": {"A": "3 de mango : 4 de yogur", "B": "6 de mango : 9 de yogur",
                                  "C": "4 de mango : 5 de yogur", "D": "1 de mango : 2 de yogur"}}},
- "passages": {"story": "..."},
+ "passages": {"story": "..."}, "passage_titles": {"story": "En el puesto de batidos"},
  "glossary": [{"term": "ratio", "translation": "razón"}],
  "comment_language": "Spanish",
  "reviewed_by": "bilingual aide"}
@@ -165,7 +165,15 @@ with `"translation"`, or put it inline in the worksheet as `"translations": {"es
     ["La razón es ___ porque ___."], "word_bank": ["dividir", "cada", "total"]}`. The starters print one a
     line, and the bank's words print in the same order as the English bank, under the question's
     translation, so a student sees both. They print only when the version prints the English ones.
-  - Translate table headers and axis labels too.
+  - `questions` may include the worksheet's `stretch` question numbers too: a student on this version who
+    gets a stretch practice sheet then gets it in their language, with the version's supports.
+  - Words printed outside the prompt (table headers and row names, a map's place names, axis labels,
+    matching items) go in the question's `"words"`, English to translated: `{"prompt": ..., "words":
+    {"Before the canal": "Antes del canal", "Lake Erie": "lago Erie"}}`. They print one a line, as "Before the
+    canal = Antes del canal", under the question's translation. A matching question's choices go in
+    `"choices": {"A": ...}`, like a choice question's options.
+  - A passage's translation goes in `passages`, by the passage's id, and its title in `passage_titles`. The
+    Word page prints the passage's credit line under it, as the worksheet does, saying it was translated.
   - Keep every number a numeral, in the same order as the English ("2 cups mango to 3 cups yogurt" keeps
     mango first). Keep the words that say which number goes where ("mango across, yogurt up"). Use the
     subject's own terms: *razón* is ratio, *proporción* is proportion.
@@ -206,7 +214,12 @@ with `"translation"`, or put it inline in the worksheet as `"translations": {"es
   Scripts the page can't print (Bengali, Nepali, Burmese, and others) can't be used for comments: write
   those in English. An English-speaking teacher can't check a comment in another language, so for a
   student just starting English, set `comment_language` to "English, then Spanish": a short English
-  comment, then the same in Spanish.
+  comment, then the same in Spanish. The word limit is for each language, so the whole comment can be twice
+  as long.
+  - The comments the scripts write themselves come from the translation too: each choice option's `why` in
+    the question's `"why": {"A": "Sí: ...", "B": "..."}`, and `"no_answer"` and `"no_answer_circled"`
+    (top level) for "No answer yet." and "No answer circled." Those print in the comment's languages, in
+    its order. Without them they print in English only, and `make` says which are missing.
 - **Reading a home-language answer.** A handwritten answer in a script other than the Latin alphabet is
   hard to read from a scan. Give it a confidence under 0.8, so the teacher sees it, and say who could read
   it (a bilingual aide).

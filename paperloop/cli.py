@@ -16,7 +16,7 @@ from . import mark as mark_mod
 from . import render as render_mod
 from . import review as review_mod
 from . import score as score_mod
-from .make import load_assignment, make_worksheet
+from .make import load_assignment, made_by_plugin, make_worksheet
 from .schemas import IngestResult, WorksheetDef, load
 from .simulate import load_students
 from .simulate import simulate as simulate_scans
@@ -90,6 +90,10 @@ def _ingest(scans: list[Path], assignment: Path, work: Path, model: str = mark_m
     for scan in scans:
         if not scan.exists():
             _fail(f"No scan at {scan}")
+    if made_by_plugin(assignment):
+        _fail(f"{assignment} was made by the Paper Loop plugin, and this command-line version reads only worksheets "
+              "it made itself. Mark the scan with the plugin instead: `python3 plugin/skills/paper-loop/scripts/"
+              'paper_loop.py prepare` (see "Marking a scan" in plugin/skills/paper-loop/SKILL.md).')
     layout, key = load_assignment(assignment)
     reader = None
     if not mock and any(p.id_boxes for p in layout.pages):

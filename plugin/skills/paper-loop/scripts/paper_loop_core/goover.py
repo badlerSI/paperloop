@@ -13,7 +13,7 @@ from __future__ import annotations
 
 import shutil
 import tempfile
-from collections import Counter
+from collections import Counter, defaultdict
 from pathlib import Path
 
 from . import deck as DK
@@ -32,7 +32,13 @@ def stats(results: dict, ws: WK.Worksheet) -> dict[int, dict]:
     out = {q: {"n": 0, "full": 0, "partial": 0, "blank": 0, "picks": Counter(), "wrong": Counter(),
                "boxes": Counter(), "crops": [], "mixed_letters": _mixed_choices(ws, q)} for q in ws.questions}
     seen = set()
+    every = defaultdict(list)
     for page in results["pages"]:
+        every[page["student_id"]] += [b["verdict"] for b in page["boxes"] if b.get("points_possible", 1)]
+    absent = {sid for sid, verdicts in every.items() if all(v == "blank" for v in verdicts)}
+    for page in results["pages"]:
+        if page["student_id"] in absent:
+            continue  # every answer blank: absent, or the work went on another sheet; not one of the class's answers
         for b in page["boxes"]:
             q = b["q"]
             if q not in out or (page["student_id"], q) in seen:
@@ -82,10 +88,12 @@ def _norm(text: str) -> str:
 
 
 def _assignment(work: Path, manifest: dict) -> Path:
-    """The assignment folder: where the manifest says, or beside the work folder if the teacher moved both."""
+    """The assignment folder: where the manifest says, beside the work folder if the teacher moved both, or the
+    folder the work folder sits in (renamed, as practice and progress find it)."""
     folder = Path(manifest["assignment_dir"])
-    if not (folder / "layout.json").exists() and (work.parent / folder.name / "layout.json").exists():
-        return work.parent / folder.name
+    for candidate in (folder, work.parent / folder.name, work.parent):
+        if (candidate / "layout.json").exists():
+            return candidate
     return folder
 
 
@@ -170,7 +178,7 @@ def _questions(b: DK.Builder, ctx: dict, go_over: list[int], passages: bool = Tr
         spec = walk.get(q, {})
         b.walk_question(ws, q, spec, chip=f"{st[q]['full']} of {st[q]['n']} got it", notes=_notes(ws, q, st[q], spec),
                         side_extra=lambda s, x, y, w, h, q=q, spec=spec: class_panel(b, ws, q, st[q], spec, s, x, y, w, h),
-                        words=int(b.sz["words"] * 1.3))
+                        words=int(b.sz["words"] * 1.3), panel_min=30 * len(_bars(b, ws, q, st[q])[0]) + 10)
         b.walk_answer(ws, q, spec, notes=LS._answer_notes(ws, q, spec))
 
 
@@ -299,18 +307,7 @@ def class_panel(b: DK.Builder, ws: WK.Worksheet, q: int, st: dict, spec: dict, s
     size = b.sz["dense"]
     item = ws.items[q]
     bottom = y + h
-    if item["type"] == "choice" and not st.get("mixed_letters"):  # one color: the answer comes on the next slide
-        letters = [o["letter"] for o in item["options"]]
-        labels = letters + (["blank"] if st["picks"].get("blank") else [])
-        values = [st["picks"].get(lbl, 0) for lbl in labels]
-        colors = [b.t.accent] * len(labels)
-    else:
-        labels = ["Full credit", "Partial", "Not yet", "Blank"]
-        not_yet = st["n"] - st["full"] - st["partial"] - st["blank"]
-        values = [st["full"], st["partial"], not_yet, st["blank"]]
-        labels, values = zip(*[(lbl, v) for lbl, v in zip(labels, values) if v or lbl == "Full credit"])
-        labels, values = list(labels), list(values)
-        colors = [b.t.accent] + ["B8BEC6"] * (len(labels) - 1)
+    labels, values, colors = _bars(b, ws, q, st)
     chart_h = min(max(h * 0.55, 30 * len(labels)), 34 * len(labels) + 10)
     wide = w >= 700  # below a strip-shaped question: the chart on the left, the words beside it
     chart_w = 400.0 if wide else w
@@ -334,6 +331,20 @@ def class_panel(b: DK.Builder, ws: WK.Worksheet, q: int, st: dict, spec: dict, s
         t = b.text(s, tx, ty, tw, max(bottom - ty, size * 1.2), lines, size, size - 2)
         end = max(end, ty + t.h)
     return end + 10
+
+
+def _bars(b: DK.Builder, ws: WK.Worksheet, q: int, st: dict) -> tuple[list[str], list[int], list[str]]:
+    """The class panel's bars: the letters picked for a choice question, else full credit, partial, not yet, blank."""
+    item = ws.items[q]
+    if item["type"] == "choice" and not st.get("mixed_letters"):  # one color: the answer comes on the next slide
+        letters = [o["letter"] for o in item["options"]]
+        labels = letters + (["blank"] if st["picks"].get("blank") else [])
+        return labels, [st["picks"].get(lbl, 0) for lbl in labels], [b.t.accent] * len(labels)
+    labels = ["Full credit", "Partial", "Not yet", "Blank"]
+    not_yet = st["n"] - st["full"] - st["partial"] - st["blank"]
+    values = [st["full"], st["partial"], not_yet, st["blank"]]
+    labels, values = zip(*[(lbl, v) for lbl, v in zip(labels, values) if v or lbl == "Full credit"])
+    return list(labels), list(values), [b.t.accent] + ["B8BEC6"] * (len(labels) - 1)
 
 
 def _notes(ws: WK.Worksheet, q: int, st: dict, spec: dict) -> str:

@@ -25,7 +25,8 @@ from decimal import ROUND_HALF_UP, Decimal, localcontext
 from fractions import Fraction
 from pathlib import Path
 
-from .sheet import WorksheetError
+from . import script as SC
+from .sheet import NO_ANSWER, NO_CIRCLE, WorksheetError
 
 SCAFFOLDS = ("plain", "hint", "steps", "example", "frame", "word_bank", "glossary")
 MODES = ("bilingual", "glossary", "companion")
@@ -406,8 +407,11 @@ def _prints_bank(q: dict, asides: list) -> bool:
 
 def _translated(entry, q: dict, frames: bool = True, bank: bool = True) -> str:
     """A question's translation as printed: a string as written, or {"prompt", "options": {letter: text},
-    "frame": [...], "word_bank": [...]} with one option a line (only the options this version printed), then
-    the sentence starters and the word bank in the home language, when the version prints them in English."""
+    "choices": {letter: text}, "words": {english: translated}, "frame": [...], "word_bank": [...]} with one
+    option a line (only the options this version printed), a matching question's choices, the words printed
+    outside the prompt (table headers, place names), then the sentence starters and the word bank in the home
+    language, when the version prints them in English. Its "why" ({letter: text}) isn't printed: it goes into
+    the comments beside the student's answers (_version)."""
     if isinstance(entry, str):
         return entry
     if not isinstance(entry, dict) or "prompt" not in entry:
@@ -418,6 +422,14 @@ def _translated(entry, q: dict, frames: bool = True, bank: bool = True) -> str:
     for o in q.get("options", []):
         if o["letter"] in options:
             lines.append(f"{o['letter']}. {options[o['letter']]}")
+    choices = entry.get("choices") or {}  # a matching question's choices, by letter, like a choice's options
+    for k, ch in enumerate(q.get("choices", [])):
+        letter = ch.get("letter", chr(65 + k)) if isinstance(ch, dict) else chr(65 + k)
+        if letter in choices:
+            lines.append(f"{letter}. {choices[letter]}")
+    words = entry.get("words") or {}  # words printed outside the prompt: table headers, a map's place names
+    pairs = words.items() if isinstance(words, dict) else [(w.get("term", ""), w.get("translation", "")) for w in words]
+    lines += [f"{english} = {translated}" for english, translated in pairs]
     if frames and entry.get("frame"):  # the starters, translated, each on its own line
         lines += [entry["frame"]] if isinstance(entry["frame"], str) else [str(f) for f in entry["frame"]]
     if bank and entry.get("word_bank"):  # the bank's words in the same order as the English bank
@@ -472,32 +484,53 @@ def _version(raw: dict, version: dict, index: int, base_dir: Path) -> tuple[dict
                              "have. Set \"language_mode\": \"companion\": its translation goes on a Word page, which "
                              "Word and Google Docs print correctly, beside the English worksheet")
     tr = _translation(raw, version, base_dir) if lang else {}
+    for pid in (tr.get("passages") or {}):  # a translation is a change, which a no-derivatives license forbids
+        source = next((q for q in raw["questions"] if q.get("type") == "passage" and str(q.get("id")) == str(pid)), {})
+        license_ = " ".join(str((source.get("cite") or {}).get("license", "")).lower()
+                            .replace("creative commons", "cc").replace("-", " ").split())
+        if re.search(r"\bnd\b", license_):
+            raise WorksheetError(f"{where}: passage {pid!r} is {source['cite']['license']}, which allows no changes, "
+                                 "and a translation is one. Leave it out of the translation's \"passages\" (the "
+                                 "version prints the English), or use a passage whose license allows adapting")
+    unprintable = SC.unprintable_language(version.get("comment_language"))
+    if unprintable:
+        raise WorksheetError(f"{where}: comments in {unprintable} can't print on the marked page here (its script "
+                             "needs a shaping engine). Leave out \"comment_language\" so comments are in English; "
+                             "the student's Word page carries the translation")
+    comments = version.get("comment_language") or (tr.get("comment_language") if lang else None)
+    dropped = SC.unprintable_language(comments)  # a translation's own choice: comments stay in the worksheet's language
+    spoken = SC.comment_languages(None if dropped else comments)
+    names = {str(n).lower() for n in (lang, *(known[:2] if known else ()), tr.get("name")) if n}
+    home = [n.lower() in names for n in spoken]  # which of the comment's languages is this version's own
+    untranslated = []  # comments the scripts write that the translation has no words for
+
+    def say(english: str, translated: str | None, what: str) -> str:
+        """A comment the scripts write themselves (a choice's why, "No answer yet.") in the comment's languages,
+        in their order: "English, then Spanish" gives both."""
+        if not any(home) or not english:
+            return english
+        if not translated:
+            untranslated.append(what)
+            return english
+        return " ".join(dict.fromkeys(translated if mine else english for mine in home))
 
     questions, glossary, changes, terms = [], [], [], []
     if lang and tr.get("glossary"):
         glossary = [(g.get("term", ""), g.get("translation", "")) for g in tr["glossary"]]
-    used_passages = {q.get("passage") for q in raw["questions"] if only is None or q.get("q") in only}
-    for q in raw["questions"]:
+    used_passages = {pid for q in raw["questions"] if only is None or q.get("q") in only  # one source, or a list
+                     for pid in (q.get("passage") if isinstance(q.get("passage"), list) else [q.get("passage")])}
+
+    def build(q: dict, on_sheet: bool = True) -> dict:
+        """One question as this version prints it: its supports, fewer choices, its translation. A stretch
+        question (not on the sheet) keeps its variables and pool, for practice to give it new numbers."""
         q = copy.deepcopy(q)
         support = q.pop("support", None) or {}
-        q.pop("pool", None)
-        if q.get("type") == "passage":
-            if only is not None and q.get("id") not in used_passages:
-                continue
-            questions.append(q)
-            if lang and mode == "bilingual" and str(q.get("id")) in (tr.get("passages") or {}):
-                questions.append({"type": "passage", "note": True, "lang": lang,
-                                  "title": (tr.get("passage_titles") or {}).get(str(q["id"])) or q.get("title") or "",
-                                  "text": tr["passages"][str(q["id"])]})
-            continue
-        if q.get("type") == "note" or (only is not None and q.get("q") not in only):
-            if q.get("type") == "note":
-                questions.append(q)
-            continue
+        if on_sheet:
+            q.pop("pool", None)
         asides, help_ = [], []  # help_: supports printed here that change what the question measures
         kind = q.get("type", "short")
-        if support.get("glossary"):  # for a key-words page, whether or not the words also print on the sheet
-            terms += [f"{g['term']}: {g['meaning']}" for g in support["glossary"]]
+        if support.get("glossary") and on_sheet:  # for a key-words page, whether or not they print on the sheet
+            terms.extend(f"{g['term']}: {g['meaning']}" for g in support["glossary"])
         if "plain" in scaffolds and support.get("plain"):
             q["prompt"] = support["plain"]
             if q.get("passage") or q.get("spelling"):
@@ -525,8 +558,12 @@ def _version(raw: dict, version: dict, index: int, base_dir: Path) -> tuple[dict
         if keep and kind == "choice" and len(q.get("options", [])) > keep:
             q = _reduce(q, keep, support.get("drop", []))
             help_.append(MODIFICATIONS["max_choices"])
+        entry = (tr.get("questions") or {}).get(str(q.get("q")))
+        if kind == "choice":  # each option's why is a comment: in the comment's languages
+            whys = (entry.get("why") if isinstance(entry, dict) else None) or {}
+            q["options"] = [{**o, "why": say(o.get("why", ""), whys.get(o.get("letter")),
+                                              f"question {q.get('q')}'s \"why\"")} for o in q.get("options", [])]
         if lang and mode == "bilingual":
-            entry = (tr.get("questions") or {}).get(str(q.get("q")))
             if entry:
                 asides.append({"kind": "translation", "lang": lang,
                                "text": _translated(entry, q, frames=bool(q.get("frame")), bank=_prints_bank(q, asides))})
@@ -539,8 +576,29 @@ def _version(raw: dict, version: dict, index: int, base_dir: Path) -> tuple[dict
             q["asides"] = asides
         if help_:
             q["scaffolded"] = sorted(set(help_))
-            changes += help_
-        questions.append(q)
+            if on_sheet:
+                changes.extend(help_)
+        return q
+
+    for q in raw["questions"]:
+        if q.get("type") in ("passage", "note"):
+            q = {k: v for k, v in copy.deepcopy(q).items() if k not in ("support", "pool")}
+        if q.get("type") == "passage":
+            if only is not None and q.get("id") not in used_passages:
+                continue
+            questions.append(q)
+            if lang and mode == "bilingual" and str(q.get("id")) in (tr.get("passages") or {}):
+                questions.append({"type": "passage", "note": True, "lang": lang,
+                                  "title": (tr.get("passage_titles") or {}).get(str(q["id"])) or q.get("title") or "",
+                                  "text": tr["passages"][str(q["id"])]})
+            continue
+        if q.get("type") == "note" or (only is not None and q.get("q") not in only):
+            if q.get("type") == "note":
+                questions.append(q)
+            continue
+        questions.append(build(q))
+    # The stretch questions too, as this version would print them, for a practice sheet in the student's language
+    stretch = [build(q, on_sheet=False) for q in raw.get("stretch") or [] if isinstance(q, dict)]
 
     head = []
     name = tr.get("name") or (LANGUAGES[lang][1] if lang in LANGUAGES else lang) if lang else ""
@@ -556,8 +614,8 @@ def _version(raw: dict, version: dict, index: int, base_dir: Path) -> tuple[dict
                              f"{version.get('name') or lang} or English."})
     defn = {**{k: v for k, v in raw.items() if k not in ("versions", "variants", "questions", "translations")},
             "questions": head + questions}
-    if version.get("comment_language") or (lang and tr.get("comment_language")):
-        defn["comment_language"] = version.get("comment_language") or tr["comment_language"]
+    if comments and not dropped:
+        defn["comment_language"] = comments
     if scale > 1 or space > 1 or per_page:
         defn["print"] = {"scale": scale, "space": space, "per_page": per_page}
     if only is not None:
@@ -574,9 +632,14 @@ def _version(raw: dict, version: dict, index: int, base_dir: Path) -> tuple[dict
             "notes": version.get("notes", ""),
             "copies": version.get("copies"), "translation": tr if lang else None,
             "modifies": sorted(set(changes)), "print": defn.get("print"),
-            "comment_language": defn.get("comment_language"),
+            "comment_language": defn.get("comment_language"), "comment_language_dropped": dropped,
+            "blank_comments": {"answer": say(NO_ANSWER, tr.get("no_answer"), "\"no_answer\""),
+                               "circled": say(NO_CIRCLE, tr.get("no_answer_circled"), "\"no_answer_circled\"")}
+            if any(home) else None,
+            "untranslated_comments": list(dict.fromkeys(untranslated)),
             "language_quality": known[2] if known else ("unknown" if lang else None),
-            "language_english": known[0] if known else lang, "reviewed": bool(tr.get("reviewed_by")) if lang else None}
+            "language_english": known[0] if known else lang, "reviewed": bool(tr.get("reviewed_by")) if lang else None,
+            "stretch": stretch}
     return form, defn
 
 
@@ -608,13 +671,21 @@ def expand(raw: dict, base_dir: Path) -> list[tuple[dict, dict]]:
         ids.add(form["id"])
         forms.append((form, defn))
     for k, sheet in enumerate(raw.get("personal") or [], start=1):  # one sheet per student (practice.py)
+        head = []
+        if sheet.get("language") and sheet.get("language_mode") == "companion":  # as on their version's sheet
+            name = sheet.get("version_name") or sheet.get("language_name") or sheet["language"]
+            head.append({"type": "passage", "note": True, "title": "",
+                         "text": f"Your {name} page goes with this sheet. You may answer in {name} or English."})
         defn = {**{key: v for key, v in raw.items() if key not in ("versions", "variants", "personal", "questions",
                                                                   "stretch")},
-                "questions": sheet["questions"],
+                "questions": head + sheet["questions"],
                 **{key: sheet[key] for key in ("print", "comment_language") if sheet.get(key)}}
+        # A student on a version keeps its home-language Word page and its reference page (sheet._version_extras).
         forms.append(({"id": f"p{sheet['student_id']}", "name": f"Practice for {sheet['student_id']}",
                        "label": sheet["student_id"], "kind": "variant", "student_id": sheet["student_id"],
-                       **{key: sheet[key] for key in ("language", "language_name", "language_english", "modifies")
+                       **{key: sheet[key] for key in ("language", "language_name", "language_english", "modifies",
+                                                      "language_mode", "translation", "reference", "formulas",
+                                                      "glossary_terms", "version_name", "blank_comments")
                           if sheet.get(key)}}, defn))
     if raw.get("variants"):
         if not isinstance(raw["variants"], dict):
@@ -632,9 +703,9 @@ def expand(raw: dict, base_dir: Path) -> list[tuple[dict, dict]]:
 def companion(form: dict, defn: dict, out_dir: Path) -> Path:
     """The version's translation as a Word page: directions, key words, any passage, and each question.
     Word and Google Docs shape every script, so this prints correctly in any language."""
-    from . import script as SC
     from . import wordfile as W
-    tr, lang, name = form["translation"], form["language"], form["language_name"]
+    tr, lang = form["translation"], form["language"]
+    name = form.get("language_name") or form.get("language_english") or lang
     rtl = SC.has_rtl(json.dumps(tr, ensure_ascii=False))
     doc = W.Doc()
     doc.para(tr.get("title") or defn["title"], bold=True, size=18, markup=False, lang=lang, rtl=rtl)
@@ -645,11 +716,14 @@ def companion(form: dict, defn: dict, out_dir: Path) -> Path:
         doc.heading(tr.get("glossary_title") or "Key words", 2)
         doc.table([["English", name]] + [[g.get("term", ""), g.get("translation", "")] for g in tr["glossary"]],
                   [2.6, 3.9], lang=lang, rtl_columns=(1,) if rtl else ())
-    titles = {b.get("id"): b.get("title") or "" for b in defn["questions"] if b.get("type") == "passage"}
+    passages = {b.get("id"): b for b in defn["questions"] if b.get("type") == "passage" and not b.get("note")}
     for pid, text in (tr.get("passages") or {}).items():
-        doc.heading(titles.get(pid) or name, 2)
+        doc.heading((tr.get("passage_titles") or {}).get(pid) or passages.get(pid, {}).get("title") or name, 2)
         for para in str(text).split("\n\n"):
             doc.para(para, markup=False, lang=lang, rtl=rtl)
+        if passages.get(pid, {}).get("source"):  # the credit line the license asks for, as the worksheet prints it
+            doc.para(f"{passages[pid]['source']} Translated into {form.get('language_english') or name}.",
+                     italic=True, size=9, color="666666", markup=False)
     questions = tr.get("questions") or {}
     for q in defn["questions"]:
         if q.get("type") == "passage" or str(q.get("q")) not in questions:

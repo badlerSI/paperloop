@@ -1134,16 +1134,24 @@ def card_icon(pen: Pen, cx: float, cy: float, text: str = "?", w: float = 18, h:
     c.drawCentredString(cx, cy - 3.2, text)
 
 
-def diagram_snake(pen: Pen, x: float, y: float, size: float) -> None:
-    c, sq = pen.c, size / 8
-    mini_board(c, x, y, sq)
+def snake_path(c, x: float, y: float, sq: float, width: float, gray: float, head: float) -> None:
+    """The Snake Race path through the squares' centres, with an arrow in each row and at each turn."""
     pts = [_centre(x, y, sq, *snake_square(n)) for n in range(1, 65)]
-    poly(c, pts, close=False, width=1.1, gray=0.35)
+    poly(c, pts, close=False, width=width, gray=gray)
     for row in range(8):  # which way each row runs
         a, b = _centre(x, y, sq, 3, row), _centre(x, y, sq, 4, row)
         if row % 2:
             a, b = b, a
-        arrow(c, [a, ((a[0] + b[0]) / 2, a[1])], head=6, width=1.1, gray=0.35)
+        arrow(c, [a, ((a[0] + b[0]) / 2, a[1])], head=head, width=width, gray=gray)
+    for n in range(8, 64, 8):  # up to the next row
+        a, b = _centre(x, y, sq, *snake_square(n)), _centre(x, y, sq, *snake_square(n + 1))
+        arrow(c, [a, (a[0], (a[1] + b[1]) / 2)], head=head, width=width, gray=gray)
+
+
+def diagram_snake(pen: Pen, x: float, y: float, size: float) -> None:
+    c, sq = pen.c, size / 8
+    mini_board(c, x, y, sq)
+    snake_path(c, x, y, sq, 1.1, 0.35, 6)
     for n in snake_corners():
         star(c, *_centre(x, y, sq, *snake_square(n)), sq * 0.26)
     c.setFillGray(INK)
@@ -1224,7 +1232,7 @@ GAME_RULES = {
         "meta": "2 to 4 players  |  30-40 minutes (set a timer: farthest along wins)", "move": "move",
         "need": "The printed board (or a checker or chess board), 1 die, the cards in two piles (3-dot cards, and "
                 "the rest), and a marker for each player: a coin, a checker, or a tent pawn.",
-        "rules": ["Follow the numbers from Start (1) to Finish (64). On a plain board, go along the bottom row, "
+        "rules": ["Follow the arrows from Start (1) to Finish (64). On a plain board, go along the bottom row, "
                   "up one, and back.",
                   "Put your marker beside square 1.",
                   "Roll the die. The player on your left reads you a card. They keep the back hidden.",
@@ -1342,11 +1350,12 @@ def piece_board(m: "Maker", p: dict):
     def draw():
         c = pen.c
         y = pen.header(P["title"], "Game board",
-                       "Snake Race: follow the numbers from Start to Finish. A star means a 3-dot card. (For checkers "
-                       "or chess, ignore the numbers.)")
+                       "Snake Race: follow the arrows from Start to Finish. A star means a 3-dot card. (For "
+                       "checkers or chess, ignore the arrows and numbers.)")
         sq = (PAGE_W - 2 * MARGIN) / 8
         x0, y0 = MARGIN, y - 8 * sq - 6
         mini_board(c, x0, y0, sq, dark=0.85)
+        snake_path(c, x0, y0, sq, 1.8, 0.5, 10)
         c.setFont(pen.f.bold, 9.5)
         for n in range(1, 65):  # dark enough to survive a copier
             col, row = snake_square(n)

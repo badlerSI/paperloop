@@ -50,7 +50,9 @@ Applies to every question type and subject:
   the word in uncertain_words, and if it changes the verdict, set confidence below 0.8.
 - A printed line through handwriting (an answer line, a ruled line) isn't a cross-out: compare with the
   blank crop when there is one.
-- Comments are written in the language the work order says (English unless the worksheet sets another).
+- Comments are written in the language the work order says (English unless the worksheet sets another). A
+  comment in two languages ("English, then Spanish") says the same thing in each, in that order; the word
+  limit is for each language, so the whole comment can be twice as long.
 - **Grammar and mechanics count only when the key or rubric says so.** In a world-language answer, a
   grammar point the question asks about (agreement, a verb form) is part of the answer.
 - **Evidence from a passage** counts if it accurately quotes or paraphrases what the passage says, with a
@@ -196,7 +198,10 @@ that isn't on the page.
 4. confidence: for the checklist as a whole.
 
 If nothing at all is drawn in the frame (you're only looking because of a mark outside it), write
-`{"verdict": "blank", "confidence": 1}` instead.
+`{"verdict": "blank", "confidence": 1}` instead. If the drawing has an answer box with something written in
+it, add that answer as in "math", with a comment: `{"verdict": "blank", "answer": "7/12", "answer_verdict":
+"correct", "comment": "7/12 is right. Shade the strip to show it.", "confidence": 0.95}`. The checklist items
+then count as not met.
 
 ## math
 
@@ -232,7 +237,8 @@ The work order gives both crops. Look at the answer box first, then the work.
 5. **comment**: when the answer is wrong, point to the first step that went wrong. When it's right, name
    the move that made it work, such as "you flipped the sign when dividing by -2". When the answer is right
    but there's no work, ask for the steps ("17 is right; show how you got it"); don't praise a move you can't
-   see.
+   see. When the work order says the work is optional (a student whose plan gives a calculator or a scribe),
+   a right answer is complete: say it's right without asking for steps.
    - Equivalent forms of an answer count: interval notation or a number-line answer can match an
      inequality. A strict inequality where the key has a non-strict one (x > -4 for x ≥ -4), or the reverse,
      is incorrect.

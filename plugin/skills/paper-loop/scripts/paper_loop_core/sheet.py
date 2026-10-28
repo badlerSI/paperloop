@@ -56,6 +56,8 @@ CODE_ROWS, CODE_COLS = 4, 8
 CODE_AREA = (66.0, 698.0, 128.0, 760.0)  # the code's spot, or an older sheet's QR code
 
 ID_RIGHT, ID_WRITE_Y = 550.0, 722.0  # the ID boxes end here; their bottom edge
+HEADER_X = 138.0  # the title and directions start here, right of the page code
+HEADER_GROWTH = 1.6  # large print grows the header and footer labels this much at most
 CONTENT_TOP = 680.0
 LEFT, BOX_RIGHT, GUTTER_LEFT, GUTTER_RIGHT = 48.0, 392.0, 404.0, 572.0
 SUMMARY_RECT = (48.0, 64.0, 572.0, 136.0)
@@ -257,6 +259,11 @@ def normalize(defn: dict) -> dict:
                              "(comments may give the right answer)")
     defn["teacher_notes"] = defn.get("teacher_notes", "")
     defn["comment_language"] = defn.get("comment_language", "English")
+    from . import script as SC
+    if SC.unprintable_language(defn["comment_language"]):  # check refuses every comment in it
+        raise WorksheetError(f"worksheet: comments in {SC.unprintable_language(defn['comment_language'])} can't print "
+                             "on the marked page here (its script needs a shaping engine): set \"comment_language\" "
+                             "to English or another language the page prints")
     if not 2 <= defn["id_digits"] <= 4:
         raise WorksheetError("worksheet: \"id_digits\" must be 2, 3, or 4")
     defn["print"] = {"scale": 1.0, "space": 1.0, "per_page": None, **(defn.get("print") or {})}
@@ -456,11 +463,15 @@ class Layout:
         self.summary = SUMMARY_RECT_COMPACT if defn["style"] == "compact" else SUMMARY_RECT
         self.bottom = self.summary[3] + 12
         self.lang_fonts: dict[tuple[str, str], tuple[str, str]] = {}
+        self._grown: dict[int, tuple[dict, list[tuple]]] = {}  # large print's diagrams, by question (grown)
         # The header grows with large print too (up to 1.6x): directions, labels, and the ID boxes.
-        self.hk = min(self.k, 1.6)
+        self.hk = min(self.k, HEADER_GROWTH)
         self.header_size, self.header_leading = (10.5, 13.0) if st["primary"] else (8.5, 10.5)
         self.header_size, self.header_leading = self.header_size * self.hk, self.header_leading * self.hk
-        self.header_lines = self.split(defn["instructions"], fonts.regular, self.header_size, 290)
+        # The directions wrap short of the ID boxes, which large print makes wider (and moves left).
+        boxes = id_boxes(defn["id_digits"], defn["style"], self.k)
+        self.header_lines = self.split(defn["instructions"], fonts.regular, self.header_size,
+                                       min(290.0, boxes[0][0] - HEADER_X - 10))
         # Large print: the directions start below the bigger "Page 1 of N" line, not on it.
         self.header_top = min(716.0, 727 - 2 * (self.hk - 1) - 0.75 * self.header_size)
         self.content_top = min(CONTENT_TOP, self.header_top - (len(self.header_lines) - 1) * self.header_leading - 12
@@ -472,6 +483,66 @@ class Layout:
 
     def diagram_scale(self, q: dict) -> float:
         return min(self.k, (BOX_RIGHT - LEFT) / q["diagram"]["width"])
+
+    def diagram_boost(self, q: dict) -> float:
+        """Large print grows a diagram, but one already about as wide as the question column can't grow: its words
+        and label boxes grow by the rest instead, in place, so place names and writing room still get bigger."""
+        return self.k / self.diagram_scale(q) if self.k > 1 else 1.0
+
+    def grown(self, q: dict) -> tuple[dict, list[tuple]]:
+        """(the diagram as printed, each label's box as (x, y, width, height)) in the diagram's units. For large
+        print on a diagram that can't grow (diagram_boost), the label boxes and then the words grow by up to that
+        much about their middles, as far as they stay inside the diagram and clear of the printed lines, the
+        words, each other, and the spots the boxes' lines point to."""
+        if id(q) in self._grown:
+            return self._grown[id(q)]
+        diagram, labels = q["diagram"], q.get("labels", [])
+        boxes = [tuple(float(v) for v in spot["box"]) for spot in labels]
+        boost, width, height = self.diagram_boost(q), diagram["width"], diagram["height"]
+        if boost >= 1.02:
+            def measure(text: str, bold: bool, size: float) -> float:
+                return self._width(self.f.text(text), self.f.bold if bold else self.f.regular, size)
+
+            ink = D.outlines(diagram, measure)
+            points = [tuple(spot["points_to"]) for spot in labels if spot["points_to"]]
+
+            def corners(b: tuple) -> tuple:
+                return b[0], b[1], b[0] + b[2], b[1] + b[3]
+
+            def hits(r: tuple, skip: int = -1) -> set:  # the printed pieces a rectangle meets
+                return {n for n, piece in enumerate(ink) if piece[0] != skip and D.touches(r, piece)}
+
+            def free(r: tuple, others: list[tuple], before: set, skip: int = -1) -> bool:
+                return (hits(r, skip) <= before and not any(D.touches(r, (-1, "area", corners(o))) for o in others)
+                        and not any(r[0] < px < r[2] and r[1] < py < r[3] for px, py in points))
+
+            for k, (x, y, w, h) in enumerate(boxes):
+                before, g = hits(corners(boxes[k])), boost
+                while g >= 1.02:
+                    w2, h2 = min(w * g, width), min(h * g, height)
+                    grown = (min(max(x + (w - w2) / 2, 0), width - w2), min(max(y + (h - h2) / 2, 0), height - h2),
+                             w2, h2)
+                    if free(corners(grown), boxes[:k] + boxes[k + 1:], before):
+                        boxes[k] = grown
+                        break
+                    g -= 0.05
+            shapes = list(diagram["shapes"])
+            for k, shape in enumerate(shapes):
+                if shape["shape"] != "text":
+                    continue
+                area = lambda size: D.outlines({"shapes": [{**shape, "size": size}]}, measure)[0][2]  # noqa: E731
+                was = area(shape["size"])
+                before, g = hits(was, k), boost
+                within = 0 <= was[0] and was[2] <= width and 0 <= was[1] and was[3] <= height
+                while within and g >= 1.02:
+                    r = area(shape["size"] * g)
+                    if 0 <= r[0] and r[2] <= width and 0 <= r[1] and r[3] <= height and free(r, boxes, before, k):
+                        shapes[k] = {**shape, "size": shape["size"] * g}
+                        break
+                    g -= 0.05
+            diagram = {**diagram, "shapes": shapes}
+        self._grown[id(q)] = diagram, boxes
+        return diagram, boxes
 
     # Text helpers
     def split(self, text: str, font: str, size: float, width: float) -> list[str]:
@@ -629,11 +700,18 @@ class Layout:
     # Choice options
     def option_geometry(self, q: dict):
         columns = max(1, q["columns"])
-        col_w = (BOX_RIGHT - LEFT) / columns
-        indent = ((36.0 if self.st["primary"] else 30.0) if columns == 1 else  # room for the letter
-                  (30.0 if self.st["primary"] else 20.0)) * self.k
-        width = col_w - indent - (0 if columns == 1 else 4)
-        lines = [self.split(o["text"], self.body_font(q), self.st["option_size"], width) for o in q["options"]]
+        font, size = self.body_font(q), self.st["option_size"]
+        widest = max((self._width(w, font, size) for o in q["options"] for w in self.f.text(o["text"]).split()),
+                     default=0)
+        while True:
+            col_w = (BOX_RIGHT - LEFT) / columns
+            indent = ((36.0 if self.st["primary"] else 30.0) if columns == 1 else  # room for the letter
+                      (30.0 if self.st["primary"] else 20.0)) * self.k
+            width = col_w - indent - (0 if columns == 1 else 4)
+            if columns == 1 or widest <= width + 10:  # up to the next column's letter, less a gap
+                break
+            columns //= 2  # a word wider than its column (large print, a long word): fewer columns, not overlap
+        lines = [self.split(o["text"], font, size, width) for o in q["options"]]
         return columns, col_w, indent, lines
 
     def option_rows(self, q: dict) -> list[float]:
@@ -751,13 +829,25 @@ class Layout:
         if abs(sum(widths) - full) > 0.5:
             widths = [w * full / sum(widths) for w in widths]
         size = self.st["option_size"]
+        # Large print grows the type, not the table: a column whose longest word won't fit takes room from columns
+        # with some to spare, and if together they haven't enough, the table's text prints smaller.
+        while True:
+            need = [8 + max([self._width(w, self.f.bold, size) for w in self.f.text(head).split()]
+                            + [self._width(w, self.body_font(q), size) for row in q["rows"] if isinstance(row[k], str)
+                               for w in self.f.text(row[k]).split()] + [0])
+                    for k, head in enumerate(q["columns"])]
+            fitted = _fit_widths(widths, need)
+            if fitted or size <= 7:
+                widths = fitted or widths
+                break
+            size -= 0.5
         header = [self.split(h, self.f.bold, size, w - 6) for h, w in zip(q["columns"], widths)]
         header_h = max(len(l) for l in header) * (size + 2) + 8
         row_h = self.sized(q["row_height"], "box") if q["row_height"] else self.st["box_h"] + 10 * self.k
         cell_lines = [[self.split(c, self.body_font(q), size, w - 6) if isinstance(c, str) else []
                        for c, w in zip(row, widths)] for row in q["rows"]]
         heights = [max(row_h, max((len(l) for l in row), default=1) * (size + 2) + 8) for row in cell_lines]
-        return widths, header, header_h, cell_lines, heights
+        return widths, header, header_h, cell_lines, heights, size
 
     def math_heights(self, q: dict) -> tuple[float, float]:
         work = self.sized(q["work_height"], True) if q.get("work_height") else self.st["work_h"]
@@ -781,7 +871,7 @@ class Layout:
             *_, item_h, _, choice_h = self.match_geometry(q)
             return max(sum(item_h), sum(choice_h))
         if kind == "table":
-            _, _, header_h, _, heights = self.table_geometry(q)
+            _, _, header_h, _, heights, _ = self.table_geometry(q)
             return header_h + sum(heights)
         work, answer = self.math_heights(q)
         return work + answer
@@ -834,7 +924,8 @@ class Layout:
                 while start < b["lines"]:
                     head = self.question_height(b, (start, start))
                     fit = int((y - self.bottom - head) // st["line_spacing"])
-                    if fit < min(6, b["lines"] - start):  # too little room: start a new page
+                    full = start == 0 and self.per_page and self._questions_on(pages[-1]) >= self.per_page
+                    if fit < min(6, b["lines"] - start) or full:  # too little room (or per_page): a new page
                         if not pages[-1]:
                             raise WorksheetError(f"question {b['q']}: its prompt doesn't fit on a page")
                         pages.append([])
@@ -852,13 +943,17 @@ class Layout:
                 raise WorksheetError(f"question {b['q']}: too tall for one page ({height:.0f}pt of "
                                      f"{self.content_top - self.bottom:.0f}pt); use fewer lines or a smaller diagram"
                                      + (" (at this version's print size)" if self.k > 1 or self.space > 1 else ""))
-            on_page = sum(1 for j, _ in pages[-1] if self.defn["questions"][j]["type"] != "passage")
+            on_page = self._questions_on(pages[-1])
             if (y - height < self.bottom or self.per_page and on_page >= self.per_page) and pages[-1]:
                 pages.append([])
                 y = self.content_top
             pages[-1].append((i, None))
             y -= height + st["block_gap"]
         return pages
+
+    def _questions_on(self, pieces: list[tuple]) -> int:
+        """Questions on a page so far (an essay's part counts), for per_page."""
+        return sum(1 for j, _ in pieces if self.defn["questions"][j]["type"] != "passage")
 
     def grow(self) -> None:
         """Fewer questions to a page leave room: give it to writing lines and work areas, page by page, so a
@@ -919,6 +1014,18 @@ class Layout:
             return self.block_height(q)
         head = self.block_height(q) - self.body_height(q) if part[0] == 0 else CONTINUED_H
         return head + (part[1] - part[0]) * self.st["line_spacing"]
+
+
+def _fit_widths(widths: list[float], need: list[float]) -> list[float] | None:
+    """Column widths that give each column what it needs, taken from the others' room to spare in proportion,
+    keeping the total. The widths as they are when every column has room; None when the total is too small."""
+    if all(w >= n for w, n in zip(widths, need)):
+        return widths
+    short = sum(n - w for w, n in zip(widths, need) if w < n)
+    spare = sum(w - n for w, n in zip(widths, need) if w > n)
+    if spare < short:
+        return None
+    return [n if w <= n else w - (w - n) * short / spare for w, n in zip(widths, need)]
 
 
 def wrap_text(text: str, font: str, size: float, width: float) -> list[str]:
@@ -989,18 +1096,18 @@ def _draw_code(c: canvas.Canvas, code: int) -> None:
 def _draw_header(c: canvas.Canvas, L: Layout, page_no: int, n_pages: int, boxes) -> None:
     f, defn = L.f, L.defn
     c.setFillGray(INK)
-    room = boxes[0][0] - 40 - 138  # up to the "ID #" label
+    room = boxes[0][0] - 40 - HEADER_X  # up to the "ID #" label
     size = 15.0
     while size > 10 and c.stringWidth(f.text(defn["title"]), f.bold, size) > room:
         size -= 0.5
     c.setFont(f.bold, size)
-    c.drawString(138, 744, f.text(defn["title"]))
+    c.drawString(HEADER_X, 744, f.text(defn["title"]))
     c.setFont(f.regular, 9 * L.hk)
-    c.drawString(138, 730 - 2 * (L.hk - 1), f"Page {page_no} of {n_pages}")
+    c.drawString(HEADER_X, 730 - 2 * (L.hk - 1), f"Page {page_no} of {n_pages}")
     c.setFont(f.regular, L.header_size)
     y = L.header_top
     for line in L.header_lines:  # the header rule sits below the last line
-        c.drawString(138, y, line)
+        c.drawString(HEADER_X, y, line)
         y -= L.header_leading
     c.setFont(f.bold, 10 * L.hk)
     c.drawRightString(boxes[0][0] - 6, boxes[0][1] + 11, "ID #")
@@ -1030,8 +1137,20 @@ def _draw_footer(c: canvas.Canvas, L: Layout, page_no: int, n_pages: int) -> Non
     c.setFont(L.f.regular, 7 * L.hk)
     c.drawString(x0 + 5, y1 - 10 * L.hk, "Feedback summary")
     form = f" | form {L.label}" if L.label else ""
-    c.drawCentredString(PAGE_W / 2, 32, L.f.text(f"{L.defn['assignment_id']}{form} | page {page_no} of {n_pages} | "
-                                                 "please don't write in the corner squares"))
+    parts = [f"{L.defn['assignment_id']}{form} | page {page_no} of {n_pages}",
+             "please don't write in the corner squares"]
+    # Between the corner squares, which a mark beside them can hide from the scanner: smaller type first (a long
+    # practice id in large print), then two lines.
+    room = PAGE_W - 2 * (MARKER_INSET + MARKER_SIZE + 6)
+    size = 7 * L.hk
+    while size > 6 and c.stringWidth(L.f.text(" | ".join(parts)), L.f.regular, size) > room:
+        size -= 0.25
+    lines = [" | ".join(parts)] if c.stringWidth(L.f.text(" | ".join(parts)), L.f.regular, size) <= room else parts
+    c.setFont(L.f.regular, size)
+    for k, line in enumerate(lines):
+        while c.stringWidth(L.f.text(line), L.f.regular, size) > room:  # an id too long even for its own line
+            line = line[:-2] + "…"
+        c.drawCentredString(PAGE_W / 2, 32 + (len(lines) - 1 - 2 * k) * (size * 0.6), L.f.text(line))
 
 
 def _leader(c: canvas.Canvas, box, point) -> None:
@@ -1231,8 +1350,8 @@ def _draw_question(c: canvas.Canvas, L: Layout, q: dict, y: float, part: tuple |
         ds = L.diagram_scale(q)
         x0, y0 = LEFT, diagram_top - q["diagram"]["height"] * ds
         _diagram_at(c, L, q, x0, y0, ds)
-        for spot in q["labels"]:
-            bx, by, bw, bh = (v * ds for v in spot["box"])
+        for spot, written in zip(q["labels"], L.grown(q)[1]):
+            bx, by, bw, bh = (v * ds for v in written)
             _write_box(c, f, x0 + bx, y0 + by, bw, bh, spot["n"])
             if spot["points_to"]:
                 _leader(c, (x0 + bx, y0 + by, bw, bh), (x0 + spot["points_to"][0] * ds, y0 + spot["points_to"][1] * ds))
@@ -1302,8 +1421,7 @@ def _draw_question(c: canvas.Canvas, L: Layout, q: dict, y: float, part: tuple |
             y_choice -= len(text_lines) * leading + 4
 
     elif q["type"] == "table":
-        widths, header, header_h, cell_lines, heights = L.table_geometry(q)
-        size = st["option_size"]
+        widths, header, header_h, cell_lines, heights, size = L.table_geometry(q)
         x_edges = [LEFT]
         for w in widths:
             x_edges.append(x_edges[-1] + w)
@@ -1374,12 +1492,12 @@ def _draw_question(c: canvas.Canvas, L: Layout, q: dict, y: float, part: tuple |
 def _diagram_at(c: canvas.Canvas, L: Layout, q: dict, x0: float, y0: float, ds: float) -> None:
     """A question's diagram with its bottom-left at (x0, y0), scaled for large print."""
     if ds == 1:
-        D.draw_diagram(c, q["diagram"], x0, y0, L.f, L.base)
+        D.draw_diagram(c, L.grown(q)[0], x0, y0, L.f, L.base)
         return
     c.saveState()
     c.translate(x0, y0)
     c.scale(ds, ds)
-    D.draw_diagram(c, q["diagram"], 0, 0, L.f, L.base)
+    D.draw_diagram(c, L.grown(q)[0], 0, 0, L.f, L.base)
     c.restoreState()
 
 
@@ -1422,21 +1540,52 @@ def _rtl(text: str) -> bool:
     return SC.has_rtl(text)
 
 
+def _balanced(c: canvas.Canvas, text: str, font: str, size: float, most: int) -> list[str]:
+    """text on one line, or on two of about equal width when most is 2."""
+    words = text.split()
+    if most < 2 or len(words) < 2:
+        return [text]
+    cuts = [[" ".join(words[:k]), " ".join(words[k:])] for k in range(1, len(words))]
+    return min(cuts, key=lambda two: max(c.stringWidth(line, font, size) for line in two))
+
+
 def _answer_row(c: canvas.Canvas, L: Layout, q: dict, bottom: float) -> tuple:
-    """"Answer:" and a box at the bottom right of a question, with units after it. Returns the box's rect."""
+    """"Answer:" and a box at the bottom right of a question, with units after it. Returns the box's rect.
+    A long label or long units narrow the box, down to room for an answer, then go onto two lines (a box in
+    large print is tall enough), then print smaller, so neither runs past the question's left edge."""
     st, f = L.st, L.f
-    units_w = c.stringWidth(f.text(q["units"]), f.regular, st["prompt_size"]) + 6 if q["units"] else 0
+    label, units = f.text(q.get("answer_label") or "Answer:"), f.text(q["units"]) if q["units"] else ""
+    box_h = st["box_h"] + 4
+    wanted = L.sized(q["answer_width"])
+    least = min(wanted, 60 * L.k)  # room to write an answer
+    size = st["prompt_size"]
+    while True:
+        most = 2 if 2 * size * 1.1 <= box_h else 1
+        for k_label, k_units in ((1, 1), (most, 1), (1, most), (most, most)):
+            label_lines = _balanced(c, label, f.bold, size, k_label)
+            units_lines = _balanced(c, units, f.regular, size, k_units) if units else []
+            label_w = max(c.stringWidth(line, f.bold, size) for line in label_lines) + 6
+            units_w = max(c.stringWidth(line, f.regular, size) for line in units_lines) + 6 if units else 0
+            if label_w + units_w + least <= BOX_RIGHT - LEFT:
+                break
+        if label_w + units_w + least <= BOX_RIGHT - LEFT or size <= 7:
+            break
+        size -= 0.5
     ax1 = BOX_RIGHT - units_w
-    ax0 = ax1 - min(L.sized(q["answer_width"]), BOX_RIGHT - LEFT - units_w - 80)
+    ax0 = ax1 - max(least, min(wanted, BOX_RIGHT - LEFT - label_w - units_w))
     ay0 = bottom + 4
-    rect = _write_box(c, f, ax0, ay0, ax1 - ax0, st["box_h"] + 4)
-    baseline = ay0 + (st["box_h"] + 4 - st["prompt_size"] * 0.72) / 2
+    rect = _write_box(c, f, ax0, ay0, ax1 - ax0, box_h)
     c.setFillGray(INK)
-    c.setFont(f.bold, st["prompt_size"])
-    c.drawRightString(ax0 - 6, baseline, f.text(q.get("answer_label") or "Answer:"))
-    if q["units"]:
-        c.setFont(f.regular, st["prompt_size"])
-        c.drawString(ax1 + 4, baseline, f.text(q["units"]))
+    leading = size * 1.1
+    for lines, font, right in ((label_lines, f.bold, True), (units_lines, f.regular, False)):
+        c.setFont(font, size)
+        baseline = ay0 + (box_h - size * 0.72) / 2 + (len(lines) - 1) * leading / 2  # centered beside the box
+        for line in lines:
+            if right:
+                c.drawRightString(ax0 - 6, baseline, line)
+            else:
+                c.drawString(ax1 + 4, baseline, line)
+            baseline -= leading
     return rect
 
 
@@ -1458,6 +1607,9 @@ def _word_bank(c: canvas.Canvas, L: Layout, q: dict, top: float) -> float:
 
 # --- Key ------------------------------------------------------------------------------
 
+NO_ANSWER, NO_CIRCLE = "No answer yet.", "No answer circled."  # what marking says beside a blank answer
+
+
 def _key_item(q: dict, L: Layout) -> dict:
     item = {"q": q["q"], "type": q["type"], "prompt": q["prompt"], "points": q["points"], "key": "",
             "options": [], "answer": "", "labels": [], "word_bank": q.get("word_bank", []), "checklist": [],
@@ -1470,6 +1622,8 @@ def _key_item(q: dict, L: Layout) -> dict:
         item["scaffolded"] = q["scaffolded"]
     if q.get("retry"):  # practice of the very same question: progress reports don't count it as new evidence
         item["retry"] = True
+    if q.get("stretch"):  # a full-credit student's stretch question (practice.py): not a gap if it's missed
+        item["stretch"] = True
     kind = q["type"]
     if kind == "short":
         item.update(key=q["key"], rubric=q["rubric"])
@@ -1686,6 +1840,7 @@ def make_worksheet(defn: dict, out_dir: Path, base: Path | None = None) -> dict:
             forms.append((form, normalize(raw)))
         except WorksheetError as e:
             raise WorksheetError(f"{form['name']}: {e}" if form["id"] else str(e))
+    stretch = _stretch_items(defn, forms[0][1])
     _save_source(defn, expanded, base, out_dir)  # only once every form is good, so practice matches the key
     defn = forms[0][1]
     code_ids = _code_ids(defn["assignment_id"], [f for f, _ in forms])
@@ -1721,7 +1876,12 @@ def make_worksheet(defn: dict, out_dir: Path, base: Path | None = None) -> dict:
         if form["kind"] == "version":  # what to cut when a version runs longer than everyone else's
             fit = {"shortfall": L.shortfall(), "free_by_page": L.free_by_page(),
                    "blocks_by_page": [[(_piece_name(d["questions"][i], part), L.piece_height(i, part))
-                                       for i, part in piece] for piece in L.paginate()]}
+                                       for i, part in piece] for piece in L.paginate()],
+                   "print_notes": [f"Q{q['q']}'s diagram is {q['diagram']['width']:g}pt wide, so large print can "
+                                   f"grow it only {L.diagram_scale(q):.2f}x, not {L.k:.2f}x; its words and label "
+                                   "boxes grew where there was room. To print all of it larger, draw it at most "
+                                   f"{(BOX_RIGHT - LEFT) / L.k:.0f}pt wide"
+                                   for q in d["questions"] if q.get("diagram") and L.diagram_boost(q) > 1.1]}
         form_list.append({**entry, "code_id": code_id, "pdf": pdf, "pages": [p["page"] for p in pages],
                           "comment_language": d["comment_language"], **fit})
     for c in canvases.values():
@@ -1743,21 +1903,22 @@ def make_worksheet(defn: dict, out_dir: Path, base: Path | None = None) -> dict:
            "grade": defn["grade"], "id_digits": defn["id_digits"], "comment_words": comment_words(defn["grade"]),
            "strength_words": strength_words(defn["grade"]),
            "feedback": defn["feedback"], "comment_language": defn["comment_language"],
-           "instructions": defn["instructions"], "passages": passages, "items": base_items}
+           "instructions": defn["instructions"], "passages": passages, "items": base_items,
+           **({"stretch": stretch} if stretch else {})}
     if len(form_list) > 1:
         key["forms"] = {f["id"]: {"name": f["name"], "label": f["label"], "kind": f["kind"],
                                   "comment_language": f["comment_language"],
                                   **{k: f[k] for k in ("language", "language_name", "language_english", "language_mode", "scaffolds",
-                                                       "modifies")
+                                                       "modifies", "blank_comments")
                                      if f.get(k)},
                                   "items": items_by_form[f["id"]]} for f in form_list if f["id"]}
     write_json(out_dir / "layout.json", layout)
     write_json(out_dir / "key.json", key)
     write_json(out_dir / "worksheet.json", defn)
     for (form, d) in forms[1:]:
-        if form["kind"] == "version":
+        if form["kind"] == "version" or form.get("student_id"):
             notes += _version_extras(form, d, out_dir, layouts[form["id"]][0])
-    variants = [f for f in form_list if f["kind"] == "variant" and not f.get("student_id")]
+    variants = [f for f in form_list if f["kind"] == "variant"]  # a copy for each student, or practice sheets
     variant_notes = []
     if variants:
         variant_notes = _copies_key(defn, variants, items_by_form, out_dir)
@@ -1830,11 +1991,13 @@ def _answers(item: dict) -> list[tuple[str, str]]:
 
 
 def _copies_key(defn: dict, variants: list[dict], items_by_form: dict, out_dir: Path) -> list[str]:
-    """copies-key.pdf: every copy's answers, for checking a copy by hand. Returns problems worth a look:
-    an answer that's the same on most copies doesn't stop copying."""
+    """copies-key.pdf: every copy's answers, for checking a copy by hand, or every student's practice sheet's.
+    Returns problems worth a look: an answer that's the same on most copies doesn't stop copying."""
+    practice = all(f.get("student_id") for f in variants)
+    whose = "every student's answers" if practice else "every copy's answers"
     fonts, _ = F.choose([str(a) for f in variants for item in items_by_form[f["id"]] for _, a in _answers(item)])
     c = canvas.Canvas(str(out_dir / "copies-key.pdf"), pagesize=(PAGE_W, PAGE_H))
-    c.setTitle(fonts.text(f"{defn['title']}: every copy's answers"))
+    c.setTitle(fonts.text(f"{defn['title']}: {whose}"))
     y = PAGE_H - 54
 
     def line(text: str, font: str, size: float, x: float = 54) -> None:
@@ -1847,21 +2010,24 @@ def _copies_key(defn: dict, variants: list[dict], items_by_form: dict, out_dir: 
             c.drawString(x, y, part)
             y -= size + 3
 
-    line(f"{defn['title']}: every copy's answers", fonts.bold, 14)
-    line("The copy number is in each sheet's footer (\"form 7\").", fonts.oblique, 9)
+    line(f"{defn['title']}: {whose}", fonts.bold, 14)
+    line("Each sheet's class ID is printed in its ID boxes." if practice else
+         "The copy number is in each sheet's footer (\"form 7\").", fonts.oblique, 9)
     y -= 6
     seen: dict[tuple[int, str], list[str]] = {}
     for f in variants:
-        line(f"Copy {f['label']}", fonts.bold, 11)
+        line(f"ID {f['student_id']}" if f.get("student_id") else f"Copy {f['label']}", fonts.bold, 11)
         for item in items_by_form[f["id"]]:
             answers = _answers(item)
             for where, answer in answers:
                 seen.setdefault((item["q"], where), []).append(answer)
             shown = "; ".join(f"{w}: {a}" if w else a for w, a in answers)
-            line(f"Q{item['q']}: {shown}", fonts.regular, 9.5, 66)
+            line(f"Q{item['q']}{' (stretch)' if item.get('stretch') else ''}: {shown}", fonts.regular, 9.5, 66)
         y -= 4
     c.save()
     problems = []
+    if practice:  # each sheet is one student's own: no neighbors to copy from
+        return problems
     for (q, where), answers in seen.items():
         if not answers or answers[0] == "see the checklist":
             continue
@@ -1871,6 +2037,30 @@ def _copies_key(defn: dict, variants: list[dict], items_by_form: dict, out_dir: 
             problems.append(f"{spot} has the same answer ({most}) on {answers.count(most)} of {len(answers)} copies, "
                             "so neighbors can still share it: let more of the question vary")
     return problems
+
+
+def _stretch_items(raw: dict, base: dict) -> list[dict]:
+    """The worksheet's stretch questions, keyed as the base copy would print them (each variable at its base
+    value), for the answer key: they don't print on the worksheet, but practice sheets give them to students
+    with full credit. Checked here, so a mistake shows when the worksheet is made, not after marking."""
+    from . import forms as FM
+    questions, numbers = [], {b["q"] for b in base["questions"] if b["type"] != "passage"}
+    for q in raw.get("stretch") or []:
+        where = f"stretch question {q.get('q', '?') if isinstance(q, dict) else '?'}"
+        if not isinstance(q, dict) or q.get("q") in numbers or q.get("q") is None:
+            raise WorksheetError(f"{where}: each \"stretch\" question is an object with its own \"q\" number, not "
+                                 "one the worksheet uses")
+        if q.get("vars"):
+            q = FM._fill(q, FM._assignments(q, where)[0])
+        questions.append({**FM._strip(q), "stretch": True})
+    if not questions:
+        return []
+    passages = [b for b in base["questions"] if b["type"] == "passage" and not b["note"]]  # ones a question cites
+    try:
+        defn = normalize({**{k: v for k, v in base.items() if k != "questions"}, "questions": passages + questions})
+    except WorksheetError as e:
+        raise WorksheetError(f"stretch: {e}")
+    return [_key_item(q, None) for q in defn["questions"] if q["type"] != "passage"]
 
 
 def _kind(form_list: list[dict], fid: str) -> str:
@@ -1883,15 +2073,21 @@ def _differs(a: dict, b: dict) -> bool:
 
 
 def _version_extras(form: dict, defn: dict, out_dir: Path, L: Layout) -> list[str]:
-    """A version's companion page (its home language, for Word) and reference page; notes for the teacher."""
+    """A version's companion page (its home language, for Word) and reference page; notes for the teacher. A
+    practice sheet made for a student on a version gets them too, named for its form (p0412), one per student."""
     from . import forms as FM
     notes = []
     if form.get("language") and form.get("translation"):
         path = FM.companion(form, defn, out_dir)
-        notes.append(f"{form['name']}: {form['language_name']} page {path.relative_to(out_dir)} (print from Word or "
-                     f"Google Docs{'; it goes with the English sheet' if form['language_mode'] == 'companion' else ''})")
-    if form.get("reference"):
-        path = FM.reference_pages(form, defn, out_dir, L)
+        name = form.get("language_name") or form.get("language_english") or form["language"]
+        notes.append(f"{form['name']}: {name} page {path.relative_to(out_dir)} (print from Word or Google Docs"
+                     f"{'; it goes with the English sheet' if form.get('language_mode') == 'companion' else ''})")
+    reference = list(form.get("reference") or [])
+    if form.get("student_id"):  # a practice sheet: a key-words or formulas page only when there's something on it
+        words = form.get("glossary_terms") or (form.get("translation") or {}).get("glossary")
+        reference = [r for r in reference if (r != "glossary" or words) and (r != "formulas" or form.get("formulas"))]
+    if reference:
+        path = FM.reference_pages({**form, "reference": reference}, defn, out_dir, L)
         notes.append(f"{form['name']}: reference page {path.relative_to(out_dir)} (students keep it; it isn't "
                      "handed in or scanned)")
     if form.get("notes"):
@@ -1915,7 +2111,8 @@ def _separated_passages(defn: dict, pages: list[list[tuple]]) -> list[str]:
     for i, b in enumerate(defn["questions"]):
         if b["type"] != "passage":
             continue
-        users = [j for j, q in enumerate(defn["questions"]) if q["type"] != "passage" and q.get("passage") == b["id"]]
+        users = [j for j, q in enumerate(defn["questions"])
+                 if q["type"] != "passage" and b["id"] in (q.get("passages") or [q.get("passage")])]
         if users and page_of[users[0]][0] > page_of[i][-1]:
             first = defn["questions"][users[0]]
             out.append(f"{b['title'] or b['id']} ends on page {page_of[i][-1]}, but its first question (Q{first['q']}) "

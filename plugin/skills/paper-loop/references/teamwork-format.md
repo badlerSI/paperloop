@@ -162,7 +162,8 @@ class ID only, and writes `progress/groups-<structure>.md` (and `.json`) for the
 added for similar groups (one file per kind, so pairs don't replace lab groups). Add `--skill "..."` to sort
 by one skill, and `--roster ids.csv` to include students with nothing marked yet (or to make random groups
 before anything is marked). `--structure game` makes groups with no jobs, never above `--size`, for a card or
-board game. Students are ranked by all their marked work (every point counts the same) or by the one skill,
+board game. The one exception is a two-player game (`--size 2`) with an odd number of students: one pair becomes
+three who take turns, so no one plays alone. Students are ranked by all their marked work (every point counts the same) or by the one skill,
 then:
 
 - **Mixed** (the default, for labs, jigsaws, reading, and review): dealt out back and forth, so every group

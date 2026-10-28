@@ -322,7 +322,7 @@ def answer_key(ws: Worksheet, path: Path, drawings: dict | None = None, color: s
     number to its drawn answer (diagram shapes, from answer_drawing); models: question number to a model
     written answer, for its lines (else the key goes there)."""
     texts = [ws.title, *S.all_texts(ws.defn), *(models or {}).values()]
-    for item in ws.items.values():
+    for item in [*ws.items.values(), *ws.key.get("stretch", [])]:
         texts += [item["key"], item.get("answer", ""), item.get("notes", ""), *key_lines(item)]
         texts += [lvl for c in item.get("rubric", []) for lvl in c["levels"]]
     fonts, _ = F.choose(texts)
@@ -437,8 +437,12 @@ def _scoring_pages(c, ws: Worksheet, fonts) -> None:
         y -= gap
 
     line(f"Scoring: {ws.title}", fonts.bold, 16, gap=10)
-    for q in ws.questions:
-        item = ws.items[q]
+    stretch = ws.key.get("stretch", [])
+    for item in [ws.items[q] for q in ws.questions] + stretch:
+        if stretch and item is stretch[0]:
+            line("Stretch questions: not on the worksheet. Practice sheets give them to students with full credit.",
+                 fonts.bold, 12, gap=8)
+        q = item["q"]
         line(f"Question {q} ({_pts(item['points'])})", fonts.bold, 11)
         line(" ".join(item["prompt"].split()), fonts.oblique, 9.5, gap=3)
         for text in key_lines(item):

@@ -4,13 +4,13 @@ Print worksheets, scan the class stack on the school copier, and get marked-up p
 
 It comes two ways: a Claude Cowork plugin, where Claude marks the work within a teacher's Claude account, and a command-line version that calls the API with your own key. The command-line version is the test bench for accuracy.
 
-Status: v0.3. [SPEC.md](SPEC.md) is the plan, [NOTES.md](NOTES.md) is where things stand.
+Status: v0.5. [SPEC.md](SPEC.md) is the plan, [NOTES.md](NOTES.md) is where things stand.
 
 ## For teachers: use it inside Claude, no setup
 
 Paper Loop is also a plugin for Claude Cowork. Claude does the marking itself, so there's no API key and nothing to install on your computer. Cowork works in the Claude desktop app and in a web browser, including on a Chromebook. US K-12 teachers can get it free through [Claude for Teachers](https://www.anthropic.com/news/claude-for-teachers).
 
-1. In Claude, open Cowork, then **Customize → Plugins**, and add the marketplace `Badlerz/paperloop`. Install **Paper Loop**. You can also zip the `plugin/` folder and upload it there.
+1. In Claude, open Cowork, then **Customize → Plugins**, and add the marketplace `Badlerz/paperloop`. Install **Paper Loop**. Plugins need a paid Claude plan or Claude for Teachers. On the Free plan, turn on code execution (**Settings → Capabilities**), download `paper-loop.zip` from the [releases page](https://github.com/Badlerz/paperloop/releases), and add it under **Customize → Skills**; it then works in an ordinary chat.
 2. **Plan a lesson**, if you want one: "Plan a 50-minute 6th grade lesson on equivalent ratios, with slides and a one-page Paper Loop worksheet." You get:
    - `lesson-plan.docx`: objectives, materials, vocabulary, a timed sequence with slide numbers, checks for understanding, misconceptions, differentiation, and every worksheet answer worked through;
    - `slides.pptx`: the lesson, with what to say in the speaker notes. It opens in PowerPoint, Keynote, or Google Slides, and `slides.pdf` is the same deck;
@@ -135,6 +135,29 @@ paperloop sweep runs/day1 --truth scans/day1/truth.json --reps 3
 - Only cropped answer boxes go to the API: never the header, the ID area, or the margins.
 - Real student work needs a district-owned key under Anthropic's [US K-12 terms](https://anthropic.com/legal/k12-terms) and [K-12 DPA](https://anthropic.com/legal/k12-dpa); confirm they cover API use first. Day 1 uses only Ben's handwriting.
 - `runs/`, `scans/`, and `.env` are gitignored.
+
+## Credits
+
+Paper Loop isn't affiliated with or endorsed by any of these, and is grateful to all of them.
+
+- **Readings:**
+  - [Wikipedia](https://www.wikipedia.org), [Simple English Wikipedia](https://simple.wikipedia.org), and
+    [Wikisource](https://wikisource.org), written by their volunteers and run by the Wikimedia Foundation
+    (CC BY-SA 4.0, and the public domain);
+  - [Project Gutenberg](https://www.gutenberg.org)'s volunteer library of public-domain books;
+  - US government agencies (NASA, NOAA, USGS, the Library of Congress).
+
+  Every reading is credited under the passage. [PRIVACY.md](PRIVACY.md) says how Paper Loop uses each one,
+  and whose terms apply.
+- **Real data in the example labs:**
+  - NASA's Kepler mission (the HAT-P-7 light curve, from MAST);
+  - NOAA's Global Monitoring Laboratory (carbon dioxide at Mauna Loa);
+  - the US Geological Survey (earthquake depths);
+  - the Hudson's Bay Company fur records, as ecologists compiled them.
+- **Ideas for the paper labs:** [PhET Interactive Simulations](https://phet.colorado.edu) (University of
+  Colorado Boulder), [NOVA Labs](https://www.pbs.org/wgbh/nova/labs/) (GBH), and NetLogo (Northwestern
+  University). The labs credit the ideas they borrow and are written in Paper Loop's own words; none of
+  their material is copied.
 
 ## License
 

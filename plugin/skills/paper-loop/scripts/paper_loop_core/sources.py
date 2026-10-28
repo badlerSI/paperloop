@@ -6,8 +6,9 @@ then prints the credit line the license asks for. Openly licensed and public-dom
 and adapted. Some free sites forbid rewriting their texts, or using them with AI tools, and an "ND" license
 forbids changes: a passage adapted from one of those is refused, with what to use instead.
 
-`fetch` gets an article's plain text from Wikipedia or Simple English Wikipedia (with the revision, so the
-credit points at the exact text used) or a book from Project Gutenberg, when the sandbox can reach them.
+`wikipedia` gets an article's plain text from Wikipedia, Simple English Wikipedia, or Wikisource (with the
+revision, so the credit points at the exact text used), when the sandbox can reach them. `gutenberg` reads a
+book from the file the teacher downloaded: Project Gutenberg's site is for people, not scripts.
 """
 
 from __future__ import annotations
@@ -19,6 +20,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import date
+from pathlib import Path
 
 from .sheet import WorksheetError
 
@@ -140,20 +142,28 @@ def level_problems(defn: dict) -> list[str]:
 
 # --- Getting a text ----------------------------------------------------------------------------------
 
-AGENT = "PaperLoop/0.4 (classroom worksheets; https://github.com/) python-urllib"
+AGENT = "PaperLoop/0.5 (classroom worksheets; https://github.com/Badlerz/paperloop) python-urllib"
 
 
-def _get(url: str) -> bytes:
+def _get(url: str, tries: int = 3) -> bytes:
     request = urllib.request.Request(url, headers={"User-Agent": AGENT})
-    for attempt in range(2):
+    for attempt in range(tries):
         try:
             with urllib.request.urlopen(request, timeout=20) as response:
                 return response.read()
         except urllib.error.HTTPError as e:
-            if e.code != 429 or attempt:
+            if e.code != 429 or attempt == tries - 1:
                 raise
-            time.sleep(5)  # rate-limited: once more, after a pause
+            time.sleep(_wait(e.headers.get("Retry-After") if e.headers else None, attempt))
     raise AssertionError("unreachable")
+
+
+def _wait(retry_after: str | None, attempt: int) -> float:
+    """Rate-limited: as long as the site asks (Wikimedia often says 10 seconds), up to 30; else 5, then 10."""
+    try:
+        return min(30.0, max(1.0, float(retry_after)))
+    except (TypeError, ValueError):
+        return 5.0 * (attempt + 1)
 
 
 def wikipedia(title: str, simple: bool = False, site: str | None = None) -> dict:
@@ -209,16 +219,31 @@ def _clean(extract: str) -> str:
     return re.sub(r"\n{3,}", "\n\n", "\n".join(out)).strip()
 
 
-def gutenberg(book: int) -> dict:
-    """A Project Gutenberg book's text, its license header and footer removed (as Gutenberg asks when the
-    text is reused without its name). Public domain in the US."""
-    raw = _get(f"https://www.gutenberg.org/cache/epub/{int(book)}/pg{int(book)}.txt").decode("utf-8", "replace")
+GUTENBERG = ("Project Gutenberg's website is for people, not scripts (it blocks automated downloads), so ask the "
+             "teacher to download the book: open https://www.gutenberg.org/ebooks/{book}, choose \"Plain Text "
+             "UTF-8\", and give you the file. Then run this again with the file instead of the number")
+
+
+def gutenberg(path: Path) -> dict:
+    """A Project Gutenberg book from the plain-text file the teacher downloaded (the site is for people, not
+    scripts), its license header and footer removed, as Gutenberg asks when the text is reused without its name.
+    Public domain in the US. The credit links to the book's page, as Gutenberg asks of a reference."""
+    raw = Path(path).read_text(encoding="utf-8", errors="replace")
     title = re.search(r"^Title:\s*(.+)$", raw, re.M)
     author = re.search(r"^Author:\s*(.+)$", raw, re.M)
+    number = re.search(r"\[E(?:Book|Text) #(\d+)\]", raw, re.I)
     start = re.search(r"\*\*\* ?START OF (THE|THIS) PROJECT GUTENBERG EBOOK.*?\*\*\*", raw)
     end = re.search(r"\*\*\* ?END OF (THE|THIS) PROJECT GUTENBERG EBOOK", raw)
-    body = raw[start.end() if start else 0:end.start() if end else len(raw)].strip()
+    if not start:
+        raise WorksheetError(f"{path} isn't a Project Gutenberg plain-text file (no \"*** START OF THE PROJECT "
+                             "GUTENBERG EBOOK\" line): download the book's \"Plain Text UTF-8\" file")
+    body = raw[start.end():end.start() if end else len(raw)].strip()
     body = re.sub(r"(?<![A-Za-z0-9])_([^_\n]+)_(?![A-Za-z0-9])", r"\1", body)  # _italics_ marks: the words alone
-    return {"title": title.group(1).strip() if title else f"Book {book}", "text": body.replace("\r\n", "\n"),
-            "author": author.group(1).strip() if author else "", "url": f"https://www.gutenberg.org/ebooks/{int(book)}",
-            "license": "public domain", "site": "gutenberg.org", "retrieved": date.today().isoformat()}
+    got = {"title": title.group(1).strip() if title else Path(path).stem, "text": body.replace("\r\n", "\n"),
+           "author": author.group(1).strip() if author else "",
+           "url": f"https://www.gutenberg.org/ebooks/{number.group(1)}" if number else "",
+           "license": "public domain", "site": "gutenberg.org", "retrieved": date.today().isoformat()}
+    if not number:
+        got["check"] = ("the file doesn't give its book number: put the book's page address "
+                        "(https://www.gutenberg.org/ebooks/<number>) in the passage's cite \"url\"")
+    return got
