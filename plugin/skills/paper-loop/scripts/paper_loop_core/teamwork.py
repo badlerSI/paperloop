@@ -18,6 +18,7 @@ Structures:
 from __future__ import annotations
 
 import io
+import json
 import random
 import re
 from pathlib import Path
@@ -100,7 +101,7 @@ SIZES = {"lab": (3, 5), "jigsaw": (3, 5), "reciprocal": (4, 4), "pairs": (2, 2),
 FIELDS = ("title", "grade", "grade_band", "subject", "structure", "group_size", "minutes", "goal", "abilities",
           "materials", "steps", "rounds", "rotate_every", "dice", "table", "data", "board", "tokens", "roles", "parts",
           "cards",
-          "worksheet", "class_size", "listen_for", "debrief", "sources")
+          "worksheet", "class_size", "versions", "listen_for", "debrief", "sources")
 PATTERNS = ("solid", "dots", "stripes", "plain", "checks", "rings")
 
 
@@ -348,7 +349,117 @@ def normalize(data: dict) -> dict:
                                     "sentence starters)")
             roles.append((_text(r, "name", where), _texts(r, "jobs", where), _texts(r, "say", where)))
         out["roles"] = roles
+    out["versions"] = _versions(data.get("versions"), out)
     return out
+
+
+VERSION_FIELDS = ("id", "name", "language", "parts", "roles", "steps", "goal", "reviewed_by")
+
+
+def _versions(raw, A: dict) -> list[dict]:
+    """Versions of the group materials for the students who need them: plain English, or a home language.
+    Each replaces the activity's own words (parts, role cards, steps, goal); the work stays the same."""
+    if raw is None:
+        return []
+    if not isinstance(raw, list):
+        raise TeamworkError("teamwork file: \"versions\" is a list, [{\"id\": \"plain\", \"parts\": [...]}]")
+    from .forms import LANGUAGES
+    out, seen = [], set()
+    for k, v in enumerate(raw, start=1):
+        where = f"version {k}"
+        if not isinstance(v, dict):
+            raise TeamworkError(f"{where}: one object, {{\"id\": ..., \"parts\": [...]}}")
+        unknown = sorted(set(v) - set(VERSION_FIELDS))
+        if unknown:
+            raise TeamworkError(f"{where}: unknown field {', '.join(unknown)}; a version has {', '.join(VERSION_FIELDS)}")
+        vid = _text(v, "id", where)
+        if not re.fullmatch(r"[a-z][a-z0-9-]{0,23}", vid) or vid in seen:
+            raise TeamworkError(f"{where}: \"id\" is a short, different name for each, in small letters (\"plain\", "
+                                "\"es\")")
+        seen.add(vid)
+        lang = _text(v, "language", where)
+        known = LANGUAGES.get(lang)
+        name = _text(v, "name", where) or (known[1] if known else lang) or "Plain English"
+        V = {"id": vid, "name": name, "language": lang, "reviewed_by": _text(v, "reviewed_by", where),
+             "quality": (known[2] if known else "unknown") if lang else "", "english_name": known[0] if known else lang,
+             "goal": _text(v, "goal", where) or A["goal"], "steps": _texts(v, "steps", where) or A["steps"]}
+        parts = v.get("parts")
+        if parts is not None:
+            if not isinstance(parts, list) or len(parts) != len(A["parts"]):
+                raise TeamworkError(f"{where}: \"parts\" has one entry for each of the activity's {len(A['parts'])} "
+                                    "parts, in order (each with the fields it changes: title, text, teach, check, words)")
+            merged = []
+            for n, (base, change) in enumerate(zip(A["parts"], parts), start=1):
+                if not isinstance(change, dict):
+                    raise TeamworkError(f"{where}, part {n}: one object with the fields it changes")
+                keep = {f: base[f] for f in ("title", "text", "teach", "check", "words", "quote", "quote_source")
+                        if base.get(f)}
+                merged.append(_part({**keep, **change}, n, A["kind"] == "jigsaw"))
+            V["parts"] = merged
+        else:
+            V["parts"] = A["parts"]
+        roles = v.get("roles")
+        if roles is not None:
+            if not isinstance(roles, list) or len(roles) != len(A["roles"]):
+                raise TeamworkError(f"{where}: \"roles\" has one entry for each of the {len(A['roles'])} cards, in order")
+            V["roles"] = []
+            for n, r in enumerate(roles, start=1):
+                rw = f"{where}, role {n}"
+                if not isinstance(r, dict) or not _text(r, "name", rw) or not _texts(r, "jobs", rw):
+                    raise TeamworkError(f"{rw}: needs \"name\" and \"jobs\" (and \"say\")")
+                V["roles"].append((_text(r, "name", rw), _texts(r, "jobs", rw), _texts(r, "say", rw)))
+        else:
+            V["roles"] = None
+        if parts is None and roles is None and "steps" not in v and "goal" not in v:
+            raise TeamworkError(f"{where}: changes nothing; give the \"parts\", \"roles\", \"steps\", or \"goal\" in "
+                                "its words")
+        out.append(V)
+    return out
+
+
+def _version_activity(A: dict, V: dict) -> dict:
+    """The activity as this version prints it."""
+    return {**A, "parts": V["parts"], "roles": V["roles"] or A["roles"], "steps": V["steps"], "goal": V["goal"],
+            "tag": V["name"]}
+
+
+def _version_word(A: dict, V: dict, path: Path) -> Path:
+    """A version in a script these pages can't shape, as a Word file: Word and Google Docs shape every script."""
+    from . import script as SC
+    from . import wordfile as W
+    lang = V["language"]
+    rtl = SC.has_rtl(json.dumps([V["parts"], V["roles"], V["steps"], V["goal"]], ensure_ascii=False))
+    doc = W.Doc()
+    doc.para(A["title"], bold=True, size=18, markup=False)
+    doc.para(f"{V['name']}: give this to students who read it more easily than English. They still teach, "
+             "listen, and talk with their group.", italic=True, color="666666", markup=False)
+    say = lambda text, **kw: doc.para(text, markup=False, lang=lang, rtl=rtl, **kw)  # noqa: E731
+    if V["goal"] != A["goal"]:
+        say(V["goal"], bold=True)
+    if V["steps"] is not A["steps"]:
+        doc.heading("Steps", 2)
+        for n, step in enumerate(V["steps"], start=1):
+            say(f"{n}. {step}", after=40)
+    for n, part in enumerate(V["parts"] if V["parts"] is not A["parts"] else [], start=1):
+        doc.heading(f"{chr(64 + n) if A['kind'] == 'jigsaw' else n}. {part.get('title') or ''}".rstrip(". "), 2)
+        for para in str(part["text"]).split("\n\n"):
+            say(para)
+        if part.get("quote"):
+            say(f"“{part['quote']}” {('— ' + part['quote_source']) if part.get('quote_source') else ''}", italic=True)
+        if part.get("words"):
+            say("; ".join(f"{w['word']}: {w['means']}" for w in part["words"]))
+        if part.get("teach"):
+            say("; ".join(part["teach"]), bold=True)
+        if part.get("check"):
+            say(part["check"])
+    if V["roles"]:
+        doc.heading("Jobs", 2)
+        for name, jobs, stems in V["roles"]:
+            say(name, bold=True, after=20)
+            for line in jobs + [f"“{t}”" for t in stems]:
+                say(line, after=20)
+    doc.save(path, f"{A['title']} ({V['name']})")
+    return path
 
 
 # --- Drawing ----------------------------------------------------------------------------------------
@@ -360,6 +471,8 @@ def _size(A: dict, size: float) -> float:
 
 def _header(pen: Pen, A: dict, what: str) -> float:
     c = pen.c
+    if A.get("tag"):
+        what = f"{what} ({A['tag']})"
     c.setFillGray(INK)
     size = 16.0
     while size > 9 and pen.width(what, pen.f.bold, size) > PAGE_W - 2 * MARGIN:
@@ -391,6 +504,7 @@ def teacher_page(pen: Pen, A: dict, worksheet_note: str, pages: dict[str, str]) 
         _grouping(A) + _counts(A),
         "This page is for you: print it once. " + _printing(A, pages),
         ("Each group needs: " + "; ".join(A["materials"]) + ".") if A["materials"] else "",
+        _versions_note(A, pages),
         worksheet_note]),
         ("During", _during(A) + (A["steps"] if A["kind"] != "lab" else [])),
         (rotation[0], rotation[1] + [
@@ -441,6 +555,18 @@ def _rotation(A: dict) -> tuple[str, list[str]]:
                                  "after each stop" if kind == "reciprocal" else "each round" if A["rotate_every"] == 1
                                  else f"every {A['rotate_every']} rounds")
                              + ", so every student does every job.") + " No one is always the helper or the helped."])
+
+
+def _versions_note(A: dict, pages: dict[str, str]) -> str:
+    where = []
+    for name in A.get("_pdf_versions", []):
+        found = [p for key, p in pages.items() if key.startswith(f"{name}:")]
+        where.append(f"{name}" + (f" ({', '.join(found)})" if found else ""))
+    where += [f"{name} (the Word file {path}: print it from Word or Google Docs)" for name, path in A.get("_word_files", [])]
+    if not where:
+        return ""
+    return ("Versions for the students who need them: " + "; ".join(where) + ". Same parts and jobs, so groups "
+            "stay mixed: a student with a version still teaches, listens, and talks with everyone.")
 
 
 def _counts(A: dict) -> str:
@@ -1104,6 +1230,12 @@ def reading_sheets(pen: Pen, A: dict):
     yield
 
 
+def _shaped(text: str) -> bool:
+    """Right-to-left, Indic, Myanmar, or Ethiopic: scripts these pages can't shape."""
+    return any("\u0590" <= ch <= "\u08ff" or "\ufb1d" <= ch <= "\ufeff" or "\u0900" <= ch <= "\u0dff"
+               or "\u1000" <= ch <= "\u109f" or "\u1200" <= ch <= "\u139f" for ch in text)
+
+
 def _strings(value):
     if isinstance(value, str):
         yield value
@@ -1123,8 +1255,15 @@ def build(json_path: Path, out_dir: Path) -> dict:
     except ValueError as e:
         raise TeamworkError(f"{json_path.name} isn't valid JSON: {e}") from None
     A = normalize(data)
-    texts = list(_strings(data))
-    fonts, prints = F.choose(texts)
+    texts = list(_strings({k: v for k, v in data.items() if k != "versions"}))
+    on_pdf, on_word = [], []
+    for V in A["versions"]:
+        vtexts = list(_strings([V["parts"], V["roles"], V["steps"], V["goal"]]))
+        needs_word = any(_shaped(t) for t in vtexts) or not F.choose(vtexts)[1] or \
+            any("\u2e80" <= ch <= "\u9fff" or "\uac00" <= ch <= "\ud7af" for t in vtexts for ch in t)
+        (on_word if needs_word else on_pdf).append(V)
+    fonts, prints = F.choose(texts + [t for V in on_pdf for t in _strings([V["parts"], V["roles"], V["steps"],
+                                                                          V["goal"]])])
     out_dir.mkdir(parents=True, exist_ok=True)
     path = out_dir / "teamwork.pdf"
     worksheet = A.get("worksheet")
@@ -1142,16 +1281,29 @@ def build(json_path: Path, out_dir: Path) -> dict:
     if not prints:
         checks.append(f"these characters will print as boxes: {F.unprintable(texts)}. Put home-language words on the "
                       "exit sheet's version instead (worksheets print every supported language)")
-    shaped = sorted({ch for t in texts for ch in t if "\u0590" <= ch <= "\u08ff" or "\ufb1d" <= ch <= "\ufeff"
-                     or "\u0900" <= ch <= "\u0dff" or "\u1000" <= ch <= "\u109f"})
-    if shaped:
+    if any(_shaped(t) for t in texts):
         checks.append("group pages can't shape right-to-left or Indic scripts (they'd print reversed or broken): put "
-                      "those words on the exit sheet's home-language version instead")
+                      "those words in a \"versions\" entry (it goes in a Word file, which shapes every script)")
     reading = " ".join(str(part.get("text", "")) for part in A["parts"] if isinstance(part, dict))
     level = SRC.reading_grade(reading) if reading else None
     if level is not None and A["grade"] >= 3 and level > A["grade"] + 2:
         checks.append(f"the reading scores about grade {level:g} (Flesch-Kincaid) for grade {A['grade']}: "
                       "simplify it, unless that's intended")
+    for V in A["versions"]:
+        if V["language"] and V["quality"] in ("medium", "low", "unknown") and not V["reviewed_by"]:
+            checks.append(f"Claude's {V['english_name']} isn't reliable enough to print unchecked: have a bilingual adult "
+                          f"read version {V['id']!r}, then add \"reviewed_by\" (a role, not a name)")
+        if not V["language"] and V["parts"] is not A["parts"]:
+            plain = SRC.reading_grade(" ".join(p["text"] for p in V["parts"]))
+            if plain is not None and level is not None and plain >= level:
+                checks.append(f"version {V['id']!r} reads at about grade {plain:g}, no easier than the original "
+                              f"({level:g}): use shorter sentences and everyday words")
+    word_files = []
+    for V in on_word:
+        (out_dir / "versions").mkdir(parents=True, exist_ok=True)
+        word_files.append((V, _version_word(A, V, out_dir / "versions" / f"{V['id']}.docx")))
+    A["_word_files"] = [(V["name"], f"versions/{V['id']}.docx") for V, _ in word_files]
+    A["_pdf_versions"] = [V["name"] for V in on_pdf]
 
     def render(target, page_of: dict[str, str]) -> tuple[list, list[str]]:
         c = canvas.Canvas(target, pagesize=(PAGE_W, PAGE_H))
@@ -1178,6 +1330,16 @@ def build(json_path: Path, out_dir: Path) -> dict:
             sections.append(("Questions", lambda: questions_page(pen, A)))
         elif A["kind"] == "reciprocal":
             sections.append(("Reading", lambda: reading_sheets(pen, A)))
+        for V in on_pdf:  # each version's own pages, after everyone's
+            AV = _version_activity(A, V)
+            if V["roles"]:
+                sections.append((f"{V['name']}: role cards", lambda AV=AV: role_cards(pen, AV)))
+            if A["kind"] == "lab" and (V["steps"] is not A["steps"] or V["goal"] != A["goal"]):
+                sections.append((f"{V['name']}: group task", lambda AV=AV: iter([task_card(pen, AV)])))
+            if A["kind"] == "jigsaw" and V["parts"] is not A["parts"]:
+                sections.append((f"{V['name']}: expert sheets", lambda AV=AV: expert_sheets(pen, AV)))
+            if A["kind"] == "reciprocal" and V["parts"] is not A["parts"]:
+                sections.append((f"{V['name']}: reading", lambda AV=AV: reading_sheets(pen, AV)))
         pages = []
         for name, make in sections:
             first = pen.page + 1
@@ -1195,7 +1357,7 @@ def build(json_path: Path, out_dir: Path) -> dict:
     page_of = {name: f"page {a}" if a == b else f"pages {a}-{b}" for name, a, b in pages}
     pages, warnings = render(str(path), page_of)
     return {"pdf": path, "pages": pages, "warnings": warnings, "structure": STRUCTURES[A["kind"]][0],
-            "group_size": A["group_size"]}
+            "group_size": A["group_size"], "word_files": [str(p) for _, p in word_files]}
 
 
 # --- Mixed-skill groups from a class's marked work ------------------------------------------------------
@@ -1334,4 +1496,111 @@ def form_groups(folder: Path, size: int | None = None, skill: str | None = None,
                   + ", ".join(unplaced) + "."]
     path = out / f"groups-{structure}{'-similar' if similar else ''}.md"
     path.write_text("\n".join(lines) + "\n")
+    S.write_json(path.with_suffix(".json"), {"structure": structure, "similar": similar, "seed": seed,
+                                              "groups": [[{"id": sid, "job": job} for sid, job in g] for g in plan]})
     return {"groups": plan, "path": path, "skill": skill, "mixed": bool(runs), "similar": similar}
+
+
+# --- Team points: each team scored by how much its members improved ------------------------------------
+
+def improvement_points(base: float | None, score: float) -> int:
+    """STAD's improvement points (Slavin), percentages: a perfect paper or 10 or more above your own usual is 30;
+    your usual to 10 above, 20; up to 10 below, 10; further below, 5. No earlier work counts as at your usual."""
+    if score >= 100 or (base is not None and score > base + 10):
+        return 30
+    if base is None or score >= base:
+        return 20
+    return 10 if score >= base - 10 else 5
+
+
+def team_points(folder: Path, worksheet: str, groups_path: Path | None = None, out: Path | None = None) -> dict:
+    """After the exit sheet is marked: each student's improvement points and each team's average, so every
+    student, at every level, can add as much to the team as anyone. Writes the teacher's details
+    (team-points.md, by class ID) and a page to post (team-points.pdf: teams and their points, nothing else)."""
+    from . import progress as PG
+    folder = Path(folder)
+    if not folder.is_dir():
+        raise TeamworkError(f"no folder {folder}: give the class's folder")
+    progress_dir = folder / "progress"
+    if groups_path is None:
+        made = sorted(progress_dir.glob("groups-*.json"), key=lambda p: p.stat().st_mtime)
+        if not made:
+            raise TeamworkError("no groups yet: make them with `groups` first (team points need the teams)")
+        groups_path = made[-1]
+    teams = S.read_json(Path(groups_path))["groups"]
+    runs = PG.collect(folder)
+    exits = [r for r in runs if r["assignment_id"] == worksheet]
+    if not exits:
+        found = sorted({r["assignment_id"] for r in runs})
+        raise TeamworkError(f"no marked class of {worksheet!r} under {folder}"
+                            + (f"; marked worksheets: {', '.join(found)}" if found else ""))
+    exit_run = exits[-1]
+
+    def pct(run: dict, sid: str) -> float | None:
+        answers = run["students"].get(sid, {}).get("answers", {})
+        new = [a for a in answers.values() if not a.get("retry")]
+        possible = sum(a["possible"] for a in new)
+        return 100 * sum(a["earned"] for a in new) / possible if possible else None
+
+    earlier = [r for r in runs if (r["date"], r["title"]) < (exit_run["date"], exit_run["title"])
+               and r["assignment_id"] != worksheet]
+    rows, posted = [], []
+    for k, team in enumerate(teams, start=1):
+        members = []
+        for member in team:
+            sid = member["id"]
+            score = pct(exit_run, sid)
+            past = [v for v in (pct(r, sid) for r in earlier) if v is not None]
+            base = sum(past) / len(past) if past else None
+            points = improvement_points(base, score) if score is not None else None
+            members.append((sid, base, score, points))
+        scored = [m[3] for m in members if m[3] is not None]
+        average = sum(scored) / len(scored) if scored else None
+        rows.append((k, members, average))
+        posted.append((k, average))
+    out = Path(out or progress_dir)
+    out.mkdir(parents=True, exist_ok=True)
+    lines = ["# Team points (for the teacher; post team-points.pdf, not this)", "",
+             f"Exit sheet: {exit_run['title']} ({exit_run['date']}). Each student's usual is their average on "
+             f"{len(earlier)} earlier marked worksheet{'s' if len(earlier) != 1 else ''}. Points: 30 for a perfect paper "
+             "or more than 10 above their usual; 20 for their usual to 10 above (or no earlier work); 10 for up to 10 "
+             "below; 5 for further below. Absent students don't count against the team.", ""]
+    for k, members, average in rows:
+        lines.append(f"- Team {k}: " + (f"{average:.0f} points" if average is not None else "no exit sheets") + " ("
+                     + "; ".join(f"{sid}: " + ("absent" if score is None else
+                                               f"{score:.0f}% vs usual {'none yet' if base is None else f'{base:.0f}%'}"
+                                               f", {points}") for sid, base, score, points in members) + ")")
+    (out / "team-points.md").write_text("\n".join(lines) + "\n")
+    _team_points_page(out / "team-points.pdf", exit_run["title"], posted)
+    return {"teams": rows, "md": out / "team-points.md", "pdf": out / "team-points.pdf", "earlier": len(earlier)}
+
+
+def _team_points_page(path: Path, title: str, posted: list[tuple[int, float | None]]) -> None:
+    fonts, _ = F.choose([title])
+    c = canvas.Canvas(str(path), pagesize=(PAGE_W, PAGE_H))
+    c.setTitle(fonts.text(f"Team points: {title}"))
+    c.setAuthor("Paper Loop")
+    c.setFillGray(INK)
+    c.setFont(fonts.bold, 26)
+    c.drawString(MARGIN, PAGE_H - MARGIN - 26, "Team points")
+    c.setFont(fonts.regular, 13)
+    c.drawString(MARGIN, PAGE_H - MARGIN - 50, fonts.text(title))
+    c.setFont(fonts.oblique, 11.5)
+    c.setFillGray(0.3)
+    c.drawString(MARGIN, PAGE_H - MARGIN - 72, "Everyone earns points by beating their own past work, so every "
+                                                "teammate counts the same.")
+    c.setFillGray(INK)
+    y = PAGE_H - MARGIN - 110
+    for k, average in posted:
+        c.setFont(fonts.bold, 20)
+        c.drawString(MARGIN + 10, y, f"Team {k}")
+        c.drawRightString(PAGE_W - MARGIN - 10, y, f"{average:.0f}" if average is not None else "-")
+        c.setStrokeGray(0.8)
+        c.line(MARGIN, y - 10, PAGE_W - MARGIN, y - 10)
+        y -= 40
+        if y < MARGIN + 30:
+            c.showPage()
+            y = PAGE_H - MARGIN - 40
+    c.showPage()
+    c.save()
+

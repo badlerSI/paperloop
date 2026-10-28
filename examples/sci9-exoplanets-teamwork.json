@@ -68,5 +68,112 @@
   ],
   "sources": [
     "Facts from NASA's exoplanet pages (science.nasa.gov/exoplanets); NASA material isn't copyrighted. The worksheet's light curve is real Kepler data for HAT-P-7, from MAST at the Space Telescope Science Institute; the planet's size is from the NASA Exoplanet Archive."
+  ],
+  "versions": [
+    {
+      "id": "plain",
+      "name": "Plain English",
+      "parts": [
+        {
+          "text": "Sometimes a planet passes in front of its star. Then the star looks a little dimmer. A telescope sees a small dip in the star's light. The dip comes back every time the planet goes around. The time between dips is the planet's year. A bigger planet blocks more light, so it makes a deeper dip. A planet as big as Jupiter blocks about 1% of a star like the Sun. A planet as big as Earth blocks only about 0.01%. NASA's Kepler and TESS telescopes found thousands of planets this way. But we only see the dip if the planet passes between us and the star.",
+          "words": [
+            {
+              "word": "dip",
+              "means": "a small drop"
+            },
+            {
+              "word": "orbit",
+              "means": "the path around the star"
+            }
+          ]
+        },
+        {
+          "text": "A planet pulls on its star, so the star moves in a small circle. We call this a wobble. When the star moves toward us, its light looks a little more blue. When it moves away, its light looks a little more red. Scientists measure these color changes to find the planet. A heavy planet makes a bigger wobble. A planet close to its star also makes a bigger wobble. So this method tells us how heavy the planet is. In 1995, this method found the first planet around a star like the Sun.",
+          "words": [
+            {
+              "word": "wobble",
+              "means": "a small back-and-forth movement"
+            },
+            {
+              "word": "mass",
+              "means": "how much matter, or how heavy"
+            }
+          ]
+        },
+        {
+          "text": "Sometimes scientists take a picture of the planet itself. This is hard. A star is much, much brighter than its planet. From far away, the planet looks very close to the star. So telescopes block the star's light, like when you shade your eyes from the Sun. Then the planet can show up. This works best for big, young, hot planets that are far from their stars. A picture of the planet's light can show what its air is made of.",
+          "words": [
+            {
+              "word": "glare",
+              "means": "bright light that makes it hard to see"
+            },
+            {
+              "word": "atmosphere",
+              "means": "the air around a planet"
+            }
+          ]
+        },
+        {
+          "text": "Gravity can bend light. Sometimes a star passes right in front of a star that is much farther away. The closer star's gravity acts like a magnifying glass. It makes the far star look brighter for a few weeks. If the closer star has a planet, the planet makes a short extra jump in brightness. This method can find planets far from their stars. It can even find planets with no star. But it happens only once, because the stars keep moving. So scientists usually can't look at that planet again.",
+          "words": [
+            {
+              "word": "gravity",
+              "means": "the pull between things"
+            },
+            {
+              "word": "lens",
+              "means": "something that bends light, like a magnifying glass"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "id": "es",
+      "language": "es",
+      "name": "Español",
+      "parts": [
+        {
+          "title": "El método del tránsito",
+          "text": "Cuando un planeta pasa por delante de su estrella, visto desde la Tierra, tapa un poco de la luz de la estrella. Un telescopio que mide el brillo de la estrella ve una pequeña bajada que se repite en cada órbita. El tiempo entre bajadas es el año del planeta. Qué tan profunda es la bajada depende del tamaño del planeta comparado con la estrella: la fracción de luz tapada es más o menos (radio del planeta ÷ radio de la estrella)². Un planeta del tamaño de Júpiter tapa cerca del 1% de la luz de una estrella como el Sol; uno del tamaño de la Tierra, cerca del 0.01%. Los telescopios Kepler y TESS de la NASA encontraron miles de planetas así. Solo funciona cuando la órbita está alineada de canto con nosotros.",
+          "teach": [
+            "qué es la bajada y por qué se repite",
+            "cómo la profundidad da el tamaño del planeta",
+            "por qué no se ven muchos planetas"
+          ],
+          "check": "Si una bajada es cuatro veces más profunda que otra en la misma estrella, ¿cómo se comparan los tamaños de los planetas?"
+        },
+        {
+          "title": "El método del bamboleo (velocidad radial)",
+          "text": "Un planeta y su estrella giran alrededor de su centro de masa común, así que la estrella se bambolea un poco. Cuando la estrella se acerca a nosotros, su luz se corre un poco hacia el azul; cuando se aleja, hacia el rojo. Medir ese corrimiento de ida y vuelta revela el planeta y su órbita. Los planetas más pesados y los más cercanos a su estrella causan bamboleos más grandes, así que este método da la masa del planeta (al menos un mínimo). En 1995 encontró 51 Pegasi b, el primer planeta conocido alrededor de una estrella como el Sol.",
+          "teach": [
+            "por qué se bambolea la estrella",
+            "cómo el cambio de color muestra el bamboleo",
+            "que mide la masa"
+          ],
+          "check": "¿Qué causa un bamboleo más grande: un planeta pesado cerca de su estrella o un planeta liviano lejos?"
+        },
+        {
+          "title": "La imagen directa",
+          "text": "A veces los astrónomos toman una foto del planeta mismo. Es difícil: una estrella puede ser miles de millones de veces más brillante que su planeta, y desde lejos se ven muy juntos. Los telescopios usan un coronógrafo o una pantalla estelar para tapar la luz de la estrella, como cuando te tapas los ojos del Sol. La imagen directa funciona mejor con planetas grandes y jóvenes, todavía calientes, que brillan en luz infrarroja y están lejos de su estrella. Permite estudiar la luz del planeta directamente, lo que puede mostrar de qué está hecha su atmósfera.",
+          "teach": [
+            "por qué el brillo de la estrella es el problema",
+            "cómo ayuda tapar la estrella",
+            "qué planetas son más fáciles de ver"
+          ],
+          "check": "¿Por qué es más fácil fotografiar un planeta lejos de su estrella que uno cerca?"
+        },
+        {
+          "title": "La microlente gravitacional",
+          "text": "La gravedad dobla la luz. Cuando una estrella pasa casi exactamente por delante de otra estrella más lejana, su gravedad actúa como una lente y hace que la estrella lejana se vea más brillante durante unas semanas. Si la estrella más cercana tiene un planeta, la gravedad del planeta agrega un pico corto extra al brillo. La microlente puede encontrar planetas lejos de su estrella e incluso planetas sin estrella. Cada evento ocurre una sola vez, porque las estrellas siguen moviéndose, así que normalmente no se puede volver a estudiar el planeta.",
+          "teach": [
+            "que la gravedad dobla y enfoca la luz",
+            "qué significa el pico extra",
+            "por qué cada evento no se repite"
+          ],
+          "check": "¿Por qué los astrónomos no pueden volver a mirar el mismo planeta de microlente el año que viene?"
+        }
+      ]
+    }
   ]
 }

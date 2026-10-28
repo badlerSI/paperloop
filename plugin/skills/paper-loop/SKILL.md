@@ -221,7 +221,10 @@ When a teacher wants students working together: "a lab", "group roles", "a jigsa
 5. Give the teacher `teamwork.pdf` and the exit sheet. Page 1 is theirs: what to print (with page numbers),
    materials, and how to run it.
 
-After the class, mark the exit sheets like any worksheet: that's what shows each student learned it.
+For students who need other words, add `versions` to the activity (plain English, or a home language) the way
+a worksheet has versions: same work, their words. After the class, mark the exit sheets like any worksheet:
+that's what shows each student learned it. Then `PL teampoints "<class folder>" --worksheet <exit sheet id>`
+scores each team by its members' improvement, a page to post with no names or IDs on it.
 
 ## A Paper Loop sample
 

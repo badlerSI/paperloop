@@ -73,10 +73,35 @@ methods with one or neither averaged about +0.07. So every activity has:
 | `parts` | jigsaw, reciprocal: yes | Jigsaw: 3-5 parts, each `{"title", "text", "teach": ["2-3 things to teach"], "check": "a question for the home group"}`; about 150-200 words a part (quote included) fits beside the teach box, and `teamwork` warns past that. Reciprocal: 2-8 chunks of the reading, each `{"text"}` with an optional `title`. Either kind of part can also have: `cite` (the same as a passage's: `teamwork` checks the license and prints the credit line), or `source` (a credit line as written, for text written for the activity); `quote` and `quote_source` (a primary source, set apart under the text); and `words` (`[{"word": "alliance", "means": "an agreement to help each other"}]`, a key-words line under the text, for everyone and especially students still learning English). Parts adapted from CommonLit, ReadWorks, CK-12, OpenStax, Newsela, or Khan Academy are refused, as passages are. `teamwork` flags a reading more than two grades above the class. |
 | `cards` | pairs, heads: yes | `[{"q": "...", "a": "..."}]`. Pairs: 12 a page, so 12 or 24 work well; the switch line falls halfway. Heads: as many as the time allows. |
 | `worksheet` | no, but expected | The `assignment_id` of the exit sheet each student does alone, made in the same folder. Its versions (plain wording, sentence starters, a home language) are handed out as usual and scanned together. |
-| `class_size` | no | The number of students: the teacher's page then says how many groups, and which have one more. |
+| `class_size` | no | The number of students: the teacher's page then says how many groups, and of what sizes. |
+| `versions` | no | The same activity in other words, for the students who need them: `[{"id": "plain", "name": "Plain English", "parts": [...]}, {"id": "es", "language": "es", "parts": [...], "roles": [...]}]`. A version replaces any of `parts` (one entry per part, each with just the fields it changes: `title`, `text`, `teach`, `check`, `words`), `roles` (one per card: `name`, `jobs`, `say`), `steps`, and `goal`. Plain English, and languages in the Latin, Greek, or Cyrillic alphabets (Spanish, Vietnamese, Haitian Creole, Russian...), print as extra pages after everyone's. Arabic, Chinese, Bengali, Burmese and other scripts these pages can't shape go in a Word file, `versions/<id>.docx`, which Word and Google Docs print correctly. As with worksheets, a language Claude translates less reliably asks for a bilingual adult's check (`reviewed_by`), and a plain version is checked to read easier than the original. |
 | `listen_for` | no | What the teacher listens for while walking around: the talk that shows understanding and the misconception to catch. |
 | `debrief` | no | How to wrap up with the whole class. |
 | `sources` | no | Where the activity's idea, facts, and data came from, with credit (see below). |
+
+## Versions: the same work, in words each student can read
+
+A version changes the words, never the work: the same parts, the same jobs, the same exit sheet. A student
+with the Spanish expert sheet still teaches the home group (in English or Spanish), and a student with the
+plain-English reading still takes their turn as Summarizer. That keeps groups mixed and keeps every student
+inside the group's talk, where most of the learning happens. Write a plain version in short sentences and
+everyday words, keeping every number and idea; translate key words into `words` so they print on the sheet.
+
+## Team points
+
+STAD (Student Teams-Achievement Divisions, Slavin) scores a team by how much each member improves on their
+own past work, so every student can add as much to the team as anyone. After the exit sheet is marked, run
+`PL teampoints "<class folder>" --worksheet <exit sheet id>`. It reads the newest `progress/groups-*.json`
+(or `--groups`), and gives each student improvement points from their exit sheet against their average on
+earlier marked worksheets:
+- 30 for a perfect paper, or more than 10 points above their own usual;
+- 20 for their usual to 10 above, or no earlier work;
+- 10 for up to 10 below;
+- 5 for further below.
+
+A team's score is its members' average; absent students don't count against it. It writes
+`progress/team-points.pdf` to post (teams and points, no names or IDs) and `progress/team-points.md` for the
+teacher (each class ID's points). Celebrate every team that improves; don't rank students.
 
 ## Writing a good activity
 

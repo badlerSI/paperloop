@@ -27,6 +27,7 @@
                                          pawns, a fortune teller, a mini-book, ABCD cards, and bingo
     teamwork ACTIVITY.json --out DIR     group work where students teach each other: role cards, the task,
                                          jigsaw expert sheets, coach-and-player sheets, tokens to cut out
+    teampoints FOLDER --worksheet ID      after the exit sheet is marked: team points by each student's improvement
     groups FOLDER [--size 4] [--skill S] [--structure lab] [--similar] [--roster ids.csv]
                                          groups from a class's marked work, by class ID: mixed (or
                                          --similar for targeted practice); random from a roster alone
@@ -399,6 +400,10 @@ def cmd_teamwork(command: str, argv: list[str]) -> int:
     if command == "teamwork":
         parser.add_argument("activity", type=Path)
         parser.add_argument("--out", type=Path, required=True)
+    elif command == "teampoints":
+        parser.add_argument("folder", type=Path)
+        parser.add_argument("--worksheet", required=True, help="the exit sheet's assignment_id")
+        parser.add_argument("--groups", type=Path, help="a groups-*.json (default: the newest in progress/)")
     else:
         parser.add_argument("folder", type=Path)
         parser.add_argument("--size", type=int, default=None, help="group size (default 4; 2 for pairs)")
@@ -412,14 +417,24 @@ def cmd_teamwork(command: str, argv: list[str]) -> int:
     try:
         if command == "teamwork":
             report = TW.build(args.activity, args.out)
+        elif command == "teampoints":
+            report = TW.team_points(args.folder, args.worksheet, args.groups)
         else:
             report = TW.form_groups(args.folder, args.size, args.skill, args.roster, args.structure,
                                     seed=args.seed, similar=args.similar)
     except (TW.TeamworkError, ValueError, OSError) as e:
-        print(f"Can't make the {'group work' if command == 'teamwork' else 'groups'}: {e}")
+        print(f"Can't make the {'group work' if command == 'teamwork' else 'team points' if command == 'teampoints' else 'groups'}: {e}")
         return 1
+    if command == "teampoints":
+        print(f"Wrote {report['pdf']} (to post: teams and points only) and {report['md']} (for you: each class ID's "
+              f"points, against their average on {report['earlier']} earlier worksheets).")
+        for k, members, average in report["teams"]:
+            print(f"  Team {k}: " + (f"{average:.0f}" if average is not None else "no exit sheets"))
+        return 0
     if command == "teamwork":
         print(f"Wrote {report['pdf']}: {report['structure']}, groups of {report['group_size']}.")
+        for path in report.get("word_files", []):
+            print(f"  {path}: a version in a script these pages can't shape. Print it from Word or Google Docs.")
         for name, first, last in report["pages"]:
             print(f"  {'page ' + str(first) if first == last else f'pages {first}-{last}'}: {name}")
         for w in report["warnings"]:
@@ -643,7 +658,7 @@ def main() -> int:
     if len(sys.argv) > 1 and sys.argv[1] == "pieces":  # cards, games, and foldables: their own small CLI
         from paper_loop_core import pieces
         return pieces.main(sys.argv[2:])
-    if len(sys.argv) > 1 and sys.argv[1] in ("teamwork", "groups"):
+    if len(sys.argv) > 1 and sys.argv[1] in ("teamwork", "groups", "teampoints"):
         return cmd_teamwork(sys.argv[1], sys.argv[2:])
     parser = argparse.ArgumentParser(prog="paper_loop.py", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
@@ -706,7 +721,7 @@ def main() -> int:
     p.add_argument("--grade", choices=["off", "back", "csv"], default="off")
     p.add_argument("--accept-flags", action="store_true")
     p.set_defaults(func=cmd_render)
-    for name in ("pieces", "teamwork", "groups"):  # handled above; listed so --help shows them
+    for name in ("pieces", "teamwork", "groups", "teampoints"):  # handled above; listed so --help shows them
         sub.add_parser(name, help=f"see `paper_loop.py {name} --help`")
     args = parser.parse_args()
     return args.func(args)

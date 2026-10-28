@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import subprocess
+import zipfile
 import sys
 from pathlib import Path
 
@@ -107,7 +108,8 @@ def test_jigsaw_parts_take_quotes_key_words_and_checked_credits(tmp_path):
     assert "CC BY-SA 4.0" in sheet and "Transit photometry" in sheet
     assert "For 31 students: 7 groups (3 of 5, 4 of 4), two students sharing a letter in the bigger ones." in pages[0]
     assert "The transit method" in pages[1]  # the tent names the expert's topic, for the home group
-    assert "How the parts connect" in pages[-1] and "your own words" in pages[-1]
+    notes = next(p for p in pages if p.startswith("Home group notes"))
+    assert "How the parts connect" in notes and "your own words" in notes
     part["cite"]["url"] = "https://www.commonlit.org/en/texts/x"
     S.write_json(tmp_path / "j.json", data)
     with pytest.raises(TW.TeamworkError, match="CommonLit"):
@@ -182,10 +184,10 @@ def test_a_jigsaw_gives_each_expert_a_letter_and_a_sheet(tmp_path):
     cards = "".join(pages[1:3])
     assert all(f"Expert {x}: your job" in cards for x in "ABCD") and "Listener" not in cards
     assert "Your part: The transit method." in cards
-    sheets = [p for p in pages if "Teach box" in p]
+    sheets = [p for p in pages if "Teach box" in p and "(Plain English)" not in p and "(Español)" not in p]
     assert len(sheets) == 4 and all(sheets[k].startswith(f"Expert {x}: ") for k, x in enumerate("ABCD"))
     assert "Its answer" in sheets[0] and "A picture I'll draw" in sheets[0]
-    assert "Home group notes" in pages[-1]
+    assert any(p.startswith("Home group notes") for p in pages)
     assert "Every expert counts" in pages[0]
 
 
@@ -435,3 +437,53 @@ def test_preview_replaces_only_what_it_makes(tmp_path):
     assert "deck-p7.png" not in names and (out / "deck-p1.png").read_bytes() == b"old" and "deck-sheet1.png" in names
     assert run().returncode == 0
     assert sorted(p.name for p in out.iterdir()) == ["deck-p1.png", "deck-p2.png", "deck-p3.png"]
+
+
+# --- Versions and team points ------------------------------------------------------------------
+
+def test_versions_print_plain_and_latin_languages_and_put_other_scripts_in_word(tmp_path):
+    report = TW.build(ROOT / "examples" / "sci9-exoplanets-teamwork.json", tmp_path)
+    names = [name for name, *_ in report["pages"]]
+    assert "Plain English: expert sheets" in names and "Español: expert sheets" in names
+    pages = text_of(report["pdf"])
+    assert "Plain English (pages 9-12); Español (pages 13-16)" in pages[0]
+    assert any(p.startswith("Expert B: El método del bamboleo") for p in pages)
+    data = S.read_json(ROOT / "examples" / "sci9-exoplanets-teamwork.json")
+    data["versions"] = [{"id": "ar", "language": "ar", "parts": [{"title": "طريقة العبور", "text": "عندما يمر كوكب أمام نجمه."}]
+                         + [{}] * 3}]
+    S.write_json(tmp_path / "ar.json", data)
+    report = TW.build(tmp_path / "ar.json", tmp_path / "ar")
+    assert report["word_files"] and Path(report["word_files"][0]).name == "ar.docx"
+    assert "العبور" in zipfile.ZipFile(report["word_files"][0]).read("word/document.xml").decode()
+    assert "the Word file versions/ar.docx" in text_of(report["pdf"])[0]
+    data["versions"] = [{"id": "x"}]
+    with pytest.raises(TW.TeamworkError, match="changes nothing"):
+        TW.normalize(data)
+
+
+def test_team_points_reward_each_student_s_own_improvement(tmp_path):
+    sys.path.insert(0, str(Path(__file__).parent))
+    from test_progress import _marked
+    cls = tmp_path / "P5"
+    ids = ["0501", "0502", "0503", "0504"]
+    _marked(cls, "week1", "2026-10-20", {"0501": {1: 0, 2: 0, 3: 0}, "0502": {}, "0503": {1: 0}, "0504": {}})
+    exit_sheet = S.read_json(ROOT / "examples" / "math6-ratios-02.json")
+    exit_sheet["assignment_id"] = "exit-01"
+    exit_sheet.pop("versions", None)
+    S.write_json(tmp_path / "exit-01.json", exit_sheet)
+    _marked(cls, "exit", "2026-10-27", {"0501": {}, "0502": {}, "0503": {1: 0, 2: 0, 3: 0, 4: 0}},
+            source=tmp_path / "exit-01.json")
+    (cls / "progress").mkdir()
+    S.write_json(cls / "progress" / "groups-lab.json",
+                 {"groups": [[{"id": "0501", "job": "Recorder"}, {"id": "0502", "job": "Skeptic"}],
+                             [{"id": "0503", "job": "Recorder"}, {"id": "0504", "job": "Skeptic"}]]})
+    report = TW.team_points(cls, "exit-01")
+    (_, t1, avg1), (_, t2, avg2) = report["teams"]
+    assert dict((sid, pts) for sid, _, _, pts in t1) == {"0501": 30, "0502": 30}  # a big gain and a perfect paper
+    assert dict((sid, pts) for sid, _, _, pts in t2) == {"0503": 5, "0504": None}  # well below their usual; absent
+    assert avg1 == 30 and avg2 == 5
+    posted = text_of(report["pdf"])[0]
+    assert "Team 1" in posted and "0501" not in posted  # the posted page names no one
+    assert "0503: " in report["md"].read_text()
+    with pytest.raises(TW.TeamworkError, match="no marked class of 'nope'"):
+        TW.team_points(cls, "nope")
