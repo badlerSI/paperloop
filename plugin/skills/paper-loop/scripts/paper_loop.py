@@ -470,6 +470,8 @@ def cmd_practice(args) -> int:
           "they got last time above each one.")
     for sid, qs in report["questions"].items():
         print(f"  ID {sid}: Q{', Q'.join(map(str, qs))}")
+    for note in report.get("notes", []):
+        print(f"  Check: {note}.")
     if report["stretched"]:
         print(f"  Full credit on everything, a stretch sheet instead: IDs {', '.join(report['stretched'])}.")
     no_sheet = [sid for sid in report["all_right"] if sid not in report["stretched"]]

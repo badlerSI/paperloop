@@ -104,14 +104,21 @@ class Worksheet:
 
     def answer_drawing(self, q: int, shapes: list) -> list[dict]:
         """A drawn answer, in the question's diagram coordinates, as diagram shapes. "plot" puts points (in
-        graph units) on the diagram's axes, "mark" puts points on its number line. Raises ValueError."""
+        graph units) on the diagram's axes, "mark" puts points on its number line. Raises ValueError, for any
+        malformed shape too."""
+        try:
+            return self._answer_drawing(q, shapes)
+        except (KeyError, TypeError, IndexError) as e:
+            raise ValueError(f"question {q}'s drawn answer: a shape is malformed ({type(e).__name__}: {e})") from None
+
+    def _answer_drawing(self, q: int, shapes: list) -> list[dict]:
         d = self.question_def(q).get("diagram")
         if not d:
             raise ValueError(f"question {q} has no diagram to draw the answer on")
         parts = [D.normalize_shape(s) for s in d["shapes"]]
         out = []
         for n, s in enumerate(shapes, start=1):
-            where = f"walkthrough for question {q}, draw {n}"
+            where = f"question {q}'s drawn answer, shape {n}"
             if not isinstance(s, dict) or s.get("shape") not in ANSWER_SHAPES:
                 raise ValueError(f"{where}: \"shape\" must be one of {', '.join(ANSWER_SHAPES)}")
             if s["shape"] == "plot":
@@ -145,6 +152,9 @@ class Worksheet:
                 chart = next((p for p in parts if p["shape"] == "bar_chart"), None)
                 if not chart:
                     raise ValueError(f"{where}: \"bars\" needs a bar chart in the question's diagram")
+                if len(s.get("values", [])) > len(chart["categories"]):
+                    raise ValueError(f"{where}: {len(s['values'])} bar values for {len(chart['categories'])} "
+                                     "categories")
                 slot = chart["w"] / max(1, len(chart["categories"]))
                 for k, v in enumerate(s.get("values", [])):
                     if v is not None:

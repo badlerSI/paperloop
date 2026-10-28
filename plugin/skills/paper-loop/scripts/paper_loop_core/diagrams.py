@@ -96,7 +96,10 @@ def _axes(c: canvas.Canvas, s: dict, ox: float, oy: float, f: Fonts) -> None:
     origin = ax == 0 and ay == 0  # only a true origin goes unlabeled; 1960 or 99.2% at the corner is labeled
     for i, v in enumerate(xs):
         if i % every == 0 and (v != ay or not origin):
-            c.drawCentredString(px(v), py(ax) - 2 - size, f.text(_fmt(v)))
+            if v == ay and ax != s["ymin"]:  # at the crossing, beside the y-axis rather than struck through by it
+                c.drawString(px(v) + 3, py(ax) - 2 - size, f.text(_fmt(v)))
+            else:
+                c.drawCentredString(px(v), py(ax) - 2 - size, f.text(_fmt(v)))
     for i, v in enumerate(ys):
         if i % every == 0 and (v != ax or not origin):
             c.drawRightString(px(ay) - 3, py(v) - size * 0.36, f.text(_fmt(v)))

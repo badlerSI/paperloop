@@ -21,6 +21,7 @@ import io
 import json
 import random
 import re
+import string
 from pathlib import Path
 
 from reportlab.pdfgen import canvas
@@ -204,8 +205,8 @@ def _board(board):
         try:
             d = S._diagram({k: v for k, v in board.items() if k in ("width", "height", "shapes", "description")},
                            "board", faint_images=False)
-        except S.WorksheetError as e:
-            raise TeamworkError(str(e)) from None
+        except (S.WorksheetError, KeyError, TypeError, ValueError) as e:
+            raise TeamworkError(f"board: {e}" if not isinstance(e, S.WorksheetError) else str(e)) from None
         return {**board, **d}
     if kind in ("rows", "ring"):
         names = board[BOARDS[kind][0]]
@@ -325,7 +326,7 @@ def normalize(data: dict) -> dict:
             raise TeamworkError(f"data table {k}: {{\"title\": ..., \"columns\": [...], \"rows\": [[...], ...]}}, each "
                                 "row as long as the columns")
         out["data"].append({"title": _text(d, "title", f"data table {k}"), "columns": [str(c) for c in d["columns"]],
-                            "rows": [[str(c) for c in r] for r in d["rows"]]})
+                            "rows": [["" if c is None else str(c) for c in r] for r in d["rows"]]})
     boards = data.get("board")
     out["boards"] = [_board(b) for b in (boards if isinstance(boards, list) else [boards] if boards else [])]
     out["board"] = out["boards"][0] if out["boards"] else None
@@ -359,6 +360,7 @@ def normalize(data: dict) -> dict:
                                     "sentence starters)")
             roles.append((_text(r, "name", where), _texts(r, "jobs", where), _texts(r, "say", where)))
         out["roles"] = roles
+    out["_checker"] = _checker_index(out["roles"])
     out["versions"] = _versions(data.get("versions"), out)
     return out
 
@@ -377,7 +379,19 @@ LABELS = {
            "read_intro": "First, the {last} looks at the title and guesses what the reading is about. Take turns "
                          "reading each part aloud, going left. After each part, stop and talk.",
            "stop": "Stop and talk, in this order: {order}. Pass the cards left.",
-           "last_stop": "Last stop: {order}. Then sum up the whole reading together."},
+           "last_stop": "Last stop: {order}. Then sum up the whole reading together.",
+           "footer": "Everyone also does the work, and helps each other.",
+           "footer_lab": "Next round, pass this card to your left.",
+           "footer_lab_every": "Every {every} rounds, pass this card to your left.",
+           "footer_reciprocal": "After each stop, pass this card to your left.", "footer_pairs": "Halfway, switch cards.",
+           "task": "Group task", "needs": "This task needs {abilities}. Everyone in your group is good at some of these.",
+           "rounds": "Rounds:", "check_off": "Check off each round. Pass the role cards left after each one.",
+           "check_off_every": "Check off each round. Pass the role cards left after every {every} rounds.",
+           "roll": "Roll a die", "our_data": "Our data",
+           "close": "Before you move on, {checker} checks: can everyone explain it? Then you each do the worksheet on "
+                    "your own.",
+           "the_role": "the {name}", "someone": "someone in the group", "key_words": "Key words: ",
+           "expert": "Expert {letter}"},
     "es": {"intro": "1. Lee tu parte con los otros expertos. 2. Pónganse de acuerdo en lo más importante. 3. Llena "
                     "el cuadro para enseñar: le vas a enseñar a tu grupo en unos 3 minutos.",
            "make_sure": "Asegúrate de enseñar: ", "teach_box": "Para enseñar", "teacher_checked": "Revisado",
@@ -388,7 +402,20 @@ LABELS = {
            "read_intro": "Primero, el {last} mira el título y adivina de qué trata la lectura. Túrnense para leer "
                          "cada parte en voz alta, hacia la izquierda. Después de cada parte, paren y hablen.",
            "stop": "Paren y hablen, en este orden: {order}. Pasen las tarjetas a la izquierda.",
-           "last_stop": "Última parada: {order}. Luego resuman juntos toda la lectura."},
+           "last_stop": "Última parada: {order}. Luego resuman juntos toda la lectura.",
+           "footer": "Todos también hacen el trabajo y se ayudan.",
+           "footer_lab": "En la próxima ronda, pasa esta tarjeta a tu izquierda.",
+           "footer_lab_every": "Cada {every} rondas, pasa esta tarjeta a tu izquierda.",
+           "footer_reciprocal": "Después de cada parada, pasa esta tarjeta a tu izquierda.",
+           "footer_pairs": "A la mitad, cambien de tarjeta.",
+           "task": "Tarea del grupo",
+           "needs": "Esta tarea necesita {abilities}. Cada persona del grupo es buena en algo de esto.",
+           "rounds": "Rondas:", "check_off": "Marca cada ronda. Pasen las tarjetas a la izquierda después de cada una.",
+           "check_off_every": "Marca cada ronda. Pasen las tarjetas a la izquierda cada {every} rondas.",
+           "roll": "Tira un dado", "our_data": "Nuestros datos",
+           "close": "Antes de seguir, {checker} revisa: ¿todos pueden explicarlo? Luego cada uno hace la hoja solo.",
+           "the_role": "{name}", "someone": "alguien del grupo", "key_words": "Palabras clave: ",
+           "expert": "Experto {letter}"},
 }
 
 
@@ -425,6 +452,16 @@ def _versions(raw, A: dict) -> list[dict]:
         if not isinstance(labels, dict) or any(k not in LABELS["en"] or not isinstance(t, str) for k, t in labels.items()):
             raise TeamworkError(f"{where}: \"labels\" gives the page's own words in the version's language, by key: "
                                 + ", ".join(LABELS["en"]))
+        for key, text in labels.items():  # the same {placeholders} as the English, and nothing else
+            try:
+                fields = {f for _, f, _, _ in string.Formatter().parse(text) if f is not None}
+                wanted = {f for _, f, _, _ in string.Formatter().parse(LABELS["en"][key]) if f is not None}
+            except ValueError:
+                fields, wanted = {"?"}, set()
+            if fields - wanted:
+                raise TeamworkError(f"{where}: label {key!r} may use only "
+                                    + (", ".join("{" + f + "}" for f in sorted(wanted)) or "no {placeholders}")
+                                    + " (write a literal brace as {{ or }})")
         V = {"id": vid, "name": name, "language": lang, "reviewed_by": _text(v, "reviewed_by", where),
              "ui": {**LABELS["en"], **LABELS.get(lang, {}), **labels},
              "quality": (known[2] if known else "unknown") if lang else "", "english_name": known[0] if known else lang,
@@ -591,15 +628,23 @@ def teacher_page(pen: Pen, A: dict, worksheet_note: str, pages: dict[str, str]) 
         y -= 7
 
 
+def _checker_index(roles: list) -> int | None:
+    """Which card asks "can everyone explain it?": one named for it, else one whose job is checking."""
+    for k, (name, _, _) in enumerate(roles):
+        if re.search(r"skeptic|check", name, re.I):
+            return k
+    for k, (_, jobs, _) in enumerate(roles):
+        if any(re.search(r"\bcheck(s|ing)?\b(?! out)", j, re.I) for j in jobs):
+            return k
+    return None
+
+
 def _checker(A: dict) -> str:
-    """Who asks "can everyone explain it?": the Skeptic, or whichever card checks, or the group."""
-    names = [r[0] for r in A["roles"]]
-    if "Skeptic" in names:
-        return "the Skeptic"
-    for name, jobs, _ in A["roles"]:
-        if any("check" in j.lower() for j in jobs):
-            return f"the {name}"
-    return "someone in the group"
+    """The checker's card by its position in the activity's own roles, so a translated card is found too."""
+    k = A.get("_checker")
+    if k is None or k >= len(A["roles"]):
+        return _label(A, "someone")
+    return _label(A, "the_role", name=A["roles"][k][0])
 
 
 def _rotation(A: dict) -> tuple[str, list[str]]:
@@ -613,15 +658,17 @@ def _rotation(A: dict) -> tuple[str, list[str]]:
     sizes = group_sizes(A["class_size"], A["group_size"], *group_range(kind, A["group_size"])) if A["class_size"] else []
     extra = (f" In a group of {max(sizes)}, two students share a job card." if sizes and max(sizes) > len(A["roles"])
              and kind in ("lab", "reciprocal") else "")
-    turns = (len(A["parts"]) if kind == "reciprocal" else A["rounds"] // max(1, A["rotate_every"]))
+    turns = len(A["parts"]) if kind == "reciprocal" else -(-A["rounds"] // max(1, A["rotate_every"]))
     every = turns >= len(A["roles"])
+    turns -= 1  # hand-offs: the cards change hands between turns
     return ("Jobs rotate", [("Halfway, partners switch, so each is the coach once." if kind == "pairs" else
                              "Pass the role cards one seat to the left " + (
                                  "after each stop" if kind == "reciprocal" else "each round" if A["rotate_every"] == 1
                                  else f"every {A['rotate_every']} rounds")
                              + (", so every student does every job." if every else
-                                f", so jobs change hands {turns} time{'s' if turns != 1 else ''}; next time, start the "
-                                "cards with different students."))
+                                (f", so jobs change hands {turns} time{'s' if turns != 1 else ''}" if turns else
+                                 ": with one round, jobs don't change hands") + "; next time, start the cards with "
+                                "different students."))
                             + " No one is always the helper or the helped."
                             + extra])
 
@@ -646,10 +693,16 @@ def _counts(A: dict) -> str:
     what = "pairs" if A["kind"] == "pairs" else "groups"
     by = {k: sizes.count(k) for k in sorted(set(sizes), reverse=True)}
     parts = [f"{count} of {k}" for k, count in by.items()]
-    return (f" For {n} students: {len(sizes)} {what[:-1] if len(sizes) == 1 else what}"
-            + (f" ({', '.join(parts)})" if len(by) > 1 else f" of {sizes[0]}")
-            + (", two students sharing a letter in the bigger ones" if A["kind"] == "jigsaw" and len(by) > 1 else "")
-            + ".")
+    out = (f" For {n} students: {len(sizes)} {what[:-1] if len(sizes) == 1 else what}"
+           + (f" ({', '.join(parts)})" if len(by) > 1 else f" of {sizes[0]}") + ".")
+    if A["kind"] == "jigsaw":
+        letters = len(A["parts"])
+        if max(sizes) > letters:
+            out += f" In a group of {max(sizes)}, two students share a letter."
+        if min(sizes) < letters:
+            out += (f" A group of {min(sizes)} has no Expert {chr(64 + letters)}: it reads that expert sheet "
+                    "together.")
+    return out
 
 
 def _grouping(A: dict) -> str:
@@ -692,7 +745,7 @@ def _during(A: dict) -> list[str]:
         rounds = f" Do {A['rounds']} rounds." if A["rounds"] > 1 else ""
         asker = "the Reporter" if A["group_size"] >= 4 else "the Facilitator"
         return [f"Groups follow the task card.{rounds} Circulate; answer group questions, from {asker}, only "
-                "after the group has tried.", f"Before a group moves on, ask {_checker(A)}: “Can everyone explain "
+                "after the group has tried.", f"Before a group moves on, ask {_checker({**A, 'ui': None})}: “Can everyone explain "
                 "it?” Then pick someone else to explain."]
     if kind == "jigsaw":
         home = 4 * len(A["parts"])
@@ -788,29 +841,28 @@ def role_cards(pen: Pen, A: dict) -> None:
                 yy2 = pen.para(f"“{stem}”", sx, yy2, x1 - sx - 14, size, pen.f.oblique) - 3
             c.setFillGray(0.25)
             c.setFont(pen.f.regular, _size(A, 9.5))
-            c.drawString(x0 + 14, top - h + 8, pen.f.text("Everyone also does the work, and helps each other." + {
-                "lab": (" Next round, pass this card to your left." if A["rotate_every"] == 1 else
-                        f" Every {A['rotate_every']} rounds, pass this card to your left."),
-                "reciprocal": " After each stop, pass this card to your left.",
-                "pairs": " Halfway, switch cards."}.get(A["kind"], "")))
+            more = {"lab": (_label(A, "footer_lab") if A["rotate_every"] == 1 else
+                            _label(A, "footer_lab_every", every=A["rotate_every"])),
+                    "reciprocal": _label(A, "footer_reciprocal"), "pairs": _label(A, "footer_pairs")}.get(A["kind"], "")
+            c.drawString(x0 + 14, top - h + 8, pen.f.text(_label(A, "footer") + (" " + more if more else "")))
             c.setFillGray(INK)
         yield
 
 
 def task_card(pen: Pen, A: dict) -> None:
     c = pen.c
-    y = _header(pen, A, "Group task")
+    y = _header(pen, A, _label(A, "task"))
     if A["goal"]:
         y = pen.para(A["goal"], MARGIN, y, PAGE_W - 2 * MARGIN, _size(A, 13), pen.f.bold) - 8
     if A["abilities"]:
-        y = pen.para("This task needs " + ", ".join(A["abilities"]) + ". Everyone in your group is good at some of "
-                     "these.", MARGIN, y, PAGE_W - 2 * MARGIN, _size(A, 10.5), pen.f.oblique) - 10
+        y = pen.para(_label(A, "needs", abilities=", ".join(A["abilities"])), MARGIN, y, PAGE_W - 2 * MARGIN,
+                     _size(A, 10.5), pen.f.oblique) - 10
     for n, step in enumerate(A["steps"], start=1):
         step_number(pen, MARGIN + 9, y - 8, n, 8)
         y = pen.para(step, MARGIN + 24, y, PAGE_W - 2 * MARGIN - 24, _size(A, 12)) - 6
     if A["rounds"] > 1:
         c.setFont(pen.f.bold, 11)
-        c.drawString(MARGIN, y - 12, "Rounds:")
+        c.drawString(MARGIN, y - 12, pen.f.text(_label(A, "rounds")))
         x = MARGIN + 52
         for r in range(1, A["rounds"] + 1):  # a box to check off for each, wrapping as needed
             if x + 34 > PAGE_W - MARGIN:
@@ -822,13 +874,12 @@ def task_card(pen: Pen, A: dict) -> None:
             x += 34
         y -= 20
         every = A["rotate_every"]
-        y = pen.para("Check off each round. Pass the role cards left after " + (
-            "each one." if every == 1 else f"every {every} rounds."), MARGIN, y - 2, PAGE_W - 2 * MARGIN,
-            _size(A, 10.5), pen.f.oblique) - 6
+        y = pen.para(_label(A, "check_off") if every == 1 else _label(A, "check_off_every", every=every), MARGIN,
+                     y - 2, PAGE_W - 2 * MARGIN, _size(A, 10.5), pen.f.oblique) - 6
     dice = A["dice"]
     if dice:
         c.setFont(pen.f.bold, 12)
-        c.drawString(MARGIN, y - 12, pen.f.text(dice.get("title") or "Roll a die"))
+        c.drawString(MARGIN, y - 12, pen.f.text(dice.get("title") or _label(A, "roll")))
         y -= 20
         col = min(160.0, max([70.0] + [pen.width(str(r[0]), pen.f.bold, 12) + 16 for r in dice["rows"]]))
         for roll, what in dice["rows"]:
@@ -845,7 +896,7 @@ def task_card(pen: Pen, A: dict) -> None:
     table = A.get("table")
     if table:  # the Recorder's data table, blank
         c.setFont(pen.f.bold, 12)
-        c.drawString(MARGIN, y - 12, pen.f.text(table.get("title") or "Our data"))
+        c.drawString(MARGIN, y - 12, pen.f.text(table.get("title") or _label(A, "our_data")))
         y -= 18
         cols = table["columns"]
         weights = [max(len(str(col)), 8) for col in cols]
@@ -874,8 +925,8 @@ def task_card(pen: Pen, A: dict) -> None:
         pen.warnings.append("the group task card runs off the page: shorten the steps or the dice rows, or use fewer "
                             "table rows")
     c.setFillGray(0.35)
-    pen.para(f"Before you move on, {_checker(A)} checks: can everyone explain it? Then you each do the worksheet on "
-             "your own.", MARGIN, max(y, 56), PAGE_W - 2 * MARGIN, 10, pen.f.oblique, gray=0.35)
+    pen.para(_label(A, "close", checker=_checker(A)), MARGIN, max(y, 56), PAGE_W - 2 * MARGIN, 10, pen.f.oblique,
+             gray=0.35)
     c.setFillGray(INK)
 
 
@@ -1171,7 +1222,7 @@ def _part_extras(pen: Pen, A: dict, part: dict, y: float, width: float) -> float
         c.setLineWidth(1)
         y -= 6
     if part.get("words"):
-        y = pen.para("Key words: " + "; ".join(f"{w['word']}: {w['means']}" for w in part["words"]), MARGIN, y,
+        y = pen.para(_label(A, "key_words") + "; ".join(f"{w['word']}: {w['means']}" for w in part["words"]), MARGIN, y,
                      width, _size(A, 10)) - 6
     if part.get("source"):
         y = pen.para(part["source"], MARGIN, y, width, 8, pen.f.oblique, gray=0.35) - 6
@@ -1185,7 +1236,8 @@ def _extras_height(pen: Pen, A: dict, part: dict, width: float) -> float:
         if part.get("quote_source"):
             h += pen.para_height(part["quote_source"], width - 30, 9) + 2
     if part.get("words"):
-        h += pen.para_height("Key words: " + "; ".join(f"{w['word']}: {w['means']}" for w in part["words"]), width,
+        h += pen.para_height(_label(A, "key_words") + "; ".join(f"{w['word']}: {w['means']}" for w in part["words"]),
+                             width,
                              _size(A, 10)) + 6
     if part.get("source"):
         h += pen.para_height(part["source"], width, 8, pen.f.oblique) + 6
@@ -1197,7 +1249,7 @@ def expert_sheets(pen: Pen, A: dict):
     c = pen.c
     for k, part in enumerate(A["parts"]):
         letter = chr(65 + k)
-        y = _header(pen, A, f"Expert {letter}: {part['title']}")
+        y = _header(pen, A, f"{_label(A, 'expert', letter=letter)}: {part['title']}")
         y = pen.para(_label(A, "intro"), MARGIN, y, PAGE_W - 2 * MARGIN, _size(A, 10.5), pen.f.oblique) - 10
         words = len(str(part["text"]).split()) + len(str(part.get("quote", "")).split())
         if words > 220:
@@ -1507,8 +1559,8 @@ def group_range(structure: str, size: int) -> tuple[int, int]:
         return size, size + 1
     if structure == "reciprocal":
         return 3, 5
-    if structure == "game":  # never more players than the game takes
-        return max(2, size - 1), size
+    if structure == "game":  # never more players than the game takes; an odd one out joins a pair
+        return (2, 3) if size == 2 else (max(2, size - 1), size)
     return SIZES[structure]
 
 
@@ -1557,7 +1609,7 @@ def form_groups(folder: Path, size: int | None = None, skill: str | None = None,
     size = (2 if structure == "pairs" else 4) if size is None else size
     low, high = SIZES.get(structure, (2, 6))
     if not low <= size <= high:
-        raise TeamworkError(f"a {STRUCTURES[structure][0].lower()} works with groups of {low}"
+        raise TeamworkError(f"a {STRUCTURES.get(structure, ('game',))[0].lower()} works with groups of {low}"
                             + (f" to {high}" if high != low else "") + f", not {size}")
     folder = Path(folder)
     if not folder.is_dir():
@@ -1644,7 +1696,11 @@ def form_groups(folder: Path, size: int | None = None, skill: str | None = None,
              how + jobs + f"(Made with seed {seed}; another seed reshuffles"
              + (" ties and first jobs.)" if runs else " the groups.)"), ""]
     for k, g in enumerate(plan, start=1):
-        lines.append(f"- Group {k}: " + ", ".join(f"{sid} ({role})" if role else sid for sid, role in g))
+        missing = ""
+        if structure == "jigsaw" and len(g) < size:  # a part with no expert: the group reads it together
+            missing = " (no " + ", ".join(f"Expert {chr(65 + n)}" for n in range(len(g), size)) + \
+                ": read that expert sheet together)"
+        lines.append(f"- Group {k}: " + ", ".join(f"{sid} ({role})" if role else sid for sid, role in g) + missing)
     if unplaced and runs:
         lines += ["", "No marked work " + (f"on “{skill}” " if skill else "") + "yet, so placed in the middle: "
                   + ", ".join(unplaced) + "."]
@@ -1686,22 +1742,30 @@ def team_points(folder: Path, worksheet: str, groups_path: Path | None = None, o
         if not made:
             raise TeamworkError("no groups yet: make them with `groups` first (team points need the teams)")
         groups_path = made[-1]
-    teams = S.read_json(Path(groups_path))["groups"]
+    try:
+        teams = S.read_json(Path(groups_path))["groups"]
+        teams = [[{"id": str(m["id"])} if isinstance(m, dict) else {"id": str(m)} for m in team] for team in teams]
+    except (KeyError, TypeError, ValueError):
+        raise TeamworkError(f"{groups_path} isn't a groups file: make one with `groups`") from None
     runs = PG.collect(folder)
     exits = [r for r in runs if r["assignment_id"] == worksheet]
     if not exits:
         found = sorted({r["assignment_id"] for r in runs})
         raise TeamworkError(f"no marked class of {worksheet!r} under {folder}"
                             + (f"; marked worksheets: {', '.join(found)}" if found else ""))
-    exit_run = exits[-1]
+    # Every marking of the exit sheet counts (two periods, a make-up); the latest page for each student.
+    exit_run = {**exits[0], "students": {sid: st for r in exits for sid, st in r["students"].items()},
+                "date": exits[-1]["date"]}
 
     def pct(run: dict, sid: str) -> float | None:
         answers = run["students"].get(sid, {}).get("answers", {})
         new = [a for a in answers.values() if not a.get("retry")]
         possible = sum(a["possible"] for a in new)
-        return 100 * sum(a["earned"] for a in new) / possible if possible else None
+        if not possible or all(a.get("verdict") == "blank" for a in new):
+            return None  # nothing on the page: absent, not zero
+        return 100 * sum(a["earned"] for a in new) / possible
 
-    earlier = [r for r in runs if (r["date"], r["title"]) < (exit_run["date"], exit_run["title"])
+    earlier = [r for r in runs if (r["date"], r["title"]) < (exits[0]["date"], exits[0]["title"])
                and r["assignment_id"] != worksheet]
     rows, posted = [], []
     for k, team in enumerate(teams, start=1):
@@ -1716,14 +1780,15 @@ def team_points(folder: Path, worksheet: str, groups_path: Path | None = None, o
         scored = [m[3] for m in members if m[3] is not None]
         average = sum(scored) / len(scored) if scored else None
         rows.append((k, members, average))
-        posted.append((k, average))
+        posted.append((k, average if len(scored) >= 2 else None))  # one student's score alone isn't posted
     out = Path(out or progress_dir)
     out.mkdir(parents=True, exist_ok=True)
     lines = ["# Team points (for the teacher; post team-points.pdf, not this)", "",
              f"Exit sheet: {exit_run['title']} ({exit_run['date']}). Each student's usual is their average on "
              f"{len(earlier)} earlier marked worksheet{'s' if len(earlier) != 1 else ''}. Points: 30 for a perfect paper "
              "or more than 10 above their usual; 20 for their usual to 10 above (or no earlier work); 10 for up to 10 "
-             "below; 5 for further below. Absent students don't count against the team.", ""]
+             "below; 5 for further below. Absent students don't count against the team. A team with only one exit sheet "
+             "posts \"-\" (a single score would show that student's).", ""]
     for k, members, average in rows:
         lines.append(f"- Team {k}: " + (f"{average:.0f} points" if average is not None else "no exit sheets") + " ("
                      + "; ".join(f"{sid}: " + ("absent" if score is None else
@@ -1731,7 +1796,8 @@ def team_points(folder: Path, worksheet: str, groups_path: Path | None = None, o
                                                f", {points}") for sid, base, score, points in members) + ")")
     (out / "team-points.md").write_text("\n".join(lines) + "\n")
     _team_points_page(out / "team-points.pdf", exit_run["title"], posted)
-    return {"teams": rows, "md": out / "team-points.md", "pdf": out / "team-points.pdf", "earlier": len(earlier)}
+    return {"teams": rows, "md": out / "team-points.md", "pdf": out / "team-points.pdf", "earlier": len(earlier),
+            "groups": Path(groups_path)}
 
 
 def _team_points_page(path: Path, title: str, posted: list[tuple[int, float | None]]) -> None:

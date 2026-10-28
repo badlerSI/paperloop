@@ -16,6 +16,7 @@ SCRIPTS = ROOT / "plugin" / "skills" / "paper-loop" / "scripts"
 sys.path.insert(0, str(SCRIPTS))
 sys.path.insert(0, str(ROOT / "devtools"))
 
+from paper_loop_core import fonts as F  # noqa: E402
 from paper_loop_core import forms as FM  # noqa: E402
 from paper_loop_core import goover as G  # noqa: E402
 from paper_loop_core import prepare as P  # noqa: E402
@@ -340,3 +341,28 @@ def test_make_draws_the_expected_answer_on_the_key(tmp_path):
         img = np.array(pdfium.PdfDocument(str(tmp_path / name / "answer-key.pdf"))[0].render(scale=1).to_pil().convert("RGB")).astype(int)
         reds.append(int(((img[..., 0] > 150) & (img[..., 1] < 90) & (img[..., 2] < 90)).sum()))
     assert reds[0] > reds[1] + 50  # the two dots and their labels, in red
+
+
+def test_second_review_regressions_in_versions_keys_and_practice(tmp_path):
+    import pypdfium2 as pdfium
+    # A companion page prints translated starters only when the version prints the English ones.
+    defn = S.read_json(VERSIONS)
+    defn["versions"] = [{"id": "esc", "name": "Spanish page", "language": "es", "language_mode": "companion",
+                         "translation": "math6-ratios-02.es.json"}]
+    S.make_worksheet(defn, tmp_path / "c", base=VERSIONS.parent)
+    page = zipfile.ZipFile(tmp_path / "c" / "versions" / "esc.docx").read("word/document.xml").decode()
+    assert "multiplicar" not in page and "tiene razón porque" not in page
+    # A word bank written as one string prints as words, not letters.
+    from paper_loop_core import forms as FMOD
+    assert FMOD._translated({"prompt": "P", "word_bank": "uno, dos"}, {"q": 1}) == "P\nuno, dos"  # not u · n · o
+    # A malformed key_draw is a Check line; the rest of the key is still drawn.
+    sheet = S.read_json(ROOT / "examples" / "math4-fractions-01.json")
+    sheet["questions"][0]["key_draw"] = [{"shape": "mark", "at": "x"}]
+    S.write_json(tmp_path / "bad.json", sheet)
+    run = subprocess.run([sys.executable, str(ROOT / "plugin" / "skills" / "paper-loop" / "scripts" / "paper_loop.py"),
+                          "make", str(tmp_path / "bad.json"), "--out", str(tmp_path / "bad")], capture_output=True, text=True)
+    assert "Check: question 1's key_draw" in run.stdout and (tmp_path / "bad" / "answer-key.pdf").exists()
+    # Large print in grades 2-3: the directions start below "Page 1 of N".
+    plants = S.read_json(ROOT / "examples" / "sci3-plants-01.json")
+    L = S.Layout(S.normalize({**plants, "print": {"scale": 1.6}}), F.choose(["x"])[0], tmp_path)
+    assert L.header_top < 716

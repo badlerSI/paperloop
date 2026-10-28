@@ -75,7 +75,7 @@ methods with one or neither averaged about +0.07. So every activity has:
 | `cards` | pairs, heads: yes | `[{"q": "...", "a": "..."}]`. Pairs: 12 a page, so 12 or 24 work well; the switch line falls halfway. Heads: as many as the time allows. |
 | `worksheet` | no, but expected | The `assignment_id` of the exit sheet each student does alone, made in the same folder. Its versions (plain wording, sentence starters, a home language) are handed out as usual and scanned together. |
 | `class_size` | no | The number of students: the teacher's page then says how many groups, and of what sizes. |
-| `versions` | no | The same activity in other words, for the students who need them: `[{"id": "plain", "name": "Plain English", "parts": [...]}, {"id": "es", "language": "es", "parts": [...], "roles": [...]}]`. A version replaces any of `parts` (one entry per part, each with just the fields it changes: `title`, `text`, `teach`, `check`, `words`), `roles` (one per card: `name`, `jobs`, `say`), `steps`, and `goal`. Plain English, and languages in the Latin, Greek, or Cyrillic alphabets (Spanish, Vietnamese, Haitian Creole, Russian...), print as extra pages after everyone's. Arabic, Chinese, Bengali, Burmese and other scripts these pages can't shape go in a Word file, `versions/<id>.docx`, which Word and Google Docs print correctly. As with worksheets, a language Claude translates less reliably asks for a bilingual adult's check (`reviewed_by`), and a plain version is checked to read easier than the original. |
+| `versions` | no | The same activity in other words, for the students who need them: `[{"id": "plain", "name": "Plain English", "parts": [...]}, {"id": "es", "language": "es", "parts": [...], "roles": [...]}]`. A version replaces any of `parts` (one entry per part, each with just the fields it changes: `title`, `text`, `teach`, `check`, `words`), `roles` (one per card: `name`, `jobs`, `say`), `steps`, and `goal`. Plain English, and languages in the Latin, Greek, or Cyrillic alphabets (Spanish, Vietnamese, Haitian Creole, Russian...), print as extra pages after everyone's, with the pages' own words ("Teach box", "Group task", "Rounds:") in the version's language: built in for Spanish, and for any other language give `labels`, the same keys as the English (`intro`, `teach_box`, `your_job`, `task`, `rounds`, `close`, and the rest; `teamwork` lists them if one is wrong), keeping each `{placeholder}`. Arabic, Chinese, Bengali, Burmese and other scripts these pages can't shape go in a Word file, `versions/<id>.docx`, which Word and Google Docs print correctly. As with worksheets, a language Claude translates less reliably asks for a bilingual adult's check (`reviewed_by`), and a plain version is checked to read easier than the original. |
 | `listen_for` | no | What the teacher listens for while walking around: the talk that shows understanding and the misconception to catch. |
 | `debrief` | no | How to wrap up with the whole class. |
 | `sources` | no | Where the activity's idea, facts, and data came from, with credit (see below). |
@@ -100,7 +100,9 @@ earlier marked worksheets:
 - 10 for up to 10 below;
 - 5 for further below.
 
-A team's score is its members' average; absent students don't count against it. It writes
+A team's score is its members' average; absent students (or a page with nothing on it) don't count against
+it, and a team with only one exit sheet posts "-", since one student's score alone would show. Every marking of
+the exit sheet counts: two periods, or a make-up marked later. It writes
 `progress/team-points.pdf` to post (teams and points, no names or IDs) and `progress/team-points.md` for the
 teacher (each class ID's points). Celebrate every team that improves; don't rank students.
 

@@ -126,13 +126,17 @@ def _supports(form: dict) -> list[str]:
     out = []
     if form.get("scaffolds"):
         scaffolds = form["scaffolds"]
-        out.append("supports on the page: " + (", ".join(scaffolds) if isinstance(scaffolds, list) else str(scaffolds)))
+        plain = {"plain": "plain wording", "hint": "hints", "steps": "the steps laid out", "example": "a worked example",
+                 "frame": "sentence starters", "word_bank": "a word bank", "glossary": "key words with meanings"}
+        named = ([plain.get(x, x) for x in scaffolds] if isinstance(scaffolds, list) else
+                 ["every support" if scaffolds == "all" else str(scaffolds)])
+        out.append("supports on the page: " + ", ".join(named))
     lp = form.get("large_print")
     if lp:
         out.append("large print" + ("" if lp is True else f" ({lp}pt)" if isinstance(lp, (int, float)) and lp > 2
                                     else f" ({lp})"))
     if form.get("space"):
-        out.append(f"more room to write ({form['space']}x)")
+        out.append("more room to write" + (f" ({form['space']}x)" if form["space"] is not True else ""))
     if form.get("per_page"):
         out.append(f"at most {form['per_page']} question{'s' if form['per_page'] > 1 else ''} a page")
     if form.get("max_choices"):
@@ -159,6 +163,10 @@ def _supports_csv(runs: list[dict], path: Path) -> int:
             if version:
                 rows.append([sid, run["date"], run["title"], version["name"], "; ".join(version["supports"]),
                              "; ".join(version["help"])])
+    if not rows:
+        if path.exists():
+            path.unlink()  # no one had a version: no log
+        return 0
     with path.open("w", newline="") as f:
         w = csv.writer(f)
         w.writerow(["student_id", "date", "worksheet", "version", "supports", "help that changes what's measured"])

@@ -461,7 +461,9 @@ class Layout:
         self.header_size, self.header_leading = (10.5, 13.0) if st["primary"] else (8.5, 10.5)
         self.header_size, self.header_leading = self.header_size * self.hk, self.header_leading * self.hk
         self.header_lines = self.split(defn["instructions"], fonts.regular, self.header_size, 290)
-        self.content_top = min(CONTENT_TOP, 716 - (len(self.header_lines) - 1) * self.header_leading - 12
+        # Large print: the directions start below the bigger "Page 1 of N" line, not on it.
+        self.header_top = min(716.0, 727 - 2 * (self.hk - 1) - 0.75 * self.header_size)
+        self.content_top = min(CONTENT_TOP, self.header_top - (len(self.header_lines) - 1) * self.header_leading - 12
                                - (6 if len(self.header_lines) > 3 else 0))  # a fourth line keeps clear of the rule
 
     def sized(self, value: float, room: bool = False) -> float:
@@ -722,10 +724,14 @@ class Layout:
         full = BOX_RIGHT - LEFT
         size, leading = self.st["option_size"], self.st["option_leading"]
         if q["choices"]:  # split the width by how much each side has to say, from 40% to 70% for the items
+            longest = lambda texts: max(self._width(w, self.f.regular, size) for t in texts for w in t.split() or [t])  # noqa: E731
             need_items = box_w + 12 + max(self._width(i["text"], self.f.regular, size) for i in q["items"]) * 0.6
             need_choices = 8 + max(self._width(f"{c['letter']}. {c['text']}", self.f.regular, size)
                                    for c in q["choices"]) * 0.6
             left_w = full * min(0.7, max(0.4, need_items / (need_items + need_choices)))
+            # never narrower than the longest single word on either side (large print: "photosynthesis")
+            left_w = max(left_w, box_w + 16 + longest([i["text"] for i in q["items"]]))
+            left_w = min(left_w, full - 12 - longest([f"{c['letter']}. {c['text']}" for c in q["choices"]]))
         else:
             left_w = full
         # With choices, items carry no numbers of their own: under "4." they read as question numbers.
@@ -992,7 +998,7 @@ def _draw_header(c: canvas.Canvas, L: Layout, page_no: int, n_pages: int, boxes)
     c.setFont(f.regular, 9 * L.hk)
     c.drawString(138, 730 - 2 * (L.hk - 1), f"Page {page_no} of {n_pages}")
     c.setFont(f.regular, L.header_size)
-    y = 716.0
+    y = L.header_top
     for line in L.header_lines:  # the header rule sits below the last line
         c.drawString(138, y, line)
         y -= L.header_leading

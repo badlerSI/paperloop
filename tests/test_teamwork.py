@@ -107,7 +107,7 @@ def test_jigsaw_parts_take_quotes_key_words_and_checked_credits(tmp_path):
     sheet = next(p for p in pages if p.startswith("Expert A: "))
     assert "“The planet blocks a tiny bit" in sheet and "Key words: transit: passing in front" in sheet
     assert "CC BY-SA 4.0" in sheet and "Transit photometry" in sheet
-    assert "For 31 students: 7 groups (3 of 5, 4 of 4), two students sharing a letter in the bigger ones." in pages[0]
+    assert "For 31 students: 7 groups (3 of 5, 4 of 4). In a group of 5, two students share a letter." in pages[0]
     assert "The transit method" in pages[1]  # the tent names the expert's topic, for the home group
     notes = next(p for p in pages if p.startswith("Home group notes"))
     assert "How the parts connect" in notes and "your own words" in notes
@@ -449,7 +449,7 @@ def test_versions_print_plain_and_latin_languages_and_put_other_scripts_in_word(
     assert "Plain English: expert sheets" in names and "Español: expert sheets" in names
     pages = text_of(report["pdf"])
     assert "Plain English (pages 9-12); Español (pages 13-16)" in pages[0]
-    assert any(p.startswith("Expert B: El método del bamboleo") for p in pages)
+    assert any(p.startswith("Experto B: El método del bamboleo") for p in pages)  # its heading in Spanish too
     data = S.read_json(ROOT / "examples" / "sci9-exoplanets-teamwork.json")
     data["versions"] = [{"id": "ar", "language": "ar", "parts": [{"title": "طريقة العبور", "text": "عندما يمر كوكب أمام نجمه."}]
                          + [{}] * 3}]
@@ -536,3 +536,76 @@ def test_boards_can_be_pictures_and_data_can_have_blanks(tmp_path):
     assert "Launch, with the whole class" in pages[0] and "In a group of 5, two students share a job card." in pages[0]
     assert "the boards (pages" in pages[0]
     assert "one page holds" in pages[0] and any(p.startswith("Tokens: ") and "groups' sets" in p for p in pages)
+
+
+# --- Regressions from the second review --------------------------------------------------------
+
+def test_team_points_count_every_marking_and_post_no_lone_score(tmp_path):
+    sys.path.insert(0, str(Path(__file__).parent))
+    from test_progress import _marked
+    cls = tmp_path / "P8"
+    exit_sheet = S.read_json(ROOT / "examples" / "math6-ratios-02.json")
+    exit_sheet["assignment_id"] = "exit-02"
+    exit_sheet.pop("versions", None)
+    S.write_json(tmp_path / "exit-02.json", exit_sheet)
+    _marked(cls, "exit", "2026-10-27", {"0801": {}, "0802": {}, "0803": {}}, source=tmp_path / "exit-02.json")
+    makeup = cls / "exit" / "marking-2026-10-29"  # a make-up for 0804, marked later from the same worksheet
+    makeup.mkdir()
+    key = S.read_json(cls / "exit" / "key.json")
+    S.write_json(makeup / "manifest.json", {"assignment_dir": str(cls / "exit"), "title": exit_sheet["title"], "pages": []})
+    S.write_json(makeup / "results.json", {"pages": [{"scan_index": 1, "student_id": "0804", "page": 1, "form": "", "boxes": [
+        {"q": i["q"], "type": i["type"], "verdict": "correct", "points_awarded": i["points"],
+         "points_possible": i["points"], "details": []} for i in key["items"]]}]})
+    (cls / "progress").mkdir()
+    S.write_json(cls / "progress" / "groups-lab.json", {"groups": [[{"id": "0801"}, {"id": "0802"}],
+                                                                   [{"id": "0803"}, {"id": "0899"}], [{"id": "0804"}, {"id": "0805"}]]})
+    report = TW.team_points(cls, "exit-02")
+    scored = {sid: pts for _, members, _ in report["teams"] for sid, _, _, pts in members}
+    assert scored["0801"] == 30 and scored["0804"] == 30 and scored["0899"] is None  # both markings count
+    posted = text_of(report["pdf"])[0]
+    assert "Team 1" in posted and posted.count("-") >= 2  # teams 2 and 3 had one exit sheet each: not posted
+
+
+def test_jigsaw_groups_short_a_letter_and_odd_game_classes_are_handled(tmp_path):
+    roster = tmp_path / "ids.csv"
+    roster.write_text("\n".join(f"09{k:02d}" for k in range(7)) + "\n")
+    (tmp_path / "c").mkdir()
+    jig = TW.form_groups(tmp_path / "c", size=4, structure="jigsaw", roster_path=roster)
+    assert "(no Expert D: read that expert sheet together)" in jig["path"].read_text()
+    game = TW.form_groups(tmp_path / "c", size=2, structure="game", roster_path=roster, out=tmp_path / "g")
+    assert min(len(g) for g in game["groups"]) == 2  # no one plays alone
+    with pytest.raises(TW.TeamworkError, match="game works with groups"):
+        TW.form_groups(tmp_path / "c", size=7, structure="game", roster_path=roster, out=tmp_path / "g7")
+    data = S.read_json(ROOT / "examples" / "sci9-exoplanets-teamwork.json")
+    data["class_size"] = 7
+    data.pop("versions")
+    S.write_json(tmp_path / "j.json", data)
+    teacher = text_of(TW.build(tmp_path / "j.json", tmp_path / "jo")["pdf"])[0]
+    assert "A group of 3 has no Expert D: it reads that expert sheet together." in teacher
+    assert "In a group of" not in teacher  # no group of 5 here, so no shared letter to mention
+
+
+def test_a_spanish_lab_prints_its_own_words_and_labels_are_checked(tmp_path):
+    data = S.read_json(ROOT / "examples" / "sci7-selection-teamwork.json")
+    data["versions"] = [{"id": "es", "language": "es", "goal": "Descubre qué le pasa a una población de escarabajos.",
+                         "roles": [{"name": n, "jobs": ["Ayuda."]} for n in ("Facilitador", "Anotador", "Escéptico", "Reportero")]}]
+    S.write_json(tmp_path / "es.json", data)
+    pages = text_of(TW.build(tmp_path / "es.json", tmp_path / "es")["pdf"])
+    task = next(p for p in pages if p.startswith("Tarea del grupo"))
+    assert "Rondas:" in task and "Antes de seguir, Escéptico revisa" in task
+    assert any("Todos también hacen el trabajo" in p for p in pages)
+    data["versions"][0]["labels"] = {"your_job": "{nombre}: tu trabajo"}
+    with pytest.raises(TW.TeamworkError, match="may use only"):
+        TW.normalize(data)
+
+
+def test_rotation_checker_and_blank_cells_say_the_right_thing(tmp_path):
+    one = {"title": "L", "grade": 7, "structure": "lab", "steps": ["Roll."],
+           "data": [{"columns": ["a", "b"], "rows": [["1", None]]}],
+           "roles": [{"name": "Materials Manager", "jobs": ["Check out the dice."]}, {"name": "Checker", "jobs": ["Look."]},
+                     {"name": "Writer", "jobs": ["Write."]}, {"name": "Reader", "jobs": ["Read."]}]}
+    S.write_json(tmp_path / "one.json", one)
+    pages = text_of(TW.build(tmp_path / "one.json", tmp_path / "o")["pdf"])
+    assert "with one round, jobs don't change hands" in pages[0]
+    assert "ask the Checker" in pages[0]  # by name, not the card whose job mentions "check out"
+    assert "None" not in "".join(pages)

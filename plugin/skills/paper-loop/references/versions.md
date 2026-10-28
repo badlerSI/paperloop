@@ -86,7 +86,8 @@ stays as written.
 **A record for case managers.** `PL progress` writes `progress/supports.csv`: each class ID that had a version,
 with the date, the worksheet, the version, its supports (in plain words, with any `notes` such as
 read-aloud), and the help that changes what's measured. It's the accommodation log a case manager keeps for
-an IEP or 504 plan, by class ID; the teacher matches IDs to names.
+an IEP or 504 plan, by class ID; the teacher matches IDs to names. A version's `notes` go into it word for
+word, so never write a name there.
 
 **Fewer to a page means more room to write.** A version with `per_page` gives the space it frees to the
 writing lines and work areas on each page, up to double their size.

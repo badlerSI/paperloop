@@ -140,3 +140,28 @@ def test_a_retry_of_the_same_question_is_shown_but_doesnt_set_the_status():
     assert cell["status"] == "practicing" and len(cell["attempts"]) == 2  # the retry shows, but isn't new evidence
     data = PG.analyze([run("2026-10-20", 0.0, False), run("2026-10-21", 2.0, False)])
     assert data["students"]["0101"]["I can find a unit rate"]["status"] == "got"
+
+
+def test_a_missed_stretch_question_is_practiced_again_with_the_worksheet_s_skill(tmp_path):
+    from paper_loop_core import practice as PR
+    source = S.read_json(ROOT / "examples" / "math6-ratios-02.json")
+    source.pop("versions")
+    source["stretch"] = [{"type": "short", "q": 11, "prompt": "Why does doubling both parts keep a ratio?",
+                          "key": "Each part grows by the same factor."},
+                         {"type": "short", "q": 12, "prompt": "Make a ratio equal to 3 : 5.", "key": "6 : 10, or any multiple."}]
+    S.write_json(tmp_path / "src.json", source)
+    cls = tmp_path / "P9"
+    _marked(cls, "week1", "2026-10-20", {"0901": {}, "0902": {1: 0}}, source=tmp_path / "src.json")
+    first = PR.build(cls / "week1" / "marking-2026-10-20", tmp_path / "practice")
+    assert first["stretched"] == ["0901"] and first["questions"]["0901"] == [11, 12]
+    key = S.read_json(tmp_path / "practice" / "key.json")
+    items = S.form_items(key, "p0901")
+    assert items[11]["skill"] == "Smoothie Stand Ratios"  # the worksheet's own, never "Practice: ..."
+    again = tmp_path / "pmark"
+    again.mkdir()
+    S.write_json(again / "manifest.json", {"assignment_dir": str(tmp_path / "practice"), "title": "Practice", "pages": []})
+    S.write_json(again / "results.json", {"pages": [{"scan_index": 1, "student_id": "0901", "page": 1, "form": "p0901",
+        "boxes": [{"q": 11, "type": "short", "verdict": "incorrect", "points_awarded": 0,
+                   "points_possible": items[11]["points"], "comment": "Say what happens to both parts.", "details": []}]}]})
+    second = PR.build(again, tmp_path / "practice2")  # was a KeyError: 11
+    assert second["questions"]["0901"] == [11]

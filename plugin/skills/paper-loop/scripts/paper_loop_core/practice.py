@@ -50,11 +50,12 @@ def _fresh(question: dict, avoid: str, seed: str) -> dict:
     return FM._shuffle(chosen, rng)  # a choice's right letter moves, so it isn't A on every practice sheet
 
 
-def _stretch_for(sid: str, stretch: list[dict], raw_questions: dict, results: dict, key: dict) -> list[dict]:
+def _stretch_for(sid: str, stretch: list[dict], raw_questions: dict, results: dict, key: dict, title: str) -> list[dict]:
     """A full-credit student's sheet: the worksheet's stretch questions, or new numbers on the two questions the
     class found hardest (only where new numbers or another item exist: the same question again proves nothing)."""
     if stretch:
-        return [{k: v for k, v in q.items() if k not in ("vars", "where", "pool", "support")} | {"stretch": True}
+        return [{k: v for k, v in q.items() if k not in ("vars", "where", "pool", "support")}
+                | {"stretch": True, "skill": q.get("skill") or title}
                 for q in (_fresh(q, "", f"{sid}-stretch-{q['q']}") if (q.get("vars") or q.get("pool")) else q
                           for q in stretch[:2])]
     earned: dict[int, list[float]] = {}
@@ -69,7 +70,7 @@ def _stretch_for(sid: str, stretch: list[dict], raw_questions: dict, results: di
     for _, qn in hardest[:2]:
         q = _fresh(raw_questions[qn], items.get(qn, {}).get("prompt", ""), f"{sid}-stretch-{qn}")
         q.pop("support", None)
-        q["skill"] = items.get(qn, {}).get("skill") or q.get("skill")
+        q["skill"] = items.get(qn, {}).get("skill") or q.get("skill") or title  # the worksheet's own skill
         out.append(q)
     return out
 
@@ -89,16 +90,24 @@ def build(work: Path, out: Path | None = None, most: int = 3) -> dict:
     expanded = FM.expand(source, assignment)
     forms = {form["id"]: defn for form, defn in expanded}
     metas = {form["id"]: form for form, _ in expanded}
-    origin = source  # a practice of a practice: new numbers come from the worksheet it all began with
+    origin, notes, here = source, [], assignment  # a practice of a practice: new numbers from where it all began
     for _ in range(5):
         if not origin.get("practice_of"):
             break
         first = Path(origin["practice_of"])
-        try:
-            origin = S.read_json(_assignment(first, S.read_json(first / "manifest.json")) / "source.json")
-        except (OSError, ValueError, LessonError):
+        found = None
+        for candidate in (first, here.parent / first.parent.name / first.name):  # also after the class folder moved
+            try:
+                found = _assignment(candidate, S.read_json(candidate / "manifest.json"))
+                break
+            except (OSError, ValueError, LessonError):
+                continue
+        if found is None:
+            notes.append(f"couldn't find the marking this practice came from ({first}), so questions without new "
+                         "numbers of their own repeat as written")
             origin = source
             break
+        origin, here = S.read_json(found / "source.json"), found
     raw_questions = {q["q"]: q for q in source["questions"] if q.get("type", "short") not in ("passage", "note")}
     raw_questions.update({q["q"]: q for q in origin["questions"] if q.get("type", "short") not in ("passage", "note")
                           and q.get("q") in raw_questions})
@@ -106,6 +115,8 @@ def build(work: Path, out: Path | None = None, most: int = 3) -> dict:
     for q in stretch:
         if not isinstance(q, dict) or q.get("q") in raw_questions or not q.get("q"):
             raise LessonError("each \"stretch\" question needs its own \"q\" number, not one the worksheet uses")
+    title = origin.get("title") or source["title"]  # never "Practice: ...", which would read as a skill of its own
+    lookup = {**{q["q"]: q for q in stretch}, **raw_questions}  # a stretch question missed: practice it again
 
     notes_path = work / "practice-notes.json"
     written = S.read_json(notes_path) if notes_path.exists() else {}  # Claude's own notes, by ID and question
@@ -128,7 +139,7 @@ def build(work: Path, out: Path | None = None, most: int = 3) -> dict:
         missed = missed[:most]
         if not missed:  # full credit: a stretch, so every student gets a sheet
             all_right.append(sid)
-            extra = _stretch_for(sid, stretch, raw_questions, results, key)
+            extra = _stretch_for(sid, stretch, raw_questions, results, key, title)
             if extra:
                 sheet = {"student_id": sid, "questions": extra}
                 meta = metas.get(st["form"], {})
@@ -145,7 +156,8 @@ def build(work: Path, out: Path | None = None, most: int = 3) -> dict:
         for b in sorted(missed, key=lambda b: b["q"]):
             old = S.form_items(key, st["form"])[b["q"]]
             if variant or st["form"] == "":  # new numbers or another item where the worksheet has them
-                q = _fresh(raw_questions[b["q"]], old["prompt"], f"{sid}-{b['q']}")
+                q = (_fresh(lookup[b["q"]], old["prompt"], f"{sid}-{b['q']}") if b["q"] in lookup
+                     else dict(printed[b["q"]]))
             else:  # a version: the same question, with the version's supports
                 q = dict(printed[b["q"]])
             changed = q.get("prompt") != old["prompt"]
@@ -155,14 +167,14 @@ def build(work: Path, out: Path | None = None, most: int = 3) -> dict:
                 q["retry"] = True
             q.pop("support", None)
             # Practice counts toward the same skill: the question's own, or the worksheet's title.
-            q["skill"] = old.get("skill") or q.get("skill") or manifest.get("title") or source["title"]
+            q["skill"] = old.get("skill") or q.get("skill") or title
             pid = q.get("passage")
             if pid and pid not in passages:
                 passage = next((p for p in defn["questions"] if p.get("type") == "passage" and p.get("id") == pid), None)
                 if passage:
                     questions.append(passage)
                     passages.add(pid)
-            last = b["comment"] or ("No answer yet." if b["verdict"] == "blank" else "")
+            last = b.get("comment") or ("No answer yet." if b["verdict"] == "blank" else "")
             mine = (written.get(sid) or {}).get(str(b["q"]))
             if mine:
                 q["asides"] = [{"kind": "last", "text": mine}] + list(q.get("asides", []))
@@ -210,6 +222,6 @@ def build(work: Path, out: Path | None = None, most: int = 3) -> dict:
     elif todo_path.exists():
         todo_path.unlink()
     return {"out": out, "sheets": len(sheets), "all_right": all_right, "absent": absent, "left_off": left_off,
-            "stretched": [s["student_id"] for s in sheets if s["student_id"] in all_right],
+            "stretched": [s["student_id"] for s in sheets if s["student_id"] in all_right], "notes": notes,
             "todo": todo_path if todo else None,
             "questions": {s["student_id"]: [q["q"] for q in s["questions"] if "q" in q] for s in sheets}}
