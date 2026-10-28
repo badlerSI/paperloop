@@ -322,6 +322,10 @@ reliably, so print in the text whatever Claude should know.
 - Write each checklist item so that one mistake costs one item. "Three jumps of 5" and "the last jump lands
   on 35" are two items, not one. Be specific about what's checked: "two points on the line y = 2x − 1 are
   marked", not "points are marked".
+- `key_draw` draws the expected answer in red on `answer-key.pdf`, in the diagram's own coordinates: the
+  same shapes, plus `{"shape": "plot", "points": [[2, 3], [4, 6]], "line": true}` (points on the diagram's
+  axes, in graph units), `{"shape": "mark", "at": [0.75, 1.25]}` (dots on its number line), and
+  `{"shape": "bars", "values": [3000, 1000]}` (bars on its bar chart). It works on label questions too.
 - A drawing can also have an answer box for a result: `"answer": "7/12"` (plus `accept`, `units`,
   `answer_points`) adds "Answer: [ ]" below the frame (`answer_label` changes the word: "Total:", "Slope:"; it
   works on math questions too). Use it for "shade it, then write the sum" or "plot it,

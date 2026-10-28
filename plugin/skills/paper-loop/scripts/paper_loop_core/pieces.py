@@ -1222,16 +1222,15 @@ WRONG = "The reader tells you the answer. Put the card at the bottom of the pile
 GAME_RULES = {
     "snake_race": {
         "meta": "2 to 4 players  |  30-40 minutes (set a timer: farthest along wins)", "move": "move",
-        "need": "A checker or chess board (or the printed board), 1 die, the fold-over cards in a pile, and a "
-                "marker for each player: a coin, a checker, or a tent pawn.",
-        "rules": ["The snake starts at the bottom-left square. It runs along the bottom row, up one, back along "
-                  "the next row, and so on, to the top.",
-                  "Put your marker just off the board, beside the first square.",
-                  "On your turn, roll the die. The player on your left reads you the top card.",
-                  "Right answer: move that many squares along the snake. Wrong answer: stay where you are.",
-                  "Land on a corner square, at the end of a row where the snake turns (a star in the picture)? "
-                  "Answer a 3-dot card. Right: move 3 more squares.",
-                  "The first player to reach the last square wins. You don't need an exact roll."],
+        "need": "The printed board (or a checker or chess board), 1 die, the cards in two piles (3-dot cards, and "
+                "the rest), and a marker for each player: a coin, a checker, or a tent pawn.",
+        "rules": ["Follow the numbers from Start (1) to Finish (64). On a plain board, go along the bottom row, "
+                  "up one, and back.",
+                  "Put your marker beside square 1.",
+                  "Roll the die. The player on your left reads you a card. They keep the back hidden.",
+                  "Right? Move that many squares. Wrong? Stay.",
+                  "Land on a star? Answer a card from the 3-dot pile. Right? Move 3 more.",
+                  "First to Finish wins. You don't need an exact roll."],
         "draw": diagram_snake},
     "question_checkers": {
         "meta": "2 players  |  about 25 minutes", "move": "jump",
@@ -2211,6 +2210,10 @@ def teacher_page(m: "Maker", plan: list, ranges: list) -> None:
     deck = f"{n} card{'s' if n != 1 else ''}" + (f" ({', '.join(counts)})" if counts else "")
     info = "  |  ".join(x for x in ("Paper pieces", f"grade {P['grade']}", P["subject"], deck) if x)
     y = pen.para(info, MARGIN, y, PAGE_W - 2 * MARGIN, 11, gray=0.35) - 8
+    if any(card["level"] == 3 for card in P["cards"]) and any(card["level"] < 3 for card in P["cards"]):
+        y = pen.para("Levels: each card has 1 to 3 dots. For a group still practicing, take out the 3-dot cards "
+                     "(a star then means a 2-dot card). For a group that's ahead, use only the 2- and 3-dot cards.",
+                     MARGIN, y, PAGE_W - 2 * MARGIN, 11) - 8
     y = pen.para("Everything prints one-sided, in black and white. Students need scissors (a glue stick helps for "
                  "the die and pawns). Each piece starts "
                  "on a new page; print just the pages you want.", MARGIN, y, PAGE_W - 2 * MARGIN, 11) - 14

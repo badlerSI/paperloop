@@ -224,7 +224,19 @@ def analyze(runs: list[dict]) -> dict:
         for sid, summary in run["summaries"].items():
             if sid in students:
                 latest[sid] = {"title": run["title"], **summary}
+    # Help on the page, worksheet by worksheet, for each student who ever had it: is it coming off as scores hold?
+    help_over_time: dict[str, list[dict]] = {}
+    for run in runs:
+        for sid, st in run["students"].items():
+            new = [a for a in st["answers"].values() if not a.get("retry")]
+            possible = sum(a["possible"] for a in new)
+            if possible:
+                help_over_time.setdefault(sid, []).append({"date": run["date"], "title": run["title"],
+                                                           "pct": sum(a["earned"] for a in new) / possible,
+                                                           "help": bool(st["support"])})
+    help_over_time = {sid: rows for sid, rows in sorted(help_over_time.items()) if any(r["help"] for r in rows)}
     return {"skills": skills, "students": students, "groups": groups, "worksheets": worksheets, "trends": trends,
+            "help_over_time": help_over_time,
             "summaries": latest,
             "dates": [runs[0]["date"], runs[-1]["date"]] if runs else ["", ""]}
 
@@ -467,6 +479,12 @@ the one before.</span></p>
 <h2>Worksheets</h2>
 <div class="scroll"><table id="sheets"></table></div>
 
+<div id="fading-section"><h2>Help on the page, over time</h2>
+<p class="note">For each student who had help on the page (hints, worked examples, laid-out steps, fewer choices):
+their score on each worksheet, and <span class="s">S</span> where the help printed. Fading means the help comes off
+while the score holds. The student's plan decides supports; this shows what happened on paper.</p>
+<div class="scroll"><table id="fading"></table></div></div>
+
 <h2>What marking noticed</h2>
 <div id="saw"></div>
 
@@ -547,6 +565,24 @@ for (const w of [...D.worksheets].reverse()) {
   sb.append(el("tr", {}, el("td", {}, when(w.date)), el("td", {}, w.title), el("td", {}, w.students), el("td", {}, pct(w.average)), el("td", {}, bars)));
 }
 st.append(sb);
+
+const fadingIds = Object.keys(D.help_over_time || {});
+if (!fadingIds.length) document.getElementById("fading-section").remove();
+else {
+  const ft = document.getElementById("fading");
+  const dates = [...new Set(fadingIds.flatMap(id => D.help_over_time[id].map(r => r.date + "|" + r.title)))].sort();
+  ft.append(el("thead", {}, el("tr", {}, el("th", {}, "ID"), ...dates.map(d => el("th", {}, `${when(d.split("|")[0])} ${d.split("|").slice(1).join("|")}`)))));
+  const fb = el("tbody");
+  for (const id of fadingIds) {
+    const byDate = Object.fromEntries(D.help_over_time[id].map(r => [r.date + "|" + r.title, r]));
+    fb.append(el("tr", {}, el("td", {}, id), ...dates.map(d => { const r = byDate[d];
+      if (!r) return el("td", {class: "cell none"}, "—");
+      const td = el("td", {class: "cell " + (r.pct >= 0.8 ? "got" : r.pct >= 0.5 ? "getting" : "practicing")}, pct(r.pct));
+      if (r.help) td.append(el("span", {class: "s", title: "help on the page"}, "S"));
+      return td; })));
+  }
+  ft.append(fb);
+}
 
 const saw = document.getElementById("saw");
 const notes = D.worksheets.flatMap(w => w.saw.map(s => ({...s, title: w.title, date: w.date})));

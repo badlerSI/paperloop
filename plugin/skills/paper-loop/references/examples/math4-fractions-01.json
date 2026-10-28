@@ -38,6 +38,31 @@
           "item": "A dot at 5/4: the first tick after 1.",
           "short": "5/4 placed"
         }
+      ],
+      "key_draw": [
+        {
+          "shape": "mark",
+          "at": [
+            0.75,
+            1.25
+          ]
+        },
+        {
+          "shape": "text",
+          "x": 134.5,
+          "y": 36,
+          "text": "3/4",
+          "size": 9,
+          "align": "center"
+        },
+        {
+          "shape": "text",
+          "x": 209.5,
+          "y": 36,
+          "text": "5/4",
+          "size": 9,
+          "align": "center"
+        }
       ]
     },
     {

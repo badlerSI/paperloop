@@ -159,6 +159,10 @@ with `"translation"`, or put it inline in the worksheet as `"translations": {"es
   - A question's translation is a string. For a choice question, use `{"prompt", "options": {letter:
     text}}`: the options print one a line, with their letters on the reading side, and a version with
     fewer choices drops the same ones.
+  - When the version prints sentence starters or a word bank, translate them too: `{"prompt": ..., "frame":
+    ["La razón es ___ porque ___."], "word_bank": ["dividir", "cada", "total"]}`. The starters print one a
+    line, and the bank's words print in the same order as the English bank, under the question's
+    translation, so a student sees both. They print only when the version prints the English ones.
   - Translate table headers and axis labels too.
   - Keep every number a numeral, in the same order as the English ("2 cups mango to 3 cups yogurt" keeps
     mango first). Keep the words that say which number goes where ("mango across, yogurt up"). Use the

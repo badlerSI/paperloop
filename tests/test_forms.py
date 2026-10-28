@@ -310,3 +310,33 @@ def test_a_few_to_a_page_version_gives_the_room_to_writing(tmp_path):
     taller = lambda r: r[3] - r[1]  # noqa: E731
     assert taller(rects[5]) > taller(base_rects[5]) * 1.5  # the essay box grew into the empty page
     assert taller(rects[5]) <= taller(base_rects[5]) * 2.2  # but no more than about double
+
+
+def test_bilingual_versions_translate_their_sentence_starters_and_word_banks(tmp_path):
+    import pypdfium2 as pdfium
+    S.make_worksheet(S.read_json(VERSIONS), tmp_path / "w", base=VERSIONS.parent)
+    doc = pdfium.PdfDocument(str(tmp_path / "w" / "versions" / "es.pdf"))
+    text = " ".join(doc[i].get_textpage().get_text_range() for i in range(len(doc))).replace("\r\n", " ")
+    assert "Maya ___ tiene razón porque ___." in text and "multiplicar · sumar · igual · razón" in text
+    assert "Word bank: multiply" in text  # the English bank still prints; the translation sits under it
+    lp = pdfium.PdfDocument(str(tmp_path / "w" / "versions" / "lp.pdf"))  # no starters there: none translated
+    assert "multiplicar" not in " ".join(lp[i].get_textpage().get_text_range() for i in range(len(lp)))
+
+
+def test_make_draws_the_expected_answer_on_the_key(tmp_path):
+    import numpy as np
+    import pypdfium2 as pdfium
+    path = ROOT / "examples" / "math4-fractions-01.json"
+    reds = []
+    for name, draw in (("with", True), ("without", False)):
+        defn = S.read_json(path)
+        if not draw:
+            defn["questions"][0].pop("key_draw")
+        S.write_json(tmp_path / f"{name}.json", defn)
+        run = subprocess.run([sys.executable, str(ROOT / "plugin" / "skills" / "paper-loop" / "scripts" / "paper_loop.py"),
+                              "make", str(tmp_path / f"{name}.json"), "--out", str(tmp_path / name)],
+                             capture_output=True, text=True)
+        assert run.returncode == 0 and "key_draw" not in run.stdout, run.stdout
+        img = np.array(pdfium.PdfDocument(str(tmp_path / name / "answer-key.pdf"))[0].render(scale=1).to_pil().convert("RGB")).astype(int)
+        reds.append(int(((img[..., 0] > 150) & (img[..., 1] < 90) & (img[..., 2] < 90)).sum()))
+    assert reds[0] > reds[1] + 50  # the two dots and their labels, in red

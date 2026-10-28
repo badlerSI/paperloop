@@ -65,7 +65,15 @@ def cmd_make(args) -> int:
     n = layout["base_pages"]
     try:  # the worksheet with its answers written in, for the teacher (a lesson writes a fuller one)
         from paper_loop_core import walk as WK
-        WK.answer_key(WK.Worksheet(args.out), Path(args.out) / "answer-key.pdf")
+        ws = WK.Worksheet(args.out)
+        drawings = {}
+        for q in defn["questions"]:  # a drawn answer, in red on the key: bars, plotted points, arrows
+            if q.get("key_draw"):
+                try:
+                    drawings[q["q"]] = ws.answer_drawing(q["q"], q["key_draw"])
+                except ValueError as e:
+                    print(f"  Check: question {q['q']}'s key_draw: {e}.")
+        WK.answer_key(ws, Path(args.out) / "answer-key.pdf", drawings)
     except Exception as e:  # the key is a convenience: a worksheet without one still prints and marks
         print(f"  (No answer-key.pdf: {type(e).__name__}: {e})")
     questions = [b for b in defn["questions"] if b["type"] != "passage"]

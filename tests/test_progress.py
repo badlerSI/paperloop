@@ -70,6 +70,9 @@ def test_progress_follows_each_skill_and_marks_support(tmp_path):
     log = list(csv.reader((report["out"] / "supports.csv").open()))
     assert log[0][:4] == ["student_id", "date", "worksheet", "version"]
     assert [r[0] for r in log[1:]] == ["0103"] and "supports on the page" in log[1][4]  # for a case manager
+    fading = data["help_over_time"]
+    assert list(fading) == ["0103"] and [r["help"] for r in fading["0103"]] == [False, True]
+    assert "Help on the page, over time" in (report["out"] / "dashboard.html").read_text()
     todo = (report["out"] / "progress-todo.md").read_text()
     assert "I can find a unit rate" in todo and '"home"' in todo
 

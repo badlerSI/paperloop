@@ -399,19 +399,25 @@ def _print_size(raw: dict, version: dict, where: str) -> float:
     return scale
 
 
-def _translated(entry, q: dict) -> str:
-    """A question's translation as printed: a string as written, or {"prompt", "options": {letter: text}}
-    with one option a line, only the options this version printed."""
+def _translated(entry, q: dict, frames: bool = True, bank: bool = True) -> str:
+    """A question's translation as printed: a string as written, or {"prompt", "options": {letter: text},
+    "frame": [...], "word_bank": [...]} with one option a line (only the options this version printed), then
+    the sentence starters and the word bank in the home language, when the version prints them in English."""
     if isinstance(entry, str):
         return entry
     if not isinstance(entry, dict) or "prompt" not in entry:
         raise WorksheetError(f"question {q.get('q')}: a translation is a string, or {{\"prompt\": ..., "
-                             "\"options\": {\"A\": ...}}}")
+                             "\"options\": {\"A\": ...}, \"frame\": [...], \"word_bank\": [...]}}")
     lines = [entry["prompt"]]
     options = entry.get("options") or {}
     for o in q.get("options", []):
         if o["letter"] in options:
             lines.append(f"{o['letter']}. {options[o['letter']]}")
+    if frames and entry.get("frame"):  # the starters, translated, each on its own line
+        lines += [entry["frame"]] if isinstance(entry["frame"], str) else [str(f) for f in entry["frame"]]
+    if bank and entry.get("word_bank"):  # the bank's words in the same order as the English bank
+        words = entry["word_bank"]
+        lines.append(" · ".join(words.values() if isinstance(words, dict) else map(str, words)))
     return "\n".join(lines)
 
 
@@ -517,7 +523,9 @@ def _version(raw: dict, version: dict, index: int, base_dir: Path) -> tuple[dict
         if lang and mode == "bilingual":
             entry = (tr.get("questions") or {}).get(str(q.get("q")))
             if entry:
-                asides.append({"kind": "translation", "text": _translated(entry, q), "lang": lang})
+                asides.append({"kind": "translation", "lang": lang,
+                               "text": _translated(entry, q, frames=bool(q.get("frame")),
+                                                   bank="word_bank" in scaffolds and bool(support.get("word_bank")))})
         if version.get("grid") and kind == "math":
             q["grid"] = True
         if asides:
@@ -639,7 +647,7 @@ def companion(form: dict, defn: dict, out_dir: Path) -> Path:
         if q.get("type") == "passage" or str(q.get("q")) not in questions:
             continue
         doc.para(f"{q['q']}.", bold=True, after=40, markup=False)
-        for line in str(questions[str(q["q"])]).split("\n"):
+        for line in _translated(questions[str(q["q"])], q).split("\n"):
             doc.para(line, markup=False, lang=lang, rtl=rtl, after=40)
     path = out_dir / "versions" / f"{form['id']}.docx"
     doc.save(path, f"{defn['title']} ({name})")

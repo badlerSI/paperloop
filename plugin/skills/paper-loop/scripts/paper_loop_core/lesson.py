@@ -360,7 +360,15 @@ def _build(L: dict, ws, warnings: list, measure, theme, out_dir: Path, images: P
         report["warnings"] += [f"go-over {w}" for w in g.warnings if w not in b.warnings]
         K.write_pptx(g.slides, out_dir / "go-over.pptx", f"Going over: {ws.title}")
         K.write_pdf(g.slides, out_dir / "go-over.pdf", f"Going over: {ws.title}", measure)
-        WK.answer_key(ws, out_dir / "answer-key.pdf", {q: w.get("drawing") for q, w in L["walk"].items()},
+        drawings = {}
+        for q in ws.defn.get("questions", []):  # the worksheet's own drawn answers, unless the walkthrough draws one
+            if q.get("key_draw"):
+                try:
+                    drawings[q["q"]] = ws.answer_drawing(q["q"], q["key_draw"])
+                except ValueError as e:
+                    warnings.append(f"question {q['q']}'s key_draw: {e}")
+        drawings.update({q: w.get("drawing") for q, w in L["walk"].items() if w.get("drawing")})
+        WK.answer_key(ws, out_dir / "answer-key.pdf", drawings,
                       models={q: w["model"] for q, w in L["walk"].items() if w.get("model")})
         if ws.folder.resolve() != out_dir.resolve():  # everything to print, in one place
             shutil.copy(ws.folder / "worksheet.pdf", out_dir / "worksheet.pdf")

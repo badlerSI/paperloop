@@ -15,7 +15,18 @@
         "D": "1 de mango : 2 de yogur"
       }
     },
-    "5": "Explica: Maya dice que 4 tazas de mango por 5 de yogur sabe igual que 2 : 3, porque sumó 2 a cada número. ¿Tiene razón? Explica."
+    "5": {
+      "prompt": "Explica: Maya dice que 4 tazas de mango por 5 de yogur sabe igual que 2 : 3, porque sumó 2 a cada número. ¿Tiene razón? Explica.",
+      "frame": [
+        "Maya ___ tiene razón porque ___."
+      ],
+      "word_bank": [
+        "multiplicar",
+        "sumar",
+        "igual",
+        "razón"
+      ]
+    }
   },
   "glossary": [
     {

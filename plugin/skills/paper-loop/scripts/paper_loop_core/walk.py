@@ -21,7 +21,7 @@ from . import fonts as F
 from . import sheet as S
 
 DPI = 300  # sharp enough to fill a projector
-ANSWER_SHAPES = ("circle", "line", "arrow", "polyline", "polygon", "rect", "text", "plot", "mark")
+ANSWER_SHAPES = ("circle", "line", "arrow", "polyline", "polygon", "rect", "text", "plot", "mark", "bars")
 
 
 @dataclass
@@ -141,6 +141,16 @@ class Worksheet:
                     x = line["x"] + pad + (float(v) - line["min"]) / (line["max"] - line["min"]) * (line["w"] - 2 * pad)
                     out.append(D.normalize_shape({"shape": "circle", "x": x, "y": line["y"], "r": s.get("r", 4.0),
                                                   "fill": 0}))
+            elif s["shape"] == "bars":  # the bars a student should draw on the diagram's bar chart
+                chart = next((p for p in parts if p["shape"] == "bar_chart"), None)
+                if not chart:
+                    raise ValueError(f"{where}: \"bars\" needs a bar chart in the question's diagram")
+                slot = chart["w"] / max(1, len(chart["categories"]))
+                for k, v in enumerate(s.get("values", [])):
+                    if v is not None:
+                        out.append(D.normalize_shape({"shape": "rect", "x": chart["x"] + k * slot + slot * 0.2,
+                                                      "y": chart["y"], "w": slot * 0.6,
+                                                      "h": float(v) * chart["h"] / chart["ymax"], "width": 2.0}))
             else:
                 out.append(D.normalize_shape({"width": 2.0, **s}))
         return out
