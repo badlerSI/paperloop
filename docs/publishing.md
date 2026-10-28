@@ -9,7 +9,7 @@ No single path reaches every Claude user. Three together come close.
 | Path | Who gets it | How they install it | Notes |
 | - | - | - | - |
 | **Skill zip** | Everyone, the Free plan included | Download `paper-loop.zip` from the GitHub releases page, then **Customize → Skills → + → Upload**, with code execution on (**Settings → Capabilities**) | The only path for Free accounts, which can't install plugins or use Cowork. No automatic updates. The upload caps the description at 200 characters, so `devtools/release.py` builds the zip with a short one. |
-| **GitHub marketplace** | Pro, Max, Team, Enterprise, and Claude for Teachers | **Customize → Plugins → Add marketplace** → `Badlerz/paperloop`, in chat, the desktop app, or Cowork; in Claude Code, `/plugin marketplace add Badlerz/paperloop` | Works the day the repo is public. Users see a warning that the plugin isn't reviewed. Not confirmed: whether a teacher's individual Claude for Teachers account shows **Add marketplace**. |
+| **GitHub marketplace** | Pro, Max, Team, Enterprise, and Claude for Teachers | **Customize → Plugins → Add marketplace** → `badlerSI/paperloop`, in chat, the desktop app, or Cowork; in Claude Code, `/plugin marketplace add badlerSI/paperloop` | Works the day the repo is public. Users see a warning that the plugin isn't reviewed. Not confirmed: whether a teacher's individual Claude for Teachers account shows **Add marketplace**. |
 | **Anthropic's plugin directory** | Pro, Max, Team, and Enterprise users browsing for plugins | One click from the directory | Reviewed by Anthropic (automated checks, a security scan, and a person for a new listing). The submitter needs a Pro plan or above and GitHub connected on claude.ai. |
 
 Districts on Claude for Teachers' Enterprise offering can push it to every teacher: an owner syncs the repo
@@ -28,9 +28,9 @@ under **Organization settings → Plugins & skills** and sets it to install by d
 
 ## Steps only the owner can take
 
-1. **Create the public repository** `Badlerz/paperloop` and push `main`. The README, the plugin README, the
-   samples' QR codes, and the scripts' user agent already use that name. In its settings, turn on private
-   vulnerability reporting (**Security → Private vulnerability reporting**).
+1. **Make the repository public** when ready: `badlerSI/paperloop` was created private on October 28. The
+   README, the plugin README, the samples' QR codes, and the scripts' user agent already point there. In its
+   settings, turn on private vulnerability reporting (**Security → Private vulnerability reporting**).
 2. **Make a release:** tag `v0.5.0`, run `devtools/release.py`, and attach `dist/paper-loop.zip`.
 3. **Try both installs** before telling anyone:
    - the marketplace in Cowork on your Claude for Teachers account;

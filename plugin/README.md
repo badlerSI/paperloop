@@ -35,7 +35,7 @@ Students are known only by a class ID number. Paper Loop never asks for a name.
 
 The privacy policy, which also credits the sources Paper Loop draws on (Wikipedia, Wikisource, Project
 Gutenberg, and US government agencies) and says whose terms apply, is at
-<https://github.com/Badlerz/paperloop/blob/main/PRIVACY.md>. The skill's own
+<https://github.com/badlerSI/paperloop/blob/HEAD/PRIVACY.md>. The skill's own
 rules are in [`skills/paper-loop/SKILL.md`](skills/paper-loop/SKILL.md).
 
 ## Who can use it
@@ -43,7 +43,7 @@ rules are in [`skills/paper-loop/SKILL.md`](skills/paper-loop/SKILL.md).
 Paper Loop is for teachers, not for students to use directly. Plugins work on Claude's paid plans and on
 the free [Claude for Teachers](https://www.anthropic.com/news/claude-for-teachers) plan for US K-12
 educators. On the Free plan, upload the skill instead: download `paper-loop.zip` from the
-[releases page](https://github.com/Badlerz/paperloop/releases) and add it under **Customize → Skills**.
+[releases page](https://github.com/badlerSI/paperloop/releases) and add it under **Customize → Skills**.
 
 On a teacher's own account, keep student work de-identified (class ID numbers, no names) unless the school
 or district has authorized Claude for student records.

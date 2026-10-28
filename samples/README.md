@@ -20,7 +20,7 @@ Print one of these, fill it in yourself, and watch Claude mark it. It takes abou
    view, or scan it on any copier.
 4. **Share it with Claude.** Paper Loop is a free plugin for [Claude for Teachers](https://www.anthropic.com/news/claude-for-teachers):
    - In Claude, open Cowork, then **Customize → Plugins**.
-   - Add the marketplace `Badlerz/paperloop`, and install **Paper Loop**.
+   - Add the marketplace `badlerSI/paperloop`, and install **Paper Loop**.
    - Share the photo and say "Mark this Paper Loop sample."
 
 You get the page back marked: a comment beside each answer, a check or cross on each box, and a short

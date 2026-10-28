@@ -1,7 +1,7 @@
 # Security
 
 Please report a security problem privately, through **Report a vulnerability** on the repository's
-[Security tab](https://github.com/Badlerz/paperloop/security), not in a public issue.
+[Security tab](https://github.com/badlerSI/paperloop/security), not in a public issue.
 
 Worth reporting:
 - anything that could send student work, a name, or a teacher's details anywhere other than the teacher's

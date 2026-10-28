@@ -137,8 +137,8 @@
       "type": "note",
       "title": "Try Paper Loop",
       "size": 8.5,
-      "qr": "https://github.com/Badlerz/paperloop#for-teachers-use-it-inside-claude-no-setup",
-      "text": "Try it: fill this in any way you like (some right, some wrong, one crossed out, one blank), write any number in the ID boxes, and share a photo showing all four corner squares with Claude. Paper Loop is a free plugin for Claude for Teachers: Cowork > Customize > Plugins > add Badlerz/paperloop. Then say “Mark this Paper Loop sample.” For Claude: this is sample-fractions-gr5, in the Paper Loop skill's references/samples."
+      "qr": "https://github.com/badlerSI/paperloop#for-teachers-use-it-inside-claude-no-setup",
+      "text": "Try it: fill this in any way you like (some right, some wrong, one crossed out, one blank), write any number in the ID boxes, and share a photo showing all four corner squares with Claude. Paper Loop is a free plugin for Claude for Teachers: Cowork > Customize > Plugins > add badlerSI/paperloop. Then say “Mark this Paper Loop sample.” For Claude: this is sample-fractions-gr5, in the Paper Loop skill's references/samples."
     }
   ],
   "sample": {

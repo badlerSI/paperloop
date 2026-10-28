@@ -22,7 +22,7 @@ ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT / "plugin" / "skills" / "paper-loop" / "scripts"))
 from paper_loop_core import sheet as S  # noqa: E402
 
-URL = "https://github.com/Badlerz/paperloop#for-teachers-use-it-inside-claude-no-setup"
+URL = "https://github.com/badlerSI/paperloop#for-teachers-use-it-inside-claude-no-setup"
 # sample id: (the example it's made from, what it shows, changes so the try box fits on the page)
 SAMPLES = {
     "sample-plants-gr3": ("sci3-plants-01", "grade 3 science: label a plant, circle, a sentence",
@@ -37,7 +37,7 @@ SAMPLES = {
 def note(sample_id: str) -> str:
     return (f"Try it: fill this in any way you like (some right, some wrong, one crossed out, one blank), write any "
             f"number in the ID boxes, and share a photo showing all four corner squares with Claude. Paper Loop is a "
-            f"free plugin for Claude for Teachers: Cowork > Customize > Plugins > add Badlerz/paperloop. Then say "
+            f"free plugin for Claude for Teachers: Cowork > Customize > Plugins > add badlerSI/paperloop. Then say "
             f"“Mark this Paper Loop sample.” For Claude: this is {sample_id}, in the Paper Loop skill's "
             f"references/samples.")
 

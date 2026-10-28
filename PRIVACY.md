@@ -73,4 +73,4 @@ Paper Loop is for teachers. It isn't meant for students to use directly.
 ## Changes and questions
 
 Changes to this policy are made in the public repository, where the history shows every version. Ask
-questions or report a problem in the repository's issues: <https://github.com/Badlerz/paperloop/issues>.
+questions or report a problem in the repository's issues: <https://github.com/badlerSI/paperloop/issues>.
