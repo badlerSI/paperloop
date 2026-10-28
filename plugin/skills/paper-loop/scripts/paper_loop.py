@@ -493,6 +493,9 @@ def cmd_progress(args) -> int:
     print(f"  {out / 'dashboard.html'}: the teacher's dashboard (opens in any browser; nothing leaves the computer)")
     print(f"  {out / 'parents.docx'}: a page for each family, with a line to write the student's name")
     print(f"  {out / 'progress.csv'}: each student's latest score on each skill, for a gradebook")
+    if report.get("supported"):
+        print(f"  {out / 'supports.csv'}: which version and supports each class ID had on each worksheet "
+              f"({report['supported']} rows), for a case manager's records")
     for lang, path in report["made"].items():
         if lang != "en":
             print(f"  {path}: family pages in {lang}")

@@ -83,6 +83,14 @@ stays as written.
 | `notes` | For the teacher, not printed ("read the questions aloud on request"). `make` prints it back. |
 | `copies` | How many to print, if the teacher said. |
 
+**A record for case managers.** `PL progress` writes `progress/supports.csv`: each class ID that had a version,
+with the date, the worksheet, the version, its supports (in plain words, with any `notes` such as
+read-aloud), and the help that changes what's measured. It's the accommodation log a case manager keeps for
+an IEP or 504 plan, by class ID; the teacher matches IDs to names.
+
+**Fewer to a page means more room to write.** A version with `per_page` gives the space it frees to the
+writing lines and work areas on each page, up to double their size.
+
 **Students who read below grade level** (not English learners): plain wording (`plain`) where reading isn't
 what's tested, a word bank, sentence starters, more room to write, and, in `notes`, read-aloud by an adult. On
 a reading or vocabulary question, plain wording and read-aloud change what's measured, so Paper Loop marks

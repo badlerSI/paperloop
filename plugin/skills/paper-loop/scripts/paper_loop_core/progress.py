@@ -106,13 +106,64 @@ def collect(folder: Path, roster: set[str] | None = None) -> list[dict]:
             for spec in S.read_json(work / "goover.json").get("questions", []):
                 if spec.get("saw"):
                     saw.append({"q": spec["q"], "saw": spec["saw"]})
+        source = S.read_json(assignment / "source.json") if (assignment / "source.json").exists() else {}
+        raw = {str(v.get("id")): v for v in source.get("versions", []) if isinstance(v, dict)}
+        versions = {fid: {**raw.get(fid, {}), **f} for fid, f in (key.get("forms") or {}).items()
+                    if f.get("kind") == "version"}
         runs.append({"work": str(work), "assignment_id": key["assignment_id"], "title": manifest.get("title", ""),
+                     "versions": {fid: {"name": f.get("name") or fid, "supports": _supports(f),
+                                        "help": list(f.get("modifies") or [])} for fid, f in versions.items()},
                      "date": _date(work), "subject": key.get("subject", ""), "grade_band": key.get("grade_band", ""),
                      "items": [{"q": i["q"], "skill": i.get("skill") or manifest.get("title", ""),
                                 "points": i["points"], "prompt": i["prompt"]} for i in key["items"]],
                      "students": students, "summaries": summaries, "saw": saw})
     runs.sort(key=lambda r: (r["date"], r["title"]))
     return runs
+
+
+def _supports(form: dict) -> list[str]:
+    """A version's supports in plain words, for a case manager's records."""
+    out = []
+    if form.get("scaffolds"):
+        scaffolds = form["scaffolds"]
+        out.append("supports on the page: " + (", ".join(scaffolds) if isinstance(scaffolds, list) else str(scaffolds)))
+    lp = form.get("large_print")
+    if lp:
+        out.append("large print" + ("" if lp is True else f" ({lp}pt)" if isinstance(lp, (int, float)) and lp > 2
+                                    else f" ({lp})"))
+    if form.get("space"):
+        out.append(f"more room to write ({form['space']}x)")
+    if form.get("per_page"):
+        out.append(f"at most {form['per_page']} question{'s' if form['per_page'] > 1 else ''} a page")
+    if form.get("max_choices"):
+        out.append(f"{form['max_choices']} answer choices at most")
+    if form.get("grid"):
+        out.append("graph paper for work")
+    if form.get("only"):
+        out.append("shortened: questions " + ", ".join(map(str, form["only"])))
+    if form.get("language"):
+        out.append(f"{form.get('language_name') or form['language']} ({form.get('language_mode') or 'bilingual'})")
+    if form.get("reference"):
+        out.append("reference page: " + ", ".join(form["reference"]))
+    if form.get("notes"):
+        out.append(f"note: {form['notes']}")
+    return out
+
+
+def _supports_csv(runs: list[dict], path: Path) -> int:
+    """Which supports each class ID had on each worksheet: the record a case manager keeps. IDs only."""
+    rows = []
+    for run in runs:
+        for sid, st in sorted(run["students"].items()):
+            version = run.get("versions", {}).get(st.get("form", ""))
+            if version:
+                rows.append([sid, run["date"], run["title"], version["name"], "; ".join(version["supports"]),
+                             "; ".join(version["help"])])
+    with path.open("w", newline="") as f:
+        w = csv.writer(f)
+        w.writerow(["student_id", "date", "worksheet", "version", "supports", "help that changes what's measured"])
+        w.writerows(rows)
+    return len(rows)
 
 
 def analyze(runs: list[dict]) -> dict:
@@ -210,6 +261,7 @@ def build(folder: Path, out: Path | None = None, roster_path: Path | None = None
     S.write_json(out / "progress.json", data)
     (out / "dashboard.html").write_text(dashboard_html(data))
     _csv(data, out / "progress.csv")
+    supported = _supports_csv(runs, out / "supports.csv")
     families = S.read_json(folder / "families.json") if (folder / "families.json").exists() else {}
     todo, made, unreviewed = [], {}, []
     missing = [s for s in data["skills"] if not (descriptions.get(s) or {}).get("family")
@@ -238,7 +290,7 @@ def build(folder: Path, out: Path | None = None, roster_path: Path | None = None
         (out / "progress-todo.md").unlink()
     return {"out": out, "runs": len(runs), "students": len(data["students"]), "skills": data["skills"],
             "missing": missing, "languages": todo, "made": made, "groups": data["groups"],
-            "in_language": sorted(in_language), "unreviewed": unreviewed}
+            "in_language": sorted(in_language), "unreviewed": unreviewed, "supported": supported}
 
 
 def _csv(data: dict, path: Path) -> None:

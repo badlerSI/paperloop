@@ -854,6 +854,25 @@ class Layout:
             y -= height + st["block_gap"]
         return pages
 
+    def grow(self) -> None:
+        """Fewer questions to a page leave room: give it to writing lines and work areas, page by page, so a
+        version printed a question or two to a page has more room to write, not blank paper."""
+        st = self.st
+        for pieces, free in zip(self.paginate(), self.free_by_page()):
+            room = free - 12
+            growing = [i for i, part in pieces if part is None and self.defn["questions"][i]["type"] in ("short", "math")]
+            if not growing or room < st["line_spacing"]:
+                continue
+            share = room / len(growing)
+            for i in growing:
+                q = self.defn["questions"][i]
+                if q["type"] == "short":  # at most double: more room to write, not a page of lines to fill
+                    q["lines"] += min(q["lines"], int(share // st["line_spacing"]))
+                else:
+                    factor = self.sized(100, True) / 100
+                    work = self.math_heights(q)[0]
+                    q["work_height"] = (work + min(work, share)) / factor
+
     def space_left(self) -> float:
         """Points of free space at the bottom of the last page (negative means it doesn't fit)."""
         y = self.content_top
@@ -1683,6 +1702,8 @@ def make_worksheet(defn: dict, out_dir: Path, base: Path | None = None) -> dict:
         problems = _lang_problems(L, form) if form.get("language") and form.get("language_mode") != "companion" else []
         if problems:
             raise WorksheetError(problems[0])
+        if L.per_page:
+            L.grow()
         first = len(page_layouts) + 1
         pages = _draw_form(canvases[pdf], L, code_id, form, first, pdf)
         page_layouts += pages

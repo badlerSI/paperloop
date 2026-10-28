@@ -284,3 +284,17 @@ def test_matching_items_beside_choices_carry_no_numbers_of_their_own(tmp_path):
     doc = pdfium.PdfDocument(str(tmp_path / "g" / "worksheet.pdf"))
     text = "".join(doc[i].get_textpage().get_text_range() for i in range(len(doc)))
     assert "exhaust (line 2)" in text and "1. exhaust" not in text and "A. light in color" in text
+
+
+def test_a_few_to_a_page_version_gives_the_room_to_writing(tmp_path):
+    defn = S.read_json(VERSIONS)
+    defn["versions"] = [{"id": "one", "name": "One a page", "per_page": 1}]
+    S.make_worksheet(defn, tmp_path / "w", base=VERSIONS.parent)
+    key = S.read_json(tmp_path / "w" / "key.json")
+    base_q5 = next(q for q in defn["questions"] if q.get("q") == 5)
+    layout = S.read_json(tmp_path / "w" / "layout.json")
+    rects = {b["q"]: b["rect"] for p in layout["pages"] if p.get("form") == "one" for b in p["boxes"]}
+    base_rects = {b["q"]: b["rect"] for p in layout["pages"] if not p.get("form") for b in p["boxes"]}
+    taller = lambda r: r[3] - r[1]  # noqa: E731
+    assert taller(rects[5]) > taller(base_rects[5]) * 1.5  # the essay box grew into the empty page
+    assert taller(rects[5]) <= taller(base_rects[5]) * 2.2  # but no more than about double

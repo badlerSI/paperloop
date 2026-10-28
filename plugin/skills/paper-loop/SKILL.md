@@ -273,6 +273,8 @@ When the teacher asks how the class or a student is doing over time, or wants so
      their child is doing on each skill, their latest feedback, and something to try at home. A line for
      the teacher to write the name.
    - `progress.csv`: the latest score on each skill, for a gradebook.
+   - `supports.csv`: which version and supports each class ID had on each worksheet, the record a case
+     manager keeps (when any student had a version).
 2. If it lists a `progress-todo.md`, fill in what it asks, then run it again:
    - `skills.json` in the folder: each skill in everyday words, and a ten-minute thing to try at home with
      nothing a family might not have.

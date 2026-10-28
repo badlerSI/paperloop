@@ -67,6 +67,9 @@ def test_progress_follows_each_skill_and_marks_support(tmp_path):
     assert rows[0][:3] == ["student_id", "I can make equivalent ratios", "I can make equivalent ratios: help on the page"]
     assert rows[3][1:3] == ["100", "yes"]  # scores stay numbers; help on the page is its own column
     assert report["missing"] == data["skills"]  # no skills.json yet: a work order lists what to write
+    log = list(csv.reader((report["out"] / "supports.csv").open()))
+    assert log[0][:4] == ["student_id", "date", "worksheet", "version"]
+    assert [r[0] for r in log[1:]] == ["0103"] and "supports on the page" in log[1][4]  # for a case manager
     todo = (report["out"] / "progress-todo.md").read_text()
     assert "I can find a unit rate" in todo and '"home"' in todo
 
