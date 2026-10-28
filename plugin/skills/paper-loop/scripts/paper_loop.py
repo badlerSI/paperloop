@@ -25,6 +25,11 @@
                                          a free text to read and adapt, with its license and link
     pieces PIECES.json --out DIR         cards, board games for a checker or chess board, dice, a spinner,
                                          pawns, a fortune teller, a mini-book, ABCD cards, and bingo
+    teamwork ACTIVITY.json --out DIR     group work where students teach each other: role cards, the task,
+                                         jigsaw expert sheets, coach-and-player sheets, tokens to cut out
+    groups FOLDER [--size 4] [--skill S] [--structure lab] [--similar] [--roster ids.csv]
+                                         groups from a class's marked work, by class ID: mixed (or
+                                         --similar for targeted practice); random from a roster alone
 
 Needs only numpy, scipy, Pillow, pypdfium2, and reportlab; slides also need python-pptx.
 """
@@ -253,10 +258,10 @@ def cmd_preview(args) -> int:
         return 0
     out = pdf.parent / "preview"
     out.mkdir(exist_ok=True)
-    for old in out.glob(f"{pdf.stem}-p*.png"):  # a shorter remake mustn't leave its old last pages behind
-        old.unlink()
-    for old in out.glob(f"{pdf.stem}-sheet*.png"):
-        old.unlink()
+    # A shorter remake mustn't leave its old last pages behind; one page, or the sheets, replace only themselves.
+    for old in out.glob(f"{pdf.stem}-sheet*.png" if args.sheet else f"{pdf.stem}-p*.png"):
+        if not args.page or args.sheet:
+            old.unlink()
     doc = pdfium.PdfDocument(str(pdf))
     try:
         pages = []
@@ -356,6 +361,10 @@ def cmd_source(args) -> int:
         print(f"Can't get it: {e}")
         return 1
     except OSError as e:
+        if getattr(e, "code", None) == 429:
+            print(f"{args.site} is limiting requests right now. Wait a minute and run this again (don't add a name or "
+                  "email to the request).")
+            return 1
         print(f"Can't reach {args.site} from here ({e}). Use your web tool to open the page, save its text, and "
               "note the address (for Wikipedia, the \"Permanent link\" in the Tools menu, which names the revision).")
         return 1
@@ -369,6 +378,47 @@ def cmd_source(args) -> int:
         print(f"  Check: {got['check']}.")
     print("  Quote it exactly, or abridge and adapt it (say how in \"changes\": \"shortened\", \"simplified for grade "
           "4\"), and set \"reading_level\" to the grade you adapted it for.")
+    return 0
+
+
+def cmd_teamwork(command: str, argv: list[str]) -> int:
+    """teamwork ACTIVITY.json --out DIR: role cards, the group's task, and what to cut out.
+    groups FOLDER [--size 4] [--skill "..."] [--roster ids.csv] [--structure lab]: mixed-skill groups."""
+    from paper_loop_core import teamwork as TW
+    parser = argparse.ArgumentParser(prog=f"paper_loop.py {command}")
+    if command == "teamwork":
+        parser.add_argument("activity", type=Path)
+        parser.add_argument("--out", type=Path, required=True)
+    else:
+        parser.add_argument("folder", type=Path)
+        parser.add_argument("--size", type=int, default=4)
+        parser.add_argument("--skill")
+        parser.add_argument("--roster", type=Path)
+        parser.add_argument("--structure", default="lab", choices=list(TW.STRUCTURES))
+        parser.add_argument("--similar", action="store_true",
+                            help="similar-skill groups for targeted practice (default: mixed)")
+    args = parser.parse_args(argv)
+    try:
+        if command == "teamwork":
+            report = TW.build(args.activity, args.out)
+        else:
+            report = TW.form_groups(args.folder, args.size, args.skill, args.roster, args.structure,
+                                    similar=args.similar)
+    except (TW.TeamworkError, ValueError, OSError) as e:
+        print(f"Can't make the {'group work' if command == 'teamwork' else 'groups'}: {e}")
+        return 1
+    if command == "teamwork":
+        print(f"Wrote {report['pdf']}: {report['structure']}, groups of {report['group_size']}.")
+        for name, first, last in report["pages"]:
+            print(f"  {'page ' + str(first) if first == last else f'pages {first}-{last}'}: {name}")
+        for w in report["warnings"]:
+            print(f"  Check: {w}.")
+        return 0
+    kind = "similar" if report["similar"] else "paired" if args.structure == "pairs" else "mixed"
+    how = f"{kind} by {report['skill'] or 'all skills so far'}" if report["mixed"] else "at random (nothing marked yet)"
+    print(f"{len(report['groups'])} groups, {how} (for the teacher only): {report['path']}")
+    for k, g in enumerate(report["groups"], start=1):
+        print(f"  Group {k}: " + ", ".join(f"{sid} ({role})" for sid, role in g))
     return 0
 
 
@@ -582,6 +632,8 @@ def main() -> int:
     if len(sys.argv) > 1 and sys.argv[1] == "pieces":  # cards, games, and foldables: their own small CLI
         from paper_loop_core import pieces
         return pieces.main(sys.argv[2:])
+    if len(sys.argv) > 1 and sys.argv[1] in ("teamwork", "groups"):
+        return cmd_teamwork(sys.argv[1], sys.argv[2:])
     parser = argparse.ArgumentParser(prog="paper_loop.py", description=__doc__,
                                      formatter_class=argparse.RawDescriptionHelpFormatter)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -643,6 +695,8 @@ def main() -> int:
     p.add_argument("--grade", choices=["off", "back", "csv"], default="off")
     p.add_argument("--accept-flags", action="store_true")
     p.set_defaults(func=cmd_render)
+    for name in ("pieces", "teamwork", "groups"):  # handled above; listed so --help shows them
+        sub.add_parser(name, help=f"see `paper_loop.py {name} --help`")
     args = parser.parse_args()
     return args.func(args)
 

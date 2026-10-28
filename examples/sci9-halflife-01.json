@@ -1,0 +1,130 @@
+{
+  "assignment_id": "sci9-halflife-01",
+  "title": "Half-Life: On Your Own",
+  "subject": "physical science",
+  "grade": 9,
+  "grade_band": "9th grade",
+  "compact": true,
+  "instructions": "Answer on your own, even though you did the lab with your group. Write your ID number, not your name.",
+  "questions": [
+    {
+      "type": "table",
+      "q": 1,
+      "skill": "I can use half-lives to predict what's left",
+      "prompt": "Halving: A sample starts with 800 atoms, and its half-life is 2 hours. Fill in how many atoms are left.",
+      "columns": [
+        "Time (hours)",
+        "0",
+        "2",
+        "4",
+        "6",
+        "8"
+      ],
+      "rows": [
+        [
+          "Atoms left",
+          "800",
+          {
+            "answer": "400"
+          },
+          {
+            "answer": "200"
+          },
+          {
+            "answer": "100"
+          },
+          {
+            "answer": "50"
+          }
+        ]
+      ],
+      "notes": "Each 2 hours, half are left. A student who subtracts 400 each time gets 400, 0: that's a straight line, not halving."
+    },
+    {
+      "type": "math",
+      "q": 2,
+      "skill": "I can use half-lives to predict what's left",
+      "prompt": "How Old? Carbon-14 has a half-life of 5,730 years. A bone has 1/4 of the carbon-14 it had when the animal died. How old is the bone?",
+      "answer": "11460",
+      "accept": [
+        "11,460",
+        "11,460 years",
+        "11460 years",
+        "11400",
+        "11,400"
+      ],
+      "units": "years",
+      "key": "1/4 left is two half-lives (1 → 1/2 → 1/4), so 2 × 5,730 = 11,460 years. Look for 5,730 × 4 = 22,920 (counting quarters as four half-lives) or 5,730 ÷ 4.",
+      "answer_points": 1,
+      "work_points": 1,
+      "work_height": 70,
+      "notes": "Newer measurements put carbon-14's half-life at 5,700 years, so 11,400 is also right if the student says so."
+    },
+    {
+      "type": "choice",
+      "q": 3,
+      "skill": "I can explain radioactive decay as chance",
+      "prompt": "Lucky Atom: In your lab, one atom stayed printed side up for five spills in a row. What is true about the next spill?",
+      "answer": "B",
+      "columns": 1,
+      "options": [
+        {
+          "letter": "A",
+          "text": "It is due to decay, so it will almost surely land blank side up.",
+          "why": "Each spill is a fresh chance; the atom has no memory."
+        },
+        {
+          "letter": "B",
+          "text": "It still has about a one-half chance of decaying.",
+          "why": "Yes: every spill is the same chance for every atom left."
+        },
+        {
+          "letter": "C",
+          "text": "It will never decay, because it is a stable atom.",
+          "why": "Every atom in the cup can land blank side up."
+        },
+        {
+          "letter": "D",
+          "text": "It will decay only after all the other atoms do.",
+          "why": "Atoms don't take turns; each spill is chance."
+        }
+      ]
+    },
+    {
+      "type": "short",
+      "q": 4,
+      "lines": 4,
+      "skill": "I can explain radioactive decay as chance",
+      "prompt": "Smooth or Bumpy? Your group's counts didn't halve exactly each spill, but a real sample with trillions of atoms halves almost exactly. Explain why.",
+      "rubric": [
+        {
+          "criterion": "Chance: says each atom decays (or lands) at random, so the number that decays each spill varies.",
+          "short": "Chance",
+          "levels": [
+            "missing",
+            "vague",
+            "clear"
+          ]
+        },
+        {
+          "criterion": "Few atoms: says with few atoms, chance makes big differences from half (e.g., 7 atoms can't split in half; 3 of 5 is far from half).",
+          "short": "Few atoms",
+          "levels": [
+            "missing",
+            "vague",
+            "clear"
+          ]
+        },
+        {
+          "criterion": "Many atoms: says with huge numbers, the ups and downs average out, so the fraction is very close to half.",
+          "short": "Many atoms",
+          "levels": [
+            "missing",
+            "vague",
+            "clear"
+          ]
+        }
+      ]
+    }
+  ]
+}

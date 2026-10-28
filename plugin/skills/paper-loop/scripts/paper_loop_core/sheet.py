@@ -460,7 +460,8 @@ class Layout:
         self.hk = min(self.k, 1.6)
         self.header_size, self.header_leading = 8.5 * self.hk, 10.5 * self.hk
         self.header_lines = self.split(defn["instructions"], fonts.regular, self.header_size, 290)
-        self.content_top = min(CONTENT_TOP, 716 - (len(self.header_lines) - 1) * self.header_leading - 12)
+        self.content_top = min(CONTENT_TOP, 716 - (len(self.header_lines) - 1) * self.header_leading - 12
+                               - (6 if len(self.header_lines) > 3 else 0))  # a fourth line keeps clear of the rule
 
     def sized(self, value: float, room: bool = False) -> float:
         """A size the worksheet set (a box height, a work area), at this version's print size."""
@@ -626,7 +627,8 @@ class Layout:
     def option_geometry(self, q: dict):
         columns = max(1, q["columns"])
         col_w = (BOX_RIGHT - LEFT) / columns
-        indent = ((36.0 if self.st["primary"] else 30.0) if columns == 1 else 20.0) * self.k  # room for the letter
+        indent = ((36.0 if self.st["primary"] else 30.0) if columns == 1 else  # room for the letter
+                  (30.0 if self.st["primary"] else 20.0)) * self.k
         width = col_w - indent - (0 if columns == 1 else 4)
         lines = [self.split(o["text"], self.body_font(q), self.st["option_size"], width) for o in q["options"]]
         return columns, col_w, indent, lines
@@ -1623,6 +1625,11 @@ def _lang_problems(L: Layout, form: dict) -> list[str]:
                             "which Word and Google Docs print correctly")
             break
     return problems
+
+
+def unlabeled(key: str) -> str:
+    """A key without its own "Full credit:" label, for places that print the label already."""
+    return re.sub(r"^\s*full credit\b[^:]{0,20}:\s*", "", key, flags=re.I)
 
 
 def make_worksheet(defn: dict, out_dir: Path, base: Path | None = None) -> dict:

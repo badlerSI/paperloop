@@ -1,0 +1,36 @@
+{
+  "title": "The Rooftop Garden: Reading Together",
+  "grade": 4,
+  "subject": "reading",
+  "structure": "reciprocal",
+  "minutes": 30,
+  "goal": "Understand the story well enough that anyone in your group could retell it and explain why Amara moved the bucket.",
+  "parts": [
+    {
+      "text": "Every morning, Amara climbed the stairs to the roof of her apartment building. The roof was flat and gray, and the wind always smelled like bus exhaust. But Amara had a plan."
+    },
+    {
+      "text": "She started with one bucket of soil and three bean seeds from the library's seed swap. She watered them before school and again when she got home. For nine days, nothing happened. Her neighbor Mr. Ortiz told her that beans need warm soil, so she moved the bucket next to the warm air vent."
+    },
+    {
+      "text": "On the tenth day, a pale green hook pushed up through the dirt. Amara was so excited she almost dropped her backpack down the stairwell."
+    },
+    {
+      "text": "By June, the bean vines had climbed a string all the way up the railing. Mr. Ortiz brought two tomato plants. A girl from the fourth floor brought marigolds. The gray roof was turning green, one bucket at a time.",
+      "source": "An original story written for Paper Loop."
+    }
+  ],
+  "worksheet": "ela4-garden-01",
+  "listen_for": [
+    "Questioners asking a “why” question, not only “what happened?”",
+    "Clarifiers naming a word they weren't sure of (exhaust, seed swap, stairwell) and how the group worked it out.",
+    "Summarizers keeping it short: one or two sentences, in their own words."
+  ],
+  "debrief": [
+    "Ask two Summarizers to sum up the whole story; ask the class what each one left out.",
+    "Ask: which job was hardest today? What helped?"
+  ],
+  "sources": [
+    "Reciprocal teaching: Palincsar & Brown (1984); review by Rosenshine & Meister (1994)."
+  ]
+}

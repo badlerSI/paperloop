@@ -1,0 +1,457 @@
+{
+  "assignment_id": "sci7-predators-01",
+  "title": "Lynx and Hares: On Your Own",
+  "subject": "life science",
+  "grade": 7,
+  "grade_band": "7th grade",
+  "compact": true,
+  "instructions": "Answer on your own, even though you did the lab with your group. Write your ID number, not your name.",
+  "questions": [
+    {
+      "type": "draw",
+      "q": 1,
+      "skill": "I can read population data",
+      "prompt": "Peaks: Real records! Each year, trappers in Canada sold hare and lynx furs to the Hudson's Bay Company. Circle the first hare peak and the first lynx peak. How many years after the hare peak does the lynx peak come?",
+      "diagram": {
+        "width": 344,
+        "height": 140,
+        "description": "A line graph of furs sold (thousands, 0 to 100) by year, 1900 to 1920. Hares (thick line): 30, 47, 70, 77 (1903), 36, 21, 18, 21, 22, 25, 27, 40, 57, 77 (1913), 52, 20, 11, 8, 15, 16, 25. Lynx (thin line with dots): 4, 6, 10, 35, 59 (1904), 42, 19, 13, 8, 9, 7, 8, 12, 20, 46, 51 (1915), 30, 16, 10, 10, 9. Labels 'hares' (by the 1913 peak) and 'lynx (dots)' (by the 1904 peak). Small print: 'Data: Hudson's Bay Company fur records'.",
+        "shapes": [
+          {
+            "shape": "axes",
+            "x": 36,
+            "y": 26,
+            "w": 290,
+            "h": 100,
+            "xmin": 1900,
+            "xmax": 1920,
+            "ymin": 0,
+            "ymax": 100,
+            "xstep": 2,
+            "ystep": 20,
+            "label_every": 1,
+            "xlabel": "year",
+            "ylabel": "furs (thousands)"
+          },
+          {
+            "shape": "polyline",
+            "points": [
+              [
+                36.0,
+                56.0
+              ],
+              [
+                50.5,
+                73.2
+              ],
+              [
+                65.0,
+                96.2
+              ],
+              [
+                79.5,
+                103.4
+              ],
+              [
+                94.0,
+                62.3
+              ],
+              [
+                108.5,
+                46.6
+              ],
+              [
+                123.0,
+                44.1
+              ],
+              [
+                137.5,
+                47.4
+              ],
+              [
+                152.0,
+                48.0
+              ],
+              [
+                166.5,
+                51.4
+              ],
+              [
+                181.0,
+                53.1
+              ],
+              [
+                195.5,
+                66.3
+              ],
+              [
+                210.0,
+                83.0
+              ],
+              [
+                224.5,
+                102.6
+              ],
+              [
+                239.0,
+                78.3
+              ],
+              [
+                253.5,
+                45.5
+              ],
+              [
+                268.0,
+                37.2
+              ],
+              [
+                282.5,
+                33.6
+              ],
+              [
+                297.0,
+                40.6
+              ],
+              [
+                311.5,
+                42.2
+              ],
+              [
+                326.0,
+                50.7
+              ]
+            ],
+            "width": 2
+          },
+          {
+            "shape": "polyline",
+            "points": [
+              [
+                36.0,
+                30.0
+              ],
+              [
+                50.5,
+                32.1
+              ],
+              [
+                65.0,
+                35.8
+              ],
+              [
+                79.5,
+                61.2
+              ],
+              [
+                94.0,
+                85.4
+              ],
+              [
+                108.5,
+                67.7
+              ],
+              [
+                123.0,
+                45.0
+              ],
+              [
+                137.5,
+                39.0
+              ],
+              [
+                152.0,
+                34.3
+              ],
+              [
+                166.5,
+                35.1
+              ],
+              [
+                181.0,
+                33.4
+              ],
+              [
+                195.5,
+                34.0
+              ],
+              [
+                210.0,
+                38.3
+              ],
+              [
+                224.5,
+                45.5
+              ],
+              [
+                239.0,
+                71.7
+              ],
+              [
+                253.5,
+                77.1
+              ],
+              [
+                268.0,
+                55.7
+              ],
+              [
+                282.5,
+                41.8
+              ],
+              [
+                297.0,
+                35.7
+              ],
+              [
+                311.5,
+                36.1
+              ],
+              [
+                326.0,
+                34.6
+              ]
+            ],
+            "width": 1
+          },
+          {
+            "shape": "circle",
+            "x": 36.0,
+            "y": 30.0,
+            "r": 2.2,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 50.5,
+            "y": 32.1,
+            "r": 2.2,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 65.0,
+            "y": 35.8,
+            "r": 2.2,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 79.5,
+            "y": 61.2,
+            "r": 2.2,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 94.0,
+            "y": 85.4,
+            "r": 2.2,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 108.5,
+            "y": 67.7,
+            "r": 2.2,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 123.0,
+            "y": 45.0,
+            "r": 2.2,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 137.5,
+            "y": 39.0,
+            "r": 2.2,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 152.0,
+            "y": 34.3,
+            "r": 2.2,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 166.5,
+            "y": 35.1,
+            "r": 2.2,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 181.0,
+            "y": 33.4,
+            "r": 2.2,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 195.5,
+            "y": 34.0,
+            "r": 2.2,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 210.0,
+            "y": 38.3,
+            "r": 2.2,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 224.5,
+            "y": 45.5,
+            "r": 2.2,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 239.0,
+            "y": 71.7,
+            "r": 2.2,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 253.5,
+            "y": 77.1,
+            "r": 2.2,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 268.0,
+            "y": 55.7,
+            "r": 2.2,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 282.5,
+            "y": 41.8,
+            "r": 2.2,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 297.0,
+            "y": 35.7,
+            "r": 2.2,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 311.5,
+            "y": 36.1,
+            "r": 2.2,
+            "fill": 0
+          },
+          {
+            "shape": "circle",
+            "x": 326.0,
+            "y": 34.6,
+            "r": 2.2,
+            "fill": 0
+          },
+          {
+            "shape": "text",
+            "x": 232.5,
+            "y": 100.0,
+            "text": "hares",
+            "size": 8,
+            "bold": true,
+            "align": "left"
+          },
+          {
+            "shape": "text",
+            "x": 100.0,
+            "y": 87.0,
+            "text": "lynx (dots)",
+            "size": 8,
+            "bold": true
+          },
+          {
+            "shape": "text",
+            "x": 326,
+            "y": 134,
+            "text": "Data: Hudson's Bay Company fur records",
+            "size": 6,
+            "align": "right"
+          }
+        ]
+      },
+      "checklist": [
+        {
+          "item": "The first hare peak, 1903 (about 77), is circled.",
+          "short": "Hare peak"
+        },
+        {
+          "item": "The first lynx peak, 1904 (about 59), is circled.",
+          "short": "Lynx peak"
+        }
+      ],
+      "answer": "1",
+      "units": "years",
+      "answer_points": 1,
+      "notes": "Hares peak in 1903, lynx in 1904: 1 year. A student who used the second peaks gets 2 (1913 to 1915): give the answer point if their circles are on the second peaks. 1903 or 1904 alone is a year, not the gap.",
+      "accept": [
+        "1 year",
+        "one",
+        "one year"
+      ]
+    },
+    {
+      "type": "choice",
+      "q": 2,
+      "skill": "I can explain predator and prey",
+      "prompt": "Why Fall? Why did the lynx numbers fall after 1904?",
+      "answer": "C",
+      "columns": 1,
+      "options": [
+        {
+          "letter": "A",
+          "text": "The lynx got old, since lynx only live a few generations.",
+          "why": "Look at what happened to the hares first."
+        },
+        {
+          "letter": "B",
+          "text": "The hares started hunting the lynx.",
+          "why": "Hares eat plants, not lynx."
+        },
+        {
+          "letter": "C",
+          "text": "There were fewer hares to eat, so fewer lynx could survive and have young.",
+          "why": "Yes: the lynx depend on the hares."
+        },
+        {
+          "letter": "D",
+          "text": "More lynx were born than the forest could hold.",
+          "why": "Lynx fell when their food fell, not their space."
+        }
+      ]
+    },
+    {
+      "type": "short",
+      "q": 3,
+      "lines": 3,
+      "skill": "I can explain predator and prey",
+      "prompt": "No Lynx: Suppose every lynx left the forest for good. Predict what would happen to the hares, and explain why.",
+      "key": "The hares would increase (with no predators) until they ran short of food or space (in the lab, the 60 cap), then level off or crash. Full credit needs the increase and the limit (food or space); \"they would grow forever\" is partial."
+    },
+    {
+      "type": "short",
+      "q": 4,
+      "lines": 3,
+      "skill": "I can evaluate a model",
+      "prompt": "Better Model: Name one thing real forests have that our card model left out, and how it might change the numbers.",
+      "key": "Any real factor with an effect: plants/food for hares (hares would starve at high numbers), other predators (fewer hares), weather or winter, disease, hares hiding, lynx eating other prey, animals moving in or out. Full credit needs the factor and how it changes the numbers; a factor alone is partial."
+    }
+  ]
+}

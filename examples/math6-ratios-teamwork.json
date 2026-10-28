@@ -1,0 +1,70 @@
+{
+  "title": "Ratio Coach",
+  "grade": 6,
+  "subject": "math",
+  "structure": "pairs",
+  "minutes": 20,
+  "goal": "Every partner can find equivalent ratios and unit rates, and explain how.",
+  "cards": [
+    {
+      "q": "Write a ratio equal to 2 : 3.",
+      "a": "4 : 6, 6 : 9, 8 : 12... (multiply both by the same number)"
+    },
+    {
+      "q": "3 cups of juice for 5 cups of water. How much water for 9 cups of juice?",
+      "a": "15 cups (×3)"
+    },
+    {
+      "q": "Is 4 : 5 the same as 2 : 3? Why?",
+      "a": "No. Adding 2 to each doesn't keep the ratio; 2 : 3 = 4 : 6."
+    },
+    {
+      "q": "8 pencils cost $2. What does 1 pencil cost?",
+      "a": "$0.25 (2 ÷ 8)"
+    },
+    {
+      "q": "A car goes 150 miles in 3 hours. How far in 1 hour?",
+      "a": "50 miles (150 ÷ 3)"
+    },
+    {
+      "q": "Fill in: 5 : 2 = 20 : __",
+      "a": "8 (×4)"
+    },
+    {
+      "q": "Which is the better buy: 4 cans for $3, or 6 cans for $4?",
+      "a": "6 for $4 (about $0.67 a can vs $0.75)"
+    },
+    {
+      "q": "Simplify 12 : 18.",
+      "a": "2 : 3 (÷6)"
+    },
+    {
+      "q": "A recipe uses 2 eggs for 6 muffins. How many eggs for 18 muffins?",
+      "a": "6 eggs (×3)"
+    },
+    {
+      "q": "Fill in: 7 : 21 = 1 : __",
+      "a": "3 (÷7)"
+    },
+    {
+      "q": "5 notebooks cost $7.50. What do 2 notebooks cost?",
+      "a": "$3.00 ($1.50 each)"
+    },
+    {
+      "q": "Plot (2, 3) and (4, 6). Would (6, 9) be on the same line? Why?",
+      "a": "Yes: 6 : 9 = 2 : 3, so it lines up."
+    }
+  ],
+  "worksheet": "math6-ratios-02",
+  "listen_for": [
+    "Coaches asking “What's your first step?” before showing the answer.",
+    "Players saying the ×3 or ÷6 out loud, not just the number.",
+    "Card 3: the add-the-same-number mistake. If a pair agrees 4 : 5 works, stop and model it."
+  ],
+  "debrief": [
+    "Ask: which card did your player get on the second try? What did the coach say that helped?"
+  ],
+  "sources": [
+    "Coach and player in the pattern of PALS (Fuchs and colleagues, Vanderbilt)."
+  ]
+}

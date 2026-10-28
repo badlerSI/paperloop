@@ -1,0 +1,54 @@
+{
+  "title": "Moles: Heads Together",
+  "grade": 10,
+  "subject": "chemistry",
+  "structure": "heads",
+  "group_size": 4,
+  "minutes": 20,
+  "goal": "Everyone in the group can do each step: balance, find a molar mass, and turn grams into moles.",
+  "cards": [
+    {
+      "q": "Balance: __ H₂ + __ O₂ → __ H₂O",
+      "a": "2, 1, 2"
+    },
+    {
+      "q": "How many atoms are in one formula unit of CaCO₃?",
+      "a": "5 (1 Ca, 1 C, 3 O)"
+    },
+    {
+      "q": "What is the molar mass of H₂O? (H = 1.0, O = 16.0)",
+      "a": "18.0 g/mol"
+    },
+    {
+      "q": "What is the molar mass of CO₂? (C = 12.0, O = 16.0)",
+      "a": "44.0 g/mol"
+    },
+    {
+      "q": "How many moles are in 36.0 g of water?",
+      "a": "2.00 mol (36.0 ÷ 18.0)"
+    },
+    {
+      "q": "What is the mass of 0.250 mol of CO₂?",
+      "a": "11.0 g (0.250 × 44.0)"
+    },
+    {
+      "q": "Carbon-12 has 6 protons. How many neutrons?",
+      "a": "6 (12 − 6)"
+    },
+    {
+      "q": "Why can't you balance an equation by changing H₂O to H₂O₂?",
+      "a": "That makes a different substance (hydrogen peroxide); only the coefficients change."
+    }
+  ],
+  "worksheet": "chem10-moles-01",
+  "listen_for": [
+    "Groups checking the weakest step for each person, not just agreeing on an answer.",
+    "Grams to moles: dividing by the molar mass, not multiplying."
+  ],
+  "debrief": [
+    "Call a number, then ask a student with another number to say whether they agree, and why."
+  ],
+  "sources": [
+    "Numbered Heads Together: Spencer Kagan, Cooperative Learning."
+  ]
+}

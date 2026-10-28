@@ -1,0 +1,171 @@
+{
+  "assignment_id": "sci8-atoms-01",
+  "title": "Atom Builders: On Your Own",
+  "subject": "physical science",
+  "grade": 8,
+  "grade_band": "8th grade",
+  "compact": true,
+  "instructions": "Answer on your own, even though you built atoms with your group. Use a periodic table. Write your ID number, not your name.",
+  "questions": [
+    {
+      "type": "table",
+      "q": 1,
+      "skill": "I can find protons, neutrons, and electrons",
+      "prompt": "Inside the Atom: Fill in the missing numbers.",
+      "columns": [
+        "Atom",
+        "Protons",
+        "Neutrons",
+        "Electrons",
+        "Mass number",
+        "Charge"
+      ],
+      "rows": [
+        [
+          "carbon-13",
+          "6",
+          {
+            "answer": "7"
+          },
+          "6",
+          "13",
+          {
+            "answer": "0"
+          }
+        ],
+        [
+          "oxygen ion",
+          "8",
+          "8",
+          "10",
+          {
+            "answer": "16"
+          },
+          {
+            "answer": "−2",
+            "accept": [
+              "-2",
+              "2-",
+              "2−"
+            ]
+          }
+        ],
+        [
+          "sodium-23",
+          {
+            "answer": "11"
+          },
+          {
+            "answer": "12"
+          },
+          "11",
+          "23",
+          "0"
+        ]
+      ],
+      "notes": "Mass number = protons + neutrons. Charge = protons − electrons, so 8 − 10 = −2. Look for 26 for the oxygen ion's mass number (electrons counted) and +2 (sign flipped)."
+    },
+    {
+      "type": "choice",
+      "q": 2,
+      "skill": "I can explain what decides the element",
+      "prompt": "Change One: Which change makes an atom a different element?",
+      "answer": "C",
+      "columns": 2,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Add an electron",
+          "why": "That makes an ion of the same element."
+        },
+        {
+          "letter": "B",
+          "text": "Add a neutron",
+          "why": "That makes another isotope of the same element."
+        },
+        {
+          "letter": "C",
+          "text": "Add a proton",
+          "why": "Yes: the number of protons decides the element."
+        },
+        {
+          "letter": "D",
+          "text": "Take away an electron",
+          "why": "That makes a positive ion, still the same element."
+        }
+      ]
+    },
+    {
+      "type": "choice",
+      "q": 3,
+      "skill": "I can find protons, neutrons, and electrons",
+      "prompt": "Mass Number: A student says an atom with 6 protons, 6 neutrons, and 6 electrons has a mass number of 18. What's the mistake?",
+      "answer": "B",
+      "columns": 1,
+      "options": [
+        {
+          "letter": "A",
+          "text": "There's no mistake: 6 + 6 + 6 = 18.",
+          "why": "Electrons have almost no mass; they aren't counted."
+        },
+        {
+          "letter": "B",
+          "text": "The mass number counts only protons and neutrons, so it's 12.",
+          "why": "Yes: protons plus neutrons."
+        },
+        {
+          "letter": "C",
+          "text": "The mass number counts only protons, so it's 6.",
+          "why": "That's the atomic number; neutrons count too."
+        },
+        {
+          "letter": "D",
+          "text": "The mass number counts only neutrons, so it's 6.",
+          "why": "Protons count in the mass number too."
+        }
+      ]
+    },
+    {
+      "type": "short",
+      "q": 4,
+      "lines": 3,
+      "skill": "I can explain what decides the element",
+      "prompt": "Same Element? Carbon-12 and carbon-13 are both carbon. Explain why, and say what's different about them.",
+      "key": "Both have 6 protons, and the number of protons decides the element; carbon-13 has one more neutron (7, not 6), so its mass number is higher. Full credit needs both: same protons, so same element, and a different number of neutrons. Either one alone is partial."
+    },
+    {
+      "type": "draw",
+      "q": 5,
+      "skill": "I can find protons, neutrons, and electrons",
+      "prompt": "Draw It: Draw a lithium-7 atom. Put protons and neutrons in the nucleus (the small circle) and electrons outside it. Mark protons +, neutrons n, and electrons −.",
+      "diagram": {
+        "width": 344,
+        "height": 96,
+        "description": "An empty frame with a small circle (the nucleus, about 50 points across) in the middle.",
+        "shapes": [
+          {
+            "shape": "circle",
+            "x": 172,
+            "y": 48,
+            "r": 24,
+            "stroke": 0.5
+          }
+        ]
+      },
+      "checklist": [
+        {
+          "item": "Exactly 3 protons (marked + or p) are inside the small circle.",
+          "short": "3 protons inside"
+        },
+        {
+          "item": "Exactly 4 neutrons (marked n or 0) are inside the small circle.",
+          "short": "4 neutrons inside"
+        },
+        {
+          "item": "Exactly 3 electrons (marked − or e) are outside the small circle.",
+          "short": "3 electrons outside"
+        }
+      ]
+    }
+  ]
+}

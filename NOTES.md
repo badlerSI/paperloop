@@ -325,6 +325,19 @@ log, with what each review changed and what's still open, is [docs/next-level.md
 walkthrough for teachers and the podcast is
 [Paper Loop: One Worksheet, Every Student](https://claude.ai/artifact/8bB8CAgaNFiG82pyRR4miV).
 
+## Students teaching each other: group work and paper labs (Oct 27)
+
+`PL teamwork` makes group work from one JSON file, in five structures that research supports: labs with
+rotating roles, jigsaws, reciprocal teaching, PALS-style coach-and-player pairs, and Numbered Heads Together.
+Every activity pairs a group goal with a one-page exit sheet each student does alone, which Paper Loop marks
+like any worksheet (group goals plus individual accountability is what Slavin's reviews found works). `PL
+groups` makes groups from marked work by class ID: mixed for labs, PALS-style pairs, or similar skills for
+targeted practice, with first jobs at random. Eight examples: paper labs on natural selection, half-life,
+lynx and hares, and building atoms; an exoplanet jigsaw; a reading group; ratio coaching; and mole review.
+Each has its own exit sheet, two of them graphing real data (a Kepler light curve, Hudson's Bay fur records).
+Ideas come from PhET, NOVA Labs, NetLogo, and NASA, in Paper Loop's own words, after a license check (PhET
+moved to CC BY-NC in March 2026). Three teacher trials shaped it. The log is [docs/teamwork.md](docs/teamwork.md).
+
 ## Top three for Day 2
 
 0. **Try the plugin in real Cowork, on a Claude for Teachers account.** Check that it installs from the marketplace, that the cloud sandbox has numpy, scipy, Pillow, pypdfium2, reportlab, and python-pptx (0.6.22 or later), and that a scan can come in from Google Drive. Open a generated slides.pptx in PowerPoint and in Google Slides. Then mark a full class set (print 25-30 copies) and measure how much of the plan's usage it takes, with and without a subagent per question.

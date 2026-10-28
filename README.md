@@ -29,6 +29,11 @@ Paper Loop is also a plugin for Claude Cowork. Claude does the marking itself, s
    - **Versions.** Ask for versions of the same sheet for the students who need them: scaffolds (plain wording, a hint, steps, a worked example, sentence starters, a word bank), large print, more room to write, fewer per page, graph paper, a multiplication chart, or the student's home language. Translations cover the 30-plus most common home languages of US English learners; Bengali, Nepali, Burmese and other scripts the PDF can't shape go on a Word page. Each version looks like everyone else's sheet, and they're all marked from one scan.
    - **Homework.** Ask for "a different copy for each student" and every copy gets its own numbers, items, and choice order, so copying a neighbor stops working.
    - **Enrichment.** Ask for a reading on anything and Claude adapts one from Wikipedia, Simple English Wikipedia, Project Gutenberg, or a government source. The credit line the license asks for prints under it.
+
+   **Students teaching each other:**
+   - **Group work with roles.** "A lab on natural selection for groups of 4", "a jigsaw on how we find exoplanets", "coach-and-player practice on ratios", "reciprocal teaching for this story", or "numbered heads for moles". You get role cards that fold into tents (the job faces the group; what to do and say faces the student), the group's task with a blank data table, tokens to cut out, expert sheets, and a one-page sheet each student does alone at the end, marked like any other. Paper labs take their ideas from simulations like PhET and NOVA Labs: dice for chance, paper tokens for populations, a printed graph for real data.
+   - **Mixed groups.** "Group my class for tomorrow's lab" mixes each group from marked work, by class ID only, and deals the first jobs at random.
+   - **Review games.** Fold-over cards, games for any checker or chess board and a die, a fortune teller, a mini-book, and bingo.
 4. Students write their class ID number in the boxes, never their name.
 5. Scan the stack on the copier (to Google Drive, email, or USB), in any order and orientation. Give Claude the PDF: "Mark this scan of Water's Wild Ride."
 6. Claude reads every answer, asks you about anything it isn't sure of, and gives you one PDF to print and hand back.

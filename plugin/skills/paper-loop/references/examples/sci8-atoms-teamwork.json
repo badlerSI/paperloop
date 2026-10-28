@@ -1,0 +1,102 @@
+{
+  "title": "Atom Builders",
+  "grade": 8,
+  "subject": "physical science",
+  "structure": "lab",
+  "group_size": 4,
+  "minutes": 30,
+  "rounds": 6,
+  "rotate_every": 2,
+  "goal": "Build atoms and ions from protons, neutrons, and electrons, and explain which number decides the element.",
+  "abilities": [
+    "building carefully",
+    "using the periodic table",
+    "keeping a data table",
+    "explaining with evidence"
+  ],
+  "materials": [
+    "one die",
+    "a periodic table",
+    "scrap paper",
+    "scissors for the particles"
+  ],
+  "steps": [
+    "Draw a big circle on scrap paper: the nucleus goes in the middle, electrons around the outside.",
+    "Roll for your atom (the table below). Build it: protons and neutrons in the nucleus, electrons outside.",
+    "The Skeptic checks it against the periodic table: the number of protons decides the element.",
+    "Roll again. Odd: take away one electron (now it's an ion). Even: add one neutron (now it's another isotope).",
+    "The Recorder writes the row: what it is now, protons, neutrons, electrons, mass number, and charge. Take it apart and start again."
+  ],
+  "dice": {
+    "title": "Roll for your atom",
+    "rows": [
+      [
+        "1",
+        "hydrogen-1: 1 proton, 0 neutrons, 1 electron"
+      ],
+      [
+        "2",
+        "helium-4: 2 protons, 2 neutrons, 2 electrons"
+      ],
+      [
+        "3",
+        "lithium-7: 3 protons, 4 neutrons, 3 electrons"
+      ],
+      [
+        "4",
+        "carbon-12: 6 protons, 6 neutrons, 6 electrons"
+      ],
+      [
+        "5",
+        "nitrogen-14: 7 protons, 7 neutrons, 7 electrons"
+      ],
+      [
+        "6",
+        "oxygen-16: 8 protons, 8 neutrons, 8 electrons"
+      ]
+    ]
+  },
+  "table": {
+    "title": "Our atoms",
+    "columns": [
+      "What it is now",
+      "Protons",
+      "Neutrons",
+      "Electrons",
+      "Mass number",
+      "Charge"
+    ],
+    "rows": 6
+  },
+  "tokens": [
+    {
+      "label": "proton +",
+      "count": 10,
+      "pattern": "solid"
+    },
+    {
+      "label": "neutron",
+      "count": 10,
+      "pattern": "plain"
+    },
+    {
+      "label": "electron −",
+      "count": 10,
+      "pattern": "dots",
+      "size": 0.6
+    }
+  ],
+  "worksheet": "sci8-atoms-01",
+  "listen_for": [
+    "Counting electrons in the mass number. Ask: where is almost all of an atom's mass?",
+    "Thinking a new neutron makes a new element. Ask the Skeptic: did the protons change?",
+    "Charge with the sign flipped: one electron taken away makes +1, not −1."
+  ],
+  "debrief": [
+    "Ask: which number alone decides the element? How does your table show it?",
+    "Ask: carbon-12 and carbon-13 are both carbon. What's the same, and what's different?"
+  ],
+  "sources": [
+    "Inspired by the build-an-atom idea, also modeled in PhET Interactive Simulations' Build an Atom (University of Colorado Boulder). The activity and questions were written for Paper Loop."
+  ]
+}

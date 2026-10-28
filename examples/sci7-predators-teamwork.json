@@ -1,0 +1,67 @@
+{
+  "title": "Lynx and Hares: Predators and Prey",
+  "grade": 7,
+  "subject": "life science",
+  "structure": "lab",
+  "group_size": 4,
+  "minutes": 45,
+  "rounds": 10,
+  "rotate_every": 2,
+  "goal": "Find out how the numbers of a predator and its prey change together over many generations, and explain why.",
+  "abilities": [
+    "tossing and counting carefully",
+    "keeping a data table",
+    "spotting a pattern",
+    "explaining with evidence"
+  ],
+  "materials": [
+    "one sheet of plain paper for the forest",
+    "scissors for the cards"
+  ],
+  "steps": [
+    "One sheet of paper is the forest. Spread 4 hares on it, not touching, and put 1 lynx beside it. Record generation 0.",
+    "The lynx hunt: drop each lynx card on the forest from about a foot up. Every hare it touches is eaten. Take those hares off.",
+    "A lynx that ate 3 or more hares survives and has one young: add a lynx. A lynx that ate fewer starves: take it away. If no lynx are left, 1 moves in from another forest.",
+    "Every hare left has one young: double the hares, up to 60 (the forest can't feed more). Spread them out again.",
+    "Record the hares and lynx, then do the next generation."
+  ],
+  "table": {
+    "title": "Our forest",
+    "columns": [
+      "Generation",
+      "Hares",
+      "Lynx",
+      "Generation",
+      "Hares",
+      "Lynx"
+    ],
+    "rows": 6
+  },
+  "tokens": [
+    {
+      "label": "hare",
+      "count": 60,
+      "pattern": "plain",
+      "size": 0.6
+    },
+    {
+      "label": "LYNX",
+      "count": 6,
+      "pattern": "dots",
+      "size": 2.5
+    }
+  ],
+  "worksheet": "sci7-predators-01",
+  "listen_for": [
+    "Noticing that lynx numbers rise after hare numbers rise, not at the same time.",
+    "“The lynx ate all the hares” when hares crash: ask what happened to the lynx next, and why.",
+    "The Skeptic asking whether one toss can prove anything, or whether the pattern repeats."
+  ],
+  "debrief": [
+    "Have Reporters call out their numbers; sketch two or three groups' hares and lynx on the board. Ask: which rises first? Which falls first?",
+    "Fur-trade records from Canada show the same up-and-down pattern about every 10 years (the worksheet graphs them). Ask: those count furs sold, not animals alive. What could make the counts differ from the real numbers? And what's missing from our card model?"
+  ],
+  "sources": [
+    "A classic predator-and-prey card toss, rewritten for Paper Loop; computer models such as NetLogo's Wolf Sheep Predation (Wilensky, Northwestern University) explore the same idea. The worksheet's data are Hudson's Bay Company fur records, 1900-1920, as compiled by ecologists (thousands of furs)."
+  ]
+}

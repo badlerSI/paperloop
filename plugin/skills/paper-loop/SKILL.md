@@ -1,6 +1,6 @@
 ---
 name: paper-loop
-description: Turns the school copier into a feedback machine for any subject, grades 2-12. Plans lessons - a lesson plan (Word), PowerPoint slides to teach it, a deck that goes over each worksheet problem, and an answer key. Makes printable worksheets (reading passages, short and rubric-scored written answers and multi-page essays, multiple choice, fill-in-the-blank, matching, tables, show-your-work math, labeled diagrams, maps, graphs and bar charts, drawings, code listings, chemical equations, music on a staff) that can be marked from a scan - in versions for students who need supports (scaffolds, IEP accommodations like large print, home-language translations in 30+ languages), as a different copy for each student, or as enrichment adapted from free sources like Wikipedia with the credit line the license needs. Marks scanned class sets - reads every answer, writes a short comment beside it, returns one PDF of marked pages to print and hand back - then makes a go-over deck (or opens the next day's lesson with one), a practice sheet for each student of what they missed, a progress dashboard across worksheets, and a progress page for each family. Use when a teacher wants a lesson plan, slides, a worksheet, differentiated or individualized copies, enrichment, or progress reports, or has a scan of completed Paper Loop worksheets to mark, grade, or give feedback on.
+description: Turns the school copier into a feedback machine for any subject, grades 2-12. Makes printable worksheets that can be marked from a scan (passages, written answers and essays, multiple choice, tables, show-your-work math, labeled diagrams, graphs, drawings, chemical equations, music), in versions with scaffolds, IEP accommodations, or home-language translations, a different copy for each student, or enrichment from free sources like Wikipedia. Plans lessons with a Word plan and PowerPoint slides. Makes group work where students teach each other (labs, jigsaws, peer tutoring, with role cards) and paper review games. Marks scanned class sets: reads every answer, writes a comment beside it, and returns marked pages to hand back, then a go-over deck, practice sheets, a progress dashboard, and family pages. Use when a teacher wants a worksheet, lesson, slides, differentiated copies, group activity, review game, or progress report, or has a scan of completed Paper Loop worksheets to mark or grade.
 ---
 
 # Paper Loop
@@ -29,6 +29,8 @@ sandbox can't reach the site, use your web tool and save the text yourself.
 - On a teacher's own Claude for Teachers account, student work must stay de-identified unless their
   school or district has authorized Claude for student records. If the teacher plans to use names or
   district student numbers, tell them that first.
+- Never send the teacher's or a student's name, email, or other details to a website, such as in a request
+  header or a search.
 - Never ask for or record who has an IEP or 504 plan, who is learning English, or anything else about a
   student's background. The teacher hands out versions to whoever needs them; Paper Loop only knows which
   form a class ID turned in. Family pages have a line where the teacher writes the name by hand.
@@ -194,6 +196,32 @@ centers", or anything a teacher would otherwise do with Quizlet, Kahoot, or Bloo
 
 Cards work best when every card makes students recall an answer before they check it, so write questions,
 not facts to read. Making their own cards is good practice too.
+
+## Group work and labs
+
+When a teacher wants students working together: "a lab", "group roles", "a jigsaw", "peer tutoring",
+"students helping each other", or a paper version of a simulation (PhET, NOVA Labs, Gizmos).
+
+1. Read `references/teamwork-format.md` and the closest example in `references/examples/` (`*-teamwork.json`).
+   Pick the structure: a `lab` for an investigation with dice, tokens, or measuring; `pairs` for practice
+   with right answers; `reciprocal` for a reading; a `jigsaw` when the topic splits into 3-5 parts; `heads`
+   for quick review. Take ideas from simulations and online labs, but write the text and questions yourself,
+   and use real data where it's free (the format's last sections say which sources allow what).
+2. Write the exit sheet first: a worksheet each student does alone at the end, made with `PL make` like any
+   other, in the same folder (one page; two is fine in grades 2-3). Then write the activity with
+   `"worksheet"` set to its id. A reading for `reciprocal` or `jigsaw` comes from `PL source` like any
+   passage: put its credit line in the part's `source`.
+3. Run `PL teamwork "<folder>/<name>-teamwork.json" --out "<folder>/<name>-teamwork"`, fix every `Check:`
+   line, and look at every page full size: `PL preview "<folder>/<name>-teamwork/teamwork.pdf"` (not
+   `--sheet`, which is too small to judge type).
+4. Groups: run `PL groups "<class folder>" --size 4 --structure <structure> --roster "<ids.csv>"`. With marked
+   work it mixes skill in each group (`--similar` instead puts like skills together, for practicing one
+   skill; `--skill "..."` sorts by one skill); with nothing marked, it groups at random. Give the teacher
+   `progress/groups-<structure>.md`. It uses class IDs only; never write why a student is in a group.
+5. Give the teacher `teamwork.pdf` and the exit sheet. Page 1 is theirs: what to print (with page numbers),
+   materials, and how to run it.
+
+After the class, mark the exit sheets like any worksheet: that's what shows each student learned it.
 
 ## A Paper Loop sample
 

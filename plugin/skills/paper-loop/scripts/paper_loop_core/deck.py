@@ -728,7 +728,7 @@ class Builder:
                 out.append(labeled("Scored on", "; ".join(f"{c.get('short') or c['criterion']} (0-{c['max']})"
                                                          for c in item["rubric"])))
             else:
-                out.append(labeled("Full credit", item["key"]))
+                out.append(labeled("Full credit", S.unlabeled(item["key"])))
         out += self.bullets(spec.get("steps", []), size)  # bullets: numbers would read as the sheet's box numbers
         if kind == "draw" and not spec.get("drawing"):  # no drawn answer to look at: say what one shows
             out.append(Para([Run("A complete drawing shows:", bold=True)], space_after=size * 0.3))

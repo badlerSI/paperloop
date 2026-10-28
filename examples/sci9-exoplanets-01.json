@@ -1,0 +1,1020 @@
+{
+  "assignment_id": "sci9-exoplanets-01",
+  "title": "Finding Planets: On Your Own",
+  "subject": "science",
+  "grade": 9,
+  "grade_band": "9th grade",
+  "compact": true,
+  "instructions": "Answer on your own, after your home group has taught each other all four methods. Write your ID number, not your name.",
+  "questions": [
+    {
+      "type": "draw",
+      "q": 1,
+      "skill": "I can read a light curve",
+      "prompt": "Dips: Real data! NASA's Kepler telescope measured the star HAT-P-7 for 6 days (each dot averages 2 hours). Circle each dip, then find how many hours pass between dips.",
+      "diagram": {
+        "width": 344,
+        "height": 128,
+        "description": "A graph of brightness (percent, 99.2 to 100.2) against time (hours, 0 to 144), dots every 2 hours joined by a line. It is flat at 100% except three dips: about 99.3% near hour 20, 99.4% near hours 72-74, and 99.3% near hour 126. Small print: 'Data: NASA Kepler mission, via MAST'.",
+        "shapes": [
+          {
+            "shape": "axes",
+            "x": 40,
+            "y": 28,
+            "w": 290,
+            "h": 90,
+            "xmin": 0,
+            "xmax": 144,
+            "ymin": 99.2,
+            "ymax": 100.2,
+            "xstep": 12,
+            "ystep": 0.2,
+            "label_every": 1,
+            "xlabel": "time (hours)",
+            "ylabel": "brightness (%)"
+          },
+          {
+            "shape": "polyline",
+            "points": [
+              [
+                40.0,
+                100.0
+              ],
+              [
+                44.0,
+                100.0
+              ],
+              [
+                48.1,
+                100.0
+              ],
+              [
+                52.1,
+                100.0
+              ],
+              [
+                56.1,
+                100.0
+              ],
+              [
+                60.1,
+                100.0
+              ],
+              [
+                64.2,
+                100.0
+              ],
+              [
+                68.2,
+                100.0
+              ],
+              [
+                72.2,
+                100.0
+              ],
+              [
+                76.2,
+                73.9
+              ],
+              [
+                80.3,
+                39.7
+              ],
+              [
+                84.3,
+                77.5
+              ],
+              [
+                88.3,
+                100.0
+              ],
+              [
+                92.4,
+                100.0
+              ],
+              [
+                96.4,
+                100.0
+              ],
+              [
+                100.4,
+                100.0
+              ],
+              [
+                104.4,
+                100.0
+              ],
+              [
+                108.5,
+                100.0
+              ],
+              [
+                112.5,
+                100.0
+              ],
+              [
+                116.5,
+                100.0
+              ],
+              [
+                120.6,
+                100.0
+              ],
+              [
+                124.6,
+                100.0
+              ],
+              [
+                128.6,
+                100.0
+              ],
+              [
+                132.6,
+                100.0
+              ],
+              [
+                136.7,
+                100.0
+              ],
+              [
+                140.7,
+                100.0
+              ],
+              [
+                144.7,
+                100.0
+              ],
+              [
+                148.8,
+                100.0
+              ],
+              [
+                152.8,
+                100.0
+              ],
+              [
+                156.8,
+                100.0
+              ],
+              [
+                160.8,
+                100.0
+              ],
+              [
+                164.9,
+                100.0
+              ],
+              [
+                168.9,
+                100.0
+              ],
+              [
+                172.9,
+                100.0
+              ],
+              [
+                176.9,
+                100.0
+              ],
+              [
+                181.0,
+                100.0
+              ],
+              [
+                185.0,
+                49.6
+              ],
+              [
+                189.0,
+                49.6
+              ],
+              [
+                193.1,
+                100.0
+              ],
+              [
+                197.1,
+                100.0
+              ],
+              [
+                201.1,
+                100.0
+              ],
+              [
+                205.1,
+                100.0
+              ],
+              [
+                209.2,
+                100.0
+              ],
+              [
+                213.2,
+                100.0
+              ],
+              [
+                217.2,
+                100.0
+              ],
+              [
+                221.2,
+                100.0
+              ],
+              [
+                225.3,
+                100.0
+              ],
+              [
+                229.3,
+                100.0
+              ],
+              [
+                233.3,
+                100.0
+              ],
+              [
+                237.4,
+                100.0
+              ],
+              [
+                241.4,
+                100.0
+              ],
+              [
+                245.4,
+                100.0
+              ],
+              [
+                249.4,
+                100.0
+              ],
+              [
+                253.5,
+                100.0
+              ],
+              [
+                257.5,
+                100.0
+              ],
+              [
+                261.5,
+                100.0
+              ],
+              [
+                265.6,
+                100.0
+              ],
+              [
+                269.6,
+                100.0
+              ],
+              [
+                273.6,
+                100.0
+              ],
+              [
+                277.6,
+                100.0
+              ],
+              [
+                281.7,
+                100.0
+              ],
+              [
+                285.7,
+                100.0
+              ],
+              [
+                289.7,
+                71.2
+              ],
+              [
+                293.8,
+                40.6
+              ],
+              [
+                297.8,
+                94.6
+              ],
+              [
+                301.8,
+                100.0
+              ],
+              [
+                305.8,
+                100.0
+              ],
+              [
+                309.9,
+                100.0
+              ],
+              [
+                313.9,
+                100.0
+              ],
+              [
+                317.9,
+                100.0
+              ],
+              [
+                321.9,
+                100.0
+              ],
+              [
+                326.0,
+                100.0
+              ]
+            ],
+            "width": 0.8
+          },
+          {
+            "shape": "circle",
+            "x": 40.0,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 44.0,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 48.1,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 52.1,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 56.1,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 60.1,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 64.2,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 68.2,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 72.2,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 76.2,
+            "y": 73.9,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 80.3,
+            "y": 39.7,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 84.3,
+            "y": 77.5,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 88.3,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 92.4,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 96.4,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 100.4,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 104.4,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 108.5,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 112.5,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 116.5,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 120.6,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 124.6,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 128.6,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 132.6,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 136.7,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 140.7,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 144.7,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 148.8,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 152.8,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 156.8,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 160.8,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 164.9,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 168.9,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 172.9,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 176.9,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 181.0,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 185.0,
+            "y": 49.6,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 189.0,
+            "y": 49.6,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 193.1,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 197.1,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 201.1,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 205.1,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 209.2,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 213.2,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 217.2,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 221.2,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 225.3,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 229.3,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 233.3,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 237.4,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 241.4,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 245.4,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 249.4,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 253.5,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 257.5,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 261.5,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 265.6,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 269.6,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 273.6,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 277.6,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 281.7,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 285.7,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 289.7,
+            "y": 71.2,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 293.8,
+            "y": 40.6,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 297.8,
+            "y": 94.6,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 301.8,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 305.8,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 309.9,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 313.9,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 317.9,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 321.9,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "circle",
+            "x": 326.0,
+            "y": 100.0,
+            "r": 1.2,
+            "fill": 0,
+            "stroke": null
+          },
+          {
+            "shape": "text",
+            "x": 330,
+            "y": 120,
+            "text": "Data: NASA Kepler mission, via MAST",
+            "size": 6,
+            "align": "right"
+          }
+        ]
+      },
+      "checklist": [
+        {
+          "item": "All three dips (near hours 20, 73, and 126) are circled or marked, and nothing else is.",
+          "short": "Three dips marked"
+        }
+      ],
+      "answer": "53",
+      "units": "hours",
+      "answer_points": 1,
+      "notes": "The dips center near hours 20, 73, and 126, so about 53 hours apart (Kepler's value: 2.2047 days = 52.9 hours). Accept 52 to 54. A student who answers 3 counted the dips; 106 is two gaps.",
+      "accept": [
+        "52",
+        "54",
+        "about 53",
+        "52-54",
+        "53 hours"
+      ]
+    },
+    {
+      "type": "math",
+      "q": 2,
+      "skill": "I can find a planet's size from a transit",
+      "prompt": "How Big? The dips are about 0.6% deep, so (planet width ÷ star width)² = 0.006. HAT-P-7 is twice as wide as the Sun: about 218 Earths. About how many Earths wide is its planet? Use a calculator.",
+      "answer": "16.9",
+      "accept": [
+        "17",
+        "about 17",
+        "16.89",
+        "16.88"
+      ],
+      "units": "Earths wide",
+      "key": "Takes the square root: √0.006 ≈ 0.077, so the planet is 0.077 of the star's width; 0.077 × 218 ≈ 17 Earths, bigger than Jupiter (about 11). Look for 1.3 (0.006 × 218, no square root) or 0.077 alone (the ratio, not the size).",
+      "answer_points": 1,
+      "work_points": 1,
+      "work_height": 70,
+      "notes": "NASA's Exoplanet Archive lists 16.9 Earth radii for HAT-P-7 b (Stassun et al. 2017). Accept 16 to 18.5 when the work takes a square root (reading the dip as 0.7% gives about 18)."
+    },
+    {
+      "type": "choice",
+      "q": 3,
+      "skill": "I can compare ways to find planets",
+      "prompt": "Which Method? A young, hot, giant planet orbits very far from its star, and we see its orbit face-on, like looking down at a clock. Which method is most likely to find it?",
+      "answer": "C",
+      "columns": 2,
+      "options": [
+        {
+          "letter": "A",
+          "text": "Transit",
+          "why": "Face-on, it never passes in front of its star."
+        },
+        {
+          "letter": "B",
+          "text": "Wobble (radial velocity)",
+          "why": "Face-on, the star doesn't move toward or away from us."
+        },
+        {
+          "letter": "C",
+          "text": "Direct imaging",
+          "why": "Yes: far from its star and glowing hot."
+        },
+        {
+          "letter": "D",
+          "text": "None of them",
+          "why": "Direct imaging works best for exactly this planet."
+        }
+      ]
+    },
+    {
+      "type": "short",
+      "q": 4,
+      "lines": 3,
+      "skill": "I can compare ways to find planets",
+      "prompt": "Who Gets Missed? Most planets found so far were found by transits. Is the list of known planets a fair sample of all planets? Explain using what the transit method finds easily and what it misses.",
+      "rubric": [
+        {
+          "criterion": "Claim: says no, the list is not a fair sample (or is biased toward some planets).",
+          "short": "Claim",
+          "levels": [
+            "missing",
+            "vague",
+            "clear"
+          ]
+        },
+        {
+          "criterion": "Favors: names what transits find easily: big planets, close to their stars (short years, many dips).",
+          "short": "What's easy",
+          "levels": [
+            "missing",
+            "vague",
+            "clear"
+          ]
+        },
+        {
+          "criterion": "Misses: names what transits miss: orbits not edge-on to us, small planets, or planets far out with long years.",
+          "short": "What's missed",
+          "levels": [
+            "missing",
+            "vague",
+            "clear"
+          ]
+        }
+      ]
+    }
+  ]
+}

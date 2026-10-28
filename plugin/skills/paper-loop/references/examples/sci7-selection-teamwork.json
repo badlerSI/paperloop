@@ -1,0 +1,76 @@
+{
+  "title": "Beetles and Birds: Natural Selection",
+  "grade": 7,
+  "subject": "science",
+  "structure": "lab",
+  "group_size": 4,
+  "minutes": 40,
+  "rounds": 3,
+  "goal": "Find out what happens to a beetle population when birds eat the beetles they can see best.",
+  "abilities": [
+    "counting carefully",
+    "keeping a data table",
+    "spotting a pattern",
+    "explaining with evidence"
+  ],
+  "materials": [
+    "one die",
+    "scissors for the tokens"
+  ],
+  "steps": [
+    "Start with 10 green and 10 brown beetles on the brown \"forest floor\" (your desk). Record generation 0.",
+    "The birds hunt: roll the die 8 times. Each roll, take away one beetle as the table says.",
+    "Survivors have young: for each beetle left, add one beetle of the same color. Young look like their parents.",
+    "Record the new numbers of green and brown beetles. Pass the role cards to the left.",
+    "Repeat steps 2-4 for three generations, then answer the group question: what changed, and why?"
+  ],
+  "dice": {
+    "title": "The bird hunts (brown beetles are hard to see on brown ground)",
+    "rows": [
+      [
+        "1-4",
+        "A bird spots and eats a green beetle (if none are left, a brown one)."
+      ],
+      [
+        "5-6",
+        "A bird spots and eats a brown beetle (if none are left, a green one)."
+      ]
+    ]
+  },
+  "table": {
+    "title": "Our beetles",
+    "columns": [
+      "Generation",
+      "Green",
+      "Brown",
+      "Total",
+      "Percent brown"
+    ],
+    "rows": 4
+  },
+  "tokens": [
+    {
+      "label": "green",
+      "count": 40,
+      "pattern": "plain"
+    },
+    {
+      "label": "brown",
+      "count": 40,
+      "pattern": "dots"
+    }
+  ],
+  "worksheet": "sci7-selection-01",
+  "listen_for": [
+    "“The beetles turned brown to hide”: ask what color each young beetle is, and where its color came from.",
+    "Groups that see brown take over: ask what would happen on green moss instead."
+  ],
+  "debrief": [
+    "Did any single beetle change color? What changed?",
+    "Which three things had to be true for the population to change? (Beetles differ, young look like parents, some survive more.)",
+    "What would happen if the forest floor turned green?"
+  ],
+  "sources": [
+    "The idea is the classic “bird and moth” camouflage lab, as in NOVA's Evolution Lab and PhET's Natural Selection simulation; the rules and questions here are Paper Loop's own."
+  ]
+}

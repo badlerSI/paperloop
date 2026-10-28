@@ -184,3 +184,43 @@ SaaS Reaper map, and the walkthrough.
 **Noncommercial only:** OpenStax (CC BY-NC-SA since 2026-04-22), IM v.360, EngageNY/Eureka, Core Knowledge and MIT OCW, all NC-SA or NC.
 
 **Don't adapt:** CommonLit, ReadWorks and CK-12 forbid rewriting, and CK-12 and CommonLit also forbid generative-AI use. OpenStax also bars AI ingestion without written permission. For public-domain texts, use Gutenberg or Wikisource rather than these.
+
+## Open labs and group work (Oct 27)
+
+Checked Oct 27, 2026; the details and what they changed are in [teamwork.md](teamwork.md).
+
+**Licenses** (read on each site; not legal advice)
+- PhET: simulations released since March 29, 2026 are CC BY-NC 4.0; earlier ones stay CC BY 4.0; teacher
+  activities in the database are CC BY 4.0; Teacher Tips are all rights reserved
+  (phet.colorado.edu/en/licensing).
+- Concord Consortium: CC BY-NC 4.0 (concord.org/licensing; CC BY 4.0 until at least March 2026).
+- OpenSciEd: middle school CC BY 4.0; elementary and high school CC BY-NC 4.0 since October 2023.
+- NetLogo models: CC BY-NC-SA 3.0. HHMI BioInteractive: set per resource, some CC BY-NC-SA 4.0. The Wonder of
+  Science: CC BY-NC-SA 4.0. NOVA Labs (WGBH), Gizmos, NAAP, Zooniverse: no open license.
+- NASA, USGS, NOAA: free to use, with credit and no implied endorsement; logos and third-party items excluded.
+- Ideas, procedures, and facts aren't copyrightable (17 U.S.C. §102(b)); federal works have no copyright
+  (§105).
+
+**Data used**
+- HAT-P-7 (Kepler-2): Kepler quarter 1 long-cadence light curve from MAST; NASA Exoplanet Archive values
+  (Stassun et al. 2017: depth 0.60%, star 2.00 solar radii, planet 16.93 Earth radii, period 2.2047 days).
+- Lynx and snowshoe hare: Hudson's Bay Company fur records, 1900-1920, thousands of pelts (the classic
+  dataset; trapping records, not a census).
+- Carbon-14 half-life: 5,700 ± 30 years (Kutschera 2019, Radiocarbon); textbooks often use 5,730.
+
+**Evidence**
+- Slavin 1996 (Contemporary Educational Psychology 21:43): group goals plus individual accountability, median
+  +0.32 across 99 studies; one or neither, +0.07.
+- Stanczak et al. 2022 (Journal of Educational Psychology 114:1461): jigsaw, five randomized trials in grade
+  6, about 850 students, pooled effect 0.00.
+- Cohen and Lotan 1995 (AERJ 32:99): status treatments raised low-status students' participation with no
+  loss for others.
+- Rosenshine and Meister 1994 (RER 64:479): reciprocal teaching, median 0.32 on standardized tests, 0.88 on
+  experimenter-made tests.
+- PALS: Evidence for ESSA "Strong" for whole-class elementary reading (+0.23); math showed no significant
+  positive outcomes. Fuchs et al. 1997 (AERJ 34:174).
+- Lou et al. 1996 (RER 66:423): within-class grouping +0.17; students who were behind did better in mixed
+  groups, middle students in similar ones, high achievers no difference.
+- Webb 1991 (JRME 22:366): giving and receiving elaborated explanations predicts learning; bare answers
+  don't.
+- Numbered Heads Together: only small single-case studies; no rigorous evaluation of Kagan Structures found.

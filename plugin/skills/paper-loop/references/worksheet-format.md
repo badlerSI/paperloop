@@ -360,14 +360,15 @@ them.
   for explaining, and `label`, `draw`, or `table` for showing. If they listed the questions, build those.
 - **Write keys a stranger could mark from:** what full credit needs, what's partial, and the likely wrong
   answer. For math, say which mistake to look for.
-- **Math symbols** (−, ≤, √, π, x², θ) and accented letters print as written. So do chemical formulas
-  and equations written with Unicode subscripts, superscripts, and arrows (H₂O, CO₃²⁻, ¹²C, →, ⇌). Don't use
-  LaTeX or HTML tags.
+- **Math symbols** (≤, √, π, x², θ) and accented letters print as written. So do chemical formulas
+  and equations written with Unicode subscripts, superscripts, and arrows (H₂O, CO₃²⁻, ¹²C, ⇌). A plain arrow
+  (→) or minus sign (−) prints as written when the sheet has another such symbol, and otherwise as -> or -.
+  Don't use LaTeX or HTML tags.
 - **Fit the page.** `make` lists each page's blocks with their heights, its free space, and how many points
   to cut to lose a page. Lines, work areas, and diagram heights are the easiest places to save space. Give
   spare space to writing and work areas. Don't add questions the teacher didn't ask for. A question without
   room to answer is worse than a second page: if the teacher allows two pages, use them before squeezing
-  work below the minimums above. The header is a fixed height (up to 3 lines of instructions).
+  work below the minimums above. The header holds 3 lines of instructions; more push the questions down.
 - **Line breaks:** `\n` in a prompt starts a new line. Put each equation on its own line so it doesn't break
   in the middle.
 - **Shared data** (molar masses, a formula, a word list every question uses) goes in `instructions` or in a

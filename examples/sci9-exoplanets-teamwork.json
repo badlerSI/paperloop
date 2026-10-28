@@ -1,0 +1,72 @@
+{
+  "title": "How Do We Find Planets Around Other Stars?",
+  "grade": 9,
+  "subject": "earth and space science",
+  "structure": "jigsaw",
+  "minutes": 45,
+  "goal": "Learn the four main ways astronomers find exoplanets, and what each one can and can't tell us.",
+  "abilities": [
+    "reading a graph",
+    "explaining an idea simply",
+    "asking good questions",
+    "connecting ideas"
+  ],
+  "parts": [
+    {
+      "title": "The transit method",
+      "text": "When a planet passes in front of its star, as seen from Earth, it blocks a little of the star's light. A telescope measuring the star's brightness sees a small dip that repeats every orbit. The time between dips is the planet's year. How deep the dip is depends on how big the planet is compared with the star: the fraction of light blocked is about (planet radius ÷ star radius)². A Jupiter-sized planet blocks about 1% of a Sun-like star's light; an Earth-sized planet blocks about 0.01%. NASA's Kepler and TESS telescopes found thousands of planets this way. It only works when the orbit is lined up edge-on to us.",
+      "teach": [
+        "what the dip is and why it repeats",
+        "how dip depth gives the planet's size",
+        "why many planets are missed"
+      ],
+      "check": "If one dip is four times deeper than another around the same star, how do the planets' sizes compare?",
+      "source": "Written for Paper Loop from NASA's exoplanet pages (science.nasa.gov/exoplanets). Credit: NASA."
+    },
+    {
+      "title": "The wobble (radial velocity) method",
+      "text": "A planet and its star both orbit their shared center of mass, so the star wobbles a little. As the star moves toward us, its light is shifted slightly toward blue; as it moves away, toward red. Measuring this back-and-forth shift reveals the planet and its orbit. Heavier planets and planets closer to their star make bigger wobbles, so this method gives a planet's mass (at least a lower limit). In 1995 it found 51 Pegasi b, the first planet known to orbit a Sun-like star.",
+      "teach": [
+        "why a star wobbles",
+        "how the color shift shows the wobble",
+        "that it measures mass"
+      ],
+      "check": "Which makes a bigger wobble: a heavy planet close to its star, or a light planet far away?",
+      "source": "Written for Paper Loop from NASA's exoplanet pages (science.nasa.gov/exoplanets). Credit: NASA."
+    },
+    {
+      "title": "Direct imaging",
+      "text": "Sometimes astronomers take a picture of the planet itself. That is hard: a star can be billions of times brighter than its planet, and from far away they appear very close together. Telescopes use a coronagraph or a starshade to block the star's light, the way you shade your eyes from the Sun. Direct imaging works best for big, young planets that are still hot and glow in infrared light, far from their stars. It lets astronomers study a planet's light directly, which can show what its atmosphere is made of.",
+      "teach": [
+        "why the star's glare is the problem",
+        "how blocking the star helps",
+        "which planets are easiest to see"
+      ],
+      "check": "Why is it easier to photograph a planet far from its star than one close in?",
+      "source": "Written for Paper Loop from NASA's exoplanet pages (science.nasa.gov/exoplanets). Credit: NASA."
+    },
+    {
+      "title": "Gravitational microlensing",
+      "text": "Gravity bends light. When a star passes almost exactly in front of a more distant star, its gravity acts like a lens and makes the distant star look brighter for a few weeks. If the nearer star has a planet, the planet's gravity adds a short extra spike to the brightening. Microlensing can find planets far from their stars and even planets with no star at all. Each event happens only once, because the stars keep moving, so the planet usually can't be studied again.",
+      "teach": [
+        "that gravity bends and focuses light",
+        "what the extra spike means",
+        "why each event can't be repeated"
+      ],
+      "check": "Why can't astronomers go back and look at the same microlensing planet next year?",
+      "source": "Written for Paper Loop from NASA's exoplanet pages (science.nasa.gov/exoplanets). Credit: NASA."
+    }
+  ],
+  "worksheet": "sci9-exoplanets-01",
+  "listen_for": [
+    "Experts reading their sheet aloud instead of explaining: ask them to say it without looking.",
+    "Mixing up transit (size) and wobble (mass)."
+  ],
+  "debrief": [
+    "Which method would find an Earth-sized planet around a Sun-like star? Why is that hard?",
+    "Why do astronomers like to find the same planet with two methods?"
+  ],
+  "sources": [
+    "Facts from NASA's exoplanet pages (science.nasa.gov/exoplanets); NASA material isn't copyrighted. The worksheet's light curve is real Kepler data for HAT-P-7, from MAST at the Space Telescope Science Institute; the planet's size is from the NASA Exoplanet Archive."
+  ]
+}

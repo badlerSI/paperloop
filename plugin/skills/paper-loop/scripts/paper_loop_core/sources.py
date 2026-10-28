@@ -14,6 +14,8 @@ from __future__ import annotations
 
 import json
 import re
+import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import date
@@ -138,13 +140,20 @@ def level_problems(defn: dict) -> list[str]:
 
 # --- Getting a text ----------------------------------------------------------------------------------
 
-AGENT = "PaperLoop/0.3 (classroom worksheets; https://github.com/) python-urllib"
+AGENT = "PaperLoop/0.4 (classroom worksheets; https://github.com/) python-urllib"
 
 
 def _get(url: str) -> bytes:
     request = urllib.request.Request(url, headers={"User-Agent": AGENT})
-    with urllib.request.urlopen(request, timeout=20) as response:
-        return response.read()
+    for attempt in range(2):
+        try:
+            with urllib.request.urlopen(request, timeout=20) as response:
+                return response.read()
+        except urllib.error.HTTPError as e:
+            if e.code != 429 or attempt:
+                raise
+            time.sleep(5)  # rate-limited: once more, after a pause
+    raise AssertionError("unreachable")
 
 
 def wikipedia(title: str, simple: bool = False, site: str | None = None) -> dict:

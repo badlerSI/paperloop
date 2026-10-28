@@ -1,0 +1,145 @@
+{
+  "assignment_id": "sci7-selection-01",
+  "title": "Beetles and Birds: What Happened?",
+  "subject": "science",
+  "grade": 7,
+  "grade_band": "7th grade",
+  "compact": true,
+  "instructions": "Answer on your own, even though you did the lab with your group. Write your ID number, not your name.",
+  "questions": [
+    {
+      "type": "table",
+      "q": 1,
+      "skill": "I can analyze population data",
+      "prompt": "Percent Brown: Another class played on brown ground. Fill in the total and the percent of beetles that are brown.",
+      "columns": [
+        "Generation",
+        "Green",
+        "Brown",
+        "Total",
+        "Percent brown"
+      ],
+      "rows": [
+        [
+          "0",
+          "10",
+          "10",
+          "20",
+          "50%"
+        ],
+        [
+          "1",
+          "6",
+          "18",
+          {
+            "answer": "24"
+          },
+          {
+            "answer": "75%",
+            "accept": [
+              "75"
+            ]
+          }
+        ],
+        [
+          "2",
+          "4",
+          "28",
+          "32",
+          "88%"
+        ],
+        [
+          "3",
+          "2",
+          "40",
+          {
+            "answer": "42"
+          },
+          {
+            "answer": "95%",
+            "accept": [
+              "95",
+              "95.2%",
+              "95.2"
+            ]
+          }
+        ]
+      ],
+      "notes": "Generation 3: 40/42 = 95.2%; accept 95%. Generation 2 is given (28/32 = 87.5%, rounded)."
+    },
+    {
+      "type": "choice",
+      "q": 2,
+      "skill": "I can explain natural selection",
+      "prompt": "Why Brown? Why are almost all the beetles brown by generation 3? Circle the letter.",
+      "answer": "C",
+      "options": [
+        {
+          "letter": "A",
+          "text": "Green beetles turned brown so they could hide.",
+          "why": "No beetle changed color: each got its color from its parent."
+        },
+        {
+          "letter": "B",
+          "text": "The brown ground made new beetles brown.",
+          "why": "The ground didn't color the young; their parents did."
+        },
+        {
+          "letter": "C",
+          "text": "Birds ate more green beetles, so more brown beetles lived to have young.",
+          "why": "Yes: survival differed by color, and young look like their parents."
+        },
+        {
+          "letter": "D",
+          "text": "Brown beetles had more young each time.",
+          "why": "Each survivor had one young; look at who survived."
+        }
+      ],
+      "columns": 1
+    },
+    {
+      "type": "short",
+      "q": 3,
+      "lines": 4,
+      "skill": "I can explain natural selection",
+      "prompt": "Three Things: Natural selection needs (1) differences among individuals, (2) young that look like their parents, and (3) some surviving more than others. Explain where each one showed up in the lab.",
+      "rubric": [
+        {
+          "criterion": "Differences: names the two beetle colors as the variation.",
+          "short": "Differences",
+          "levels": [
+            "missing",
+            "vague",
+            "clear"
+          ]
+        },
+        {
+          "criterion": "Inheritance: says young beetles have their parents' color.",
+          "short": "Inheritance",
+          "levels": [
+            "missing",
+            "vague",
+            "clear"
+          ]
+        },
+        {
+          "criterion": "Survival: says birds ate more green beetles because they were easier to see.",
+          "short": "Survival",
+          "levels": [
+            "missing",
+            "vague",
+            "clear"
+          ]
+        }
+      ]
+    },
+    {
+      "type": "short",
+      "q": 4,
+      "lines": 3,
+      "skill": "I can predict how a population changes",
+      "prompt": "Green Moss: Suppose moss grows and the ground turns green. Predict what happens to the beetles over many generations, and explain why.",
+      "key": "Green beetles become more common (brown less), because now brown beetles are easier to see and get eaten more, so more green ones survive and have green young. Full credit needs the prediction and the survival reason; a prediction alone is partial."
+    }
+  ]
+}

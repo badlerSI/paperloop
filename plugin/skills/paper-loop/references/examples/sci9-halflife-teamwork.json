@@ -1,0 +1,57 @@
+{
+  "title": "Shake and Spill: Half-Life",
+  "grade": 9,
+  "subject": "physical science",
+  "structure": "lab",
+  "group_size": 4,
+  "minutes": 35,
+  "rounds": 6,
+  "goal": "Find out how a pile of atoms decays when each atom's decay is pure chance, and explain what a half-life is.",
+  "abilities": [
+    "counting carefully",
+    "keeping a data table",
+    "spotting a pattern",
+    "explaining with evidence"
+  ],
+  "materials": [
+    "a cup",
+    "scissors for the atoms"
+  ],
+  "steps": [
+    "Cut out the 60 atoms. Each is printed on one side only. Record round 0: 60 atoms left.",
+    "Put the atoms in a cup, shake it, and spill them on the desk. Every atom that lands blank side up has decayed: move it to the decayed pile.",
+    "Count the atoms still printed side up. The Recorder writes it in the table; the Skeptic counts again.",
+    "Put only the atoms that are left back in the cup. Pass the role cards to the left.",
+    "Repeat until fewer than 3 atoms are left. Then, together: about how many spills does it take for half of the atoms to decay?"
+  ],
+  "table": {
+    "title": "Our atoms",
+    "columns": [
+      "Spill",
+      "Atoms left",
+      "Decayed this spill",
+      "Fraction left"
+    ],
+    "rows": 8
+  },
+  "tokens": [
+    {
+      "label": "atom",
+      "count": 60,
+      "pattern": "stripes"
+    }
+  ],
+  "worksheet": "sci9-halflife-01",
+  "listen_for": [
+    "Expecting exactly half each spill. Ask: what would “exactly half” of 7 atoms be?",
+    "Thinking an atom that survived many spills is “due” to decay. Each spill is a fresh chance for every atom.",
+    "The Skeptic asking how the group knows its count is right."
+  ],
+  "debrief": [
+    "Put every group's counts on the board and add them up for each spill. The class total halves much more evenly than any one group's: ask why.",
+    "Carbon-14's half-life is 5,730 years. Ask: if one spill stood for one half-life, how old is a bone after three spills?"
+  ],
+  "sources": [
+    "Inspired by the classic coin-flip half-life activity, an idea also modeled in PhET Interactive Simulations' Radioactive Dating Game (University of Colorado Boulder). The activity and questions were written for Paper Loop."
+  ]
+}

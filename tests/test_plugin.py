@@ -198,7 +198,7 @@ def test_blank_pages_are_named_and_zoom_enlarges(water, tmp_path):
 # --- All subjects, grades 2-12 -------------------------------------------------------------
 
 PLUGIN_EXAMPLES = sorted(p for p in (ROOT / "plugin" / "skills" / "paper-loop" / "references" / "examples").glob("*.json")
-                         if not p.stem.endswith(("-lesson", "-pieces"))  # lessons: tests/test_lessons.py
+                         if not p.stem.endswith(("-lesson", "-pieces", "-teamwork"))  # tests/test_lessons.py and others
                          and "." not in p.stem)  # a version's translation (math6-ratios-02.es.json)
 PAGE_BUDGET = {"math6-ratios-01": 1, "span9-casa-01": 1, "sci3-plants-01": 1, "ela11-argument-01": 1,
                "cs10-loops-01": 1, "chem10-moles-01": 1, "mus5-notes-01": 1, "math7-data-01": 1}

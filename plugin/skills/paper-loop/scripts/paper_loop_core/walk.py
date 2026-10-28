@@ -267,9 +267,10 @@ def key_lines(item: dict) -> list[str]:
     if kind == "short" and item.get("rubric"):
         return [f"Rubric ({_pts(item['points'])}): " + "; ".join(
             f"{c.get('short') or c['criterion'].rstrip('. ')} 0-{c['max']}" for c in item["rubric"]),
-            *([f"Full credit: {item['key']}"] if item.get("key") and item["key"] != "Scored on the rubric." else [])]
+            *([f"Full credit: {S.unlabeled(item['key'])}"] if item.get("key") and item["key"] != "Scored on the rubric."
+              else [])]
     if kind == "short":
-        return [f"Full credit ({_pts(item['points'])}): {item['key']}"]
+        return [f"Full credit ({_pts(item['points'])}): {S.unlabeled(item['key'])}"]
     if kind == "choice":
         return [f"Answer ({_pts(item['points'])}): {item['key']}"]
     return [f"Answers ({_pts(item['points'])}): {item['key']}"]
@@ -368,7 +369,11 @@ def _write_in(c, ws: Worksheet, q: int, model: str | None, fonts) -> None:
         if len(lines) <= n:  # on the ruled lines
             for k, line in enumerate(lines):
                 c.drawString(x0 + 8, y1 - spacing * (k + 1) + 4, line)
-        else:  # more than the lines hold: small, evenly spaced, inside the box
+        else:  # more than the lines hold: small, evenly spaced, inside the box, on white so no line strikes it
+            c.saveState()
+            c.setFillGray(1)
+            c.rect(x0 + 1.5, y0 + 1.5, x1 - x0 - 3, y1 - y0 - 3, stroke=0, fill=1)
+            c.restoreState()
             for size in (size, 6.5, 6.0):
                 lines = simpleSplit(fonts.text(text), fonts.oblique, size, x1 - x0 - 16)
                 if len(lines) * size * 1.2 <= y1 - y0 - 6:
