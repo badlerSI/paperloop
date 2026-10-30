@@ -46,7 +46,10 @@ classes, folders, ID digits, and preferences ("Getting started").
    from that. Comments on wrong answers give hints, not answers, unless the teacher asks otherwise
    (`feedback` in the format guide).
 2. Read `references/worksheet-format.md`, then the example in `references/examples/` closest in grade and
-   subject. Write the worksheet as JSON. Mix question types. Write keys as what full credit needs, rubrics
+   subject. Write the worksheet as JSON. Mix question types, and unless the teacher wants a written-only
+   sheet, include at least one question students answer on something besides lines: a diagram to label, a
+   table to fill in, a graph or number line to mark, or a drawing with a checklist, whichever fits the
+   topic. Write keys as what full credit needs, rubrics
    with levels a stranger could apply, and drawing checklists as things you can see on the page. Give each
    question the `skill` it practices, so progress reports can follow it. For a reading, start from a free,
    human-written source (Wikipedia, Simple English Wikipedia, Project Gutenberg, a US government site:
