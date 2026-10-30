@@ -256,12 +256,13 @@
 <section id="try" class="wrap section">
   <p class="kicker">Reel 7 · Try it</p>
   <h2>Don't take my word for it.</h2>
-  <p class="section-lede">Two small demos, running on Paper Loop's own Claude account. Make a worksheet on any school topic, or write an answer and watch it get marked.</p>
+  <p class="section-lede">Three small demos, running on Paper Loop's own Claude account. Make a worksheet on any school topic, write one answer and watch it get marked, or print a sample, fill it in, and have the whole page marked from a phone photo.</p>
   <p class="quota" id="quota" aria-live="polite"></p>
 
   <div class="tabs" role="tablist" aria-label="Demos">
     <button role="tab" id="tab-make" aria-controls="panel-make" aria-selected="true">Make a worksheet</button>
     <button role="tab" id="tab-mark" aria-controls="panel-mark" aria-selected="false" tabindex="-1">Mark an answer</button>
+    <button role="tab" id="tab-page" aria-controls="panel-page" aria-selected="false" tabindex="-1">Mark a whole page</button>
   </div>
 
   <div class="panel" id="panel-make" role="tabpanel" aria-labelledby="tab-make">
@@ -344,6 +345,44 @@
     </form>
     <div class="marked" id="marked" hidden></div>
   </div>
+
+  <div class="panel" id="panel-page" role="tabpanel" aria-labelledby="tab-page" hidden>
+    <ol class="steps">
+      <li><b>Print a sample.</b> Any of the four below, on any printer.</li>
+      <li><b>Fill it in like a student.</b> Get some wrong on purpose, and write any number in the ID boxes.</li>
+      <li><b>Photograph or scan it.</b> Flat and straight on, with all four black corner squares in view. A scan from the iPhone's Notes or Files app works too.</li>
+    </ol>
+    <form class="demo-form" id="page-form">
+      <div class="field field-wide">
+        <p class="label">Sample worksheets to print</p>
+        <div class="spick" id="spick"></div>
+      </div>
+      <div class="field field-wide">
+        <p class="label" id="page-label">Your filled-in page</p>
+        <label class="dropzone" id="page-drop">
+          <input type="file" id="page-file" accept="image/*,application/pdf" aria-labelledby="page-label">
+          <span class="dropzone-text" id="page-drop-text">Choose a photo or a scan (PDF)</span>
+          <img id="page-preview" alt="Your filled-in page" hidden>
+        </label>
+        <span class="hint">Please use a sample you filled in yourself, not real student work.</span>
+      </div>
+      <div class="turnstile" id="page-check"></div>
+      <div class="form-end">
+        <button class="btn btn-primary" type="submit" id="page-go">Mark my page</button>
+        <p class="status" id="page-status" aria-live="polite"></p>
+      </div>
+    </form>
+    <div class="page-result" id="page-result" hidden></div>
+  </div>
+
+  <aside class="getit" id="get">
+    <h3>Want this for your class? Paper Loop is free.</h3>
+    <ol>
+      <li><b>On Claude for Teachers, Pro, Max or Team:</b> in Claude, open <b>Customize → Plugins → Add marketplace</b>, enter <code>badlerSI/paperloop</code>, and install Paper Loop.</li>
+      <li><b>On the Free plan:</b> download <a href="https://github.com/badlerSI/paperloop/releases/latest">paper-loop.zip</a>, then in Claude open <b>Customize → Skills</b> and upload it. Code execution has to be on (<b>Settings → Capabilities</b>).</li>
+      <li><b>Then show Claude your filled-in sample and say “Set up Paper Loop for my class.”</b> Claude marks it, sets up class numbers (never names) and a folder for each class, and makes your first real worksheet.</li>
+    </ol>
+  </aside>
 
   <p class="privacy" id="privacy">What you type, draw, or photograph goes to Anthropic's API to be read, and this site keeps none of it. To limit the demos, the site counts them by a scrambled form of your internet address and wipes the counts every night. Cloudflare, which hosts the site and runs the bot check when there is one, keeps its own short-term server records.</p>
 </section>

@@ -2,7 +2,18 @@ import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
 import { Limiter, MemoryLedger, type Caps, type Kind, type Left, type Reservation } from "./limiter";
-import { LANGUAGES, MARK_SYSTEM, MarkSchema, QUESTIONS, WORKSHEET_SYSTEM, WorksheetSchema } from "./prompts";
+import {
+  LANGUAGES,
+  MARK_SYSTEM,
+  MarkSchema,
+  PAGE_SYSTEM,
+  PageSchema,
+  QUESTIONS,
+  WORKSHEET_SYSTEM,
+  WorksheetSchema,
+} from "./prompts";
+// Written by devtools/samples.py from the Paper Loop skill's sample worksheets.
+import SAMPLES from "./samples.json";
 
 export { Limiter };
 
@@ -12,12 +23,14 @@ interface Env {
   LIMITER?: DurableObjectNamespace<Limiter>;
   ANTHROPIC_API_KEY?: string;
   // Set in wrangler.jsonc. A plain upload to Cloudflare Pages has none of them, so each has a default.
+  // Add DEMOS = off in the dashboard to switch the demos off; keep_vars keeps it across deploys.
   DEMOS?: string;
   WORKSHEET_MODEL?: string;
   MARK_MODEL?: string;
   DAILY_BUDGET_USD?: string;
   WORKSHEETS_PER_VISITOR?: string;
   MARKS_PER_VISITOR?: string;
+  PAGES_PER_VISITOR?: string;
   TURNSTILE_SITE_KEY?: string;
   TURNSTILE_SECRET?: string;
   VISITOR_SALT?: string;
@@ -36,6 +49,8 @@ const PRICES: Record<string, [number, number]> = {
 const LIMITS = {
   worksheet: { maxTokens: 8000, inputTokens: 4000 },
   mark: { maxTokens: 2000, inputTokens: 6000 },
+  // A whole page: a 1600 x 1600 picture, the instructions, and every sample's key.
+  page: { maxTokens: 3000, inputTokens: 10000 },
 };
 
 const BODY_MAX = 900_000;
@@ -49,6 +64,10 @@ function jsonFormat(schema: z.ZodType) {
 }
 const WORKSHEET_FORMAT = jsonFormat(WorksheetSchema);
 const MARK_FORMAT = jsonFormat(MarkSchema);
+const PAGE_FORMAT = jsonFormat(PageSchema);
+
+type Sample = (typeof SAMPLES)[keyof typeof SAMPLES];
+const SAMPLE_IDS = Object.keys(SAMPLES) as (keyof typeof SAMPLES)[];
 
 const DEFAULT_MODEL = "claude-sonnet-5-5";
 
@@ -84,6 +103,7 @@ function caps(env: Env): Caps {
   return {
     worksheet: num(env.WORKSHEETS_PER_VISITOR, 3),
     mark: num(env.MARKS_PER_VISITOR, 8),
+    page: num(env.PAGES_PER_VISITOR, 3),
     budgetUsd: num(env.DAILY_BUDGET_USD, 5),
   };
 }
@@ -175,8 +195,12 @@ function failure(err: unknown, reserved: number): Failure {
   if (err instanceof Anthropic.APIUserAbortError) {
     return { message: "Stopped.", status: 499, refund: false, actual: reserved };
   }
+  if (err instanceof Anthropic.APIConnectionTimeoutError) {
+    // A visitor can make a call run long on purpose (a page crammed with writing), so this isn't refunded.
+    return { message: "That took too long and was stopped. Try a clearer picture with less on it.", status: 504, refund: false, actual: reserved };
+  }
   if (err instanceof Anthropic.APIConnectionError) {
-    // Includes timeouts. Tokens may have been billed, so the budget keeps the reservation.
+    // Tokens may have been billed, so the budget keeps the reservation.
     return { message: busy, status: 504, refund: true, actual: reserved };
   }
   if (err instanceof Anthropic.APIError) {
@@ -271,7 +295,7 @@ async function readBody(req: Request): Promise<unknown | null> {
 type Picture = { mediaType: "image/png" | "image/jpeg" | "image/webp"; width: number; height: number };
 
 // The picture's real type and size, from its first bytes. The page sends a drawing 900 wide or a photo
-// at most 1200 on its longest side, both re-encoded in the browser, so the size is always near the start.
+// at most 1600 on its longest side, re-encoded in the browser, so the size is always near the start.
 function picture(base64: string): Picture | null {
   let b: Uint8Array;
   try {
@@ -337,8 +361,10 @@ function refused(reason: "visitor" | "budget", kind: Kind, left: Left): Response
   if (reason === "visitor") {
     return sorry("That's all of those for today from this connection. They reset at midnight UTC.", 429, left);
   }
-  if (kind === "worksheet" && left.open) {
-    return sorry("Today's free worksheets are used up. Marking an answer still works.", 429, left);
+  // "open" says whether the cheapest demo, one answer, still fits today.
+  if (kind !== "mark" && left.open) {
+    const what = kind === "worksheet" ? "worksheets" : "whole-page markings";
+    return sorry(`Today's free ${what} are used up. Marking one answer still works.`, 429, left);
   }
   return sorry("Today's free demos are used up. They reset at midnight UTC.", 429, left);
 }
@@ -347,12 +373,13 @@ async function config(req: Request, env: Env): Promise<Response> {
   const on = demosOn(env);
   const left = on
     ? await limiter(env).status(await visitor(req, env), caps(env), worstCase("mark", models(env).mark))
-    : { worksheet: 0, mark: 0, open: false };
+    : { worksheet: 0, mark: 0, page: 0, open: false };
   return json({
     demos: on,
     turnstile: turnstileOn(env) ? env.TURNSTILE_SITE_KEY : null,
     left,
     questions: QUESTIONS,
+    samples: SAMPLE_IDS.map((id) => ({ id, title: SAMPLES[id].title, grade: SAMPLES[id].grade, shows: SAMPLES[id].shows })),
     languages: LANGUAGES,
   });
 }
@@ -454,7 +481,17 @@ async function worksheet(req: Request, env: Env, ctx: ExecutionContext): Promise
   });
 }
 
-async function mark(req: Request, env: Env): Promise<Response> {
+function checkPicture(image: string): { pic: Picture; data: string } | Response {
+  const data = image.slice(image.indexOf(",") + 1);
+  const pic = picture(data);
+  if (!pic || pic.width < 16 || pic.height < 16) return sorry("That picture couldn't be read. Try another one.", 400);
+  if (pic.width > IMAGE_SIDE_MAX || pic.height > IMAGE_SIDE_MAX) {
+    return sorry("That picture is too big. Try a smaller one.", 400);
+  }
+  return { pic, data };
+}
+
+async function mark(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
   const parsed = MarkRequest.safeParse(await readBody(req));
   if (!parsed.success) return sorry("Write an answer first, or use a smaller photo.", 400);
   const { question, custom, image, token } = parsed.data;
@@ -466,12 +503,9 @@ async function mark(req: Request, env: Env): Promise<Response> {
   }
   if (!q) return sorry("Pick a question first.", 400);
 
-  const data = image.slice(image.indexOf(",") + 1);
-  const pic = picture(data);
-  if (!pic || pic.width < 16 || pic.height < 16) return sorry("That picture couldn't be read. Try another one.", 400);
-  if (pic.width > IMAGE_SIDE_MAX || pic.height > IMAGE_SIDE_MAX) {
-    return sorry("That picture is too big. Try a smaller one.", 400);
-  }
+  const checked = checkPicture(image);
+  if (checked instanceof Response) return checked;
+  const { pic, data } = checked;
   if (!(await human(token, req, env))) return sorry("Please finish the check box first.", 403);
 
   const model = models(env).mark;
@@ -490,51 +524,153 @@ async function mark(req: Request, env: Env): Promise<Response> {
     "The student's answer is in the image above.",
   ].join("\n");
 
-  let actual = reserved;
-  let refund = false;
-  try {
-    const message = await client(env).messages.create({
-      model,
-      max_tokens: LIMITS.mark.maxTokens,
-      system: MARK_SYSTEM,
-      output_config: { effort: "low", format: MARK_FORMAT },
-      messages: [
-        {
-          role: "user",
-          content: [
-            { type: "image", source: { type: "base64", media_type: pic.mediaType, data } },
-            { type: "text", text: work },
-          ],
-        },
-      ],
-    });
-    actual = cost(model, message.usage);
-    logUsage("mark", model, message.usage, actual, message.stop_reason);
-    if (message.stop_reason === "refusal") return sorry("Claude declined to mark that one.", 422, booking.left);
-    if (message.stop_reason === "max_tokens") {
-      return sorry("That was too much writing to mark here. Try one short answer.", 422, booking.left);
-    }
-    const result = readJSON(message, MarkSchema);
-    if (!result) return sorry("Claude's answer came back garbled. Try again.", 502, booking.left);
-    return json({ result, left: booking.left });
-  } catch (err) {
-    console.error("mark", err);
-    const f = failure(err, reserved);
-    actual = f.actual;
-    refund = f.refund;
-    return sorry(f.message, f.status, refund ? { ...booking.left, mark: booking.left.mark + 1 } : booking.left);
-  } finally {
+  return askAboutPicture(env, ctx, {
+    kind: "mark",
+    who,
+    booking,
+    reserved,
+    model,
+    system: MARK_SYSTEM,
+    format: MARK_FORMAT,
+    schema: MarkSchema,
+    pic,
+    data,
+    work,
+    tooLong: "That was too much writing to mark here. Try one short answer.",
+  });
+}
+
+type Booked = Extract<Reservation, { ok: true }>;
+
+type PictureJob = {
+  kind: "mark" | "page";
+  who: string;
+  booking: Booked;
+  reserved: number;
+  model: string;
+  system: string;
+  format: typeof MARK_FORMAT;
+  schema: z.ZodType;
+  pic: Picture;
+  data: string;
+  work: string;
+  tooLong: string;
+};
+
+// One picture to Claude, for either marking demo. The call and its settling run under waitUntil, so a
+// visitor who closes the tab can't leave the worst case charged against the day's budget.
+function askAboutPicture(env: Env, ctx: ExecutionContext, job: PictureJob): Promise<Response> {
+  const { kind, booking, reserved, model } = job;
+  const run = (async (): Promise<Response> => {
+    let actual = reserved;
+    let refund = false;
     try {
-      await limiter(env).settle(who, "mark", booking.day, reserved, actual, refund);
+      const message = await client(env).messages.create({
+        model,
+        max_tokens: LIMITS[kind].maxTokens,
+        system: job.system,
+        output_config: { effort: "low", format: job.format },
+        messages: [
+          {
+            role: "user",
+            content: [
+              { type: "image", source: { type: "base64", media_type: job.pic.mediaType, data: job.data } },
+              { type: "text", text: job.work },
+            ],
+          },
+        ],
+      });
+      actual = cost(model, message.usage);
+      logUsage(kind, model, message.usage, actual, message.stop_reason);
+      if (message.stop_reason === "refusal") return sorry("Claude declined to mark that one.", 422, booking.left);
+      if (message.stop_reason === "max_tokens") return sorry(job.tooLong, 422, booking.left);
+      const result = readJSON(message, job.schema);
+      if (!result) return sorry("Claude's answer came back garbled. Try again.", 502, booking.left);
+      return json({ result, left: booking.left });
     } catch (err) {
-      console.error("settle", err);
+      console.error(kind, err);
+      const f = failure(err, reserved);
+      actual = f.actual;
+      refund = f.refund;
+      return sorry(f.message, f.status, refund ? { ...booking.left, [kind]: booking.left[kind] + 1 } : booking.left);
+    } finally {
+      try {
+        await limiter(env).settle(job.who, kind, booking.day, reserved, actual, refund);
+      } catch (err) {
+        console.error("settle", err);
+      }
     }
-  }
+  })();
+  ctx.waitUntil(run);
+  return run;
+}
+
+const PageRequest = z.object({
+  image: z
+    .string()
+    .max(BODY_MAX - 2000)
+    .regex(/^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/),
+  token: z.string().max(4096).optional(),
+});
+
+// Every sample's key goes in, and Claude reads which one this is from the page, so a visitor never picks
+// the wrong one.
+const SAMPLE_KEYS = JSON.stringify(
+  Object.fromEntries(
+    SAMPLE_IDS.map((id) => {
+      const { title, grade, subject, instructions, questions } = SAMPLES[id];
+      return [id, { title, grade, subject, instructions, questions }];
+    }),
+  ),
+);
+
+// A whole filled-in sample page, from a phone photo or a scan the browser turned into a picture.
+async function markPage(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+  const parsed = PageRequest.safeParse(await readBody(req));
+  if (!parsed.success) return sorry("Add a photo or scan of your page, or use a smaller one.", 400);
+  const { image, token } = parsed.data;
+  const checked = checkPicture(image);
+  if (checked instanceof Response) return checked;
+  const { pic, data } = checked;
+  if (!(await human(token, req, env))) return sorry("Please finish the check box first.", 403);
+
+  const model = models(env).mark;
+  const who = await visitor(req, env);
+  const reserved = worstCase("page", model);
+  const booking = await limiter(env).reserve(who, "page", reserved, caps(env), worstCase("mark", model));
+  if (!booking.ok) return refused(booking.reason, "page", booking.left);
+
+  const work = [
+    "Feedback style: hint",
+    "The samples, by id, with their questions and keys:",
+    SAMPLE_KEYS,
+    "The filled-in page is in the image above.",
+  ].join("\n");
+
+  return askAboutPicture(env, ctx, {
+    kind: "page",
+    who,
+    booking,
+    reserved,
+    model,
+    system: PAGE_SYSTEM,
+    format: PAGE_FORMAT,
+    schema: PageSchema,
+    pic,
+    data,
+    work,
+    tooLong: "That page had too much on it to mark here.",
+  });
 }
 
 async function api(req: Request, env: Env, ctx: ExecutionContext, url: URL): Promise<Response> {
   if (url.pathname === "/api/config" && req.method === "GET") return config(req, env);
-  const route = url.pathname === "/api/worksheet" ? worksheet : url.pathname === "/api/mark" ? mark : null;
+  const routes: Record<string, typeof mark | typeof worksheet> = {
+    "/api/worksheet": worksheet,
+    "/api/mark": mark,
+    "/api/page": markPage,
+  };
+  const route = routes[url.pathname] ?? null;
   if (!route) return sorry("Not found.", 404);
   if (req.method !== "POST") return sorry("Use POST.", 405);
   if (!sameOrigin(req, url)) return sorry("Demos run from this site only.", 403);
@@ -545,7 +681,7 @@ async function api(req: Request, env: Env, ctx: ExecutionContext, url: URL): Pro
 // The same as public/_headers, which Cloudflare Pages doesn't apply to pages this Worker serves.
 const PAGE_HEADERS: Record<string, string> = {
   "Content-Security-Policy":
-    "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; " +
+    "default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; " +
     "img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self'; base-uri 'none'; " +
     "form-action 'self'; frame-ancestors 'none'; object-src 'none'",
   "X-Content-Type-Options": "nosniff",
@@ -554,7 +690,7 @@ const PAGE_HEADERS: Record<string, string> = {
 };
 
 // Link previews need absolute URLs, and the page doesn't know which domain it will live on.
-async function page(req: Request, env: Env, url: URL): Promise<Response> {
+async function home(req: Request, env: Env, url: URL): Promise<Response> {
   const res = await env.ASSETS.fetch(req);
   if (!res.headers.get("content-type")?.includes("text/html")) return res;
   const out = new Response(res.body, res);
@@ -578,7 +714,7 @@ async function page(req: Request, env: Env, url: URL): Promise<Response> {
 export default {
   async fetch(req, env, ctx): Promise<Response> {
     const url = new URL(req.url);
-    if (url.pathname === "/" || url.pathname === "/index.html") return page(req, env, url);
+    if (url.pathname === "/" || url.pathname === "/index.html") return home(req, env, url);
     if (!url.pathname.startsWith("/api/")) return env.ASSETS.fetch(req);
     try {
       return await api(req, env, ctx, url);

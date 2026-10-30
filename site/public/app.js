@@ -28,7 +28,8 @@ const state = {
   sheetLanguage: null,
   view: "student",
   turnstile: {},
-  busy: { make: false, mark: false },
+  busy: { make: false, mark: false, page: false },
+  pageImage: null,
 };
 
 /* ---------- Config, quota, and the optional Turnstile check ---------- */
@@ -55,13 +56,13 @@ function showQuota() {
   // A demo that's still running keeps its button off, whatever the counts say.
   $("#make-go").disabled = state.busy.make || !l.open || l.worksheet <= 0;
   $("#mark-go").disabled = state.busy.mark || !l.open || l.mark <= 0;
+  $("#page-go").disabled = state.busy.page || !l.open || !(l.page > 0);
   if (!l.open) {
     q.textContent = "Today's free demos are used up. They reset at midnight UTC.";
     return;
   }
-  const w = `${l.worksheet} worksheet${l.worksheet === 1 ? "" : "s"}`;
-  const m = `${l.mark} marked answer${l.mark === 1 ? "" : "s"}`;
-  q.textContent = `You have ${w} and ${m} left today.`;
+  const count = (n, one) => `${n ?? 0} ${one}${n === 1 ? "" : "s"}`;
+  q.textContent = `You have ${count(l.worksheet, "worksheet")}, ${count(l.mark, "marked answer")} and ${count(l.page, "marked page")} left today.`;
 }
 
 function setLeft(left) {
@@ -72,7 +73,7 @@ function setLeft(left) {
 
 function loadTurnstile(siteKey) {
   window.onTurnstileLoad = () => {
-    for (const id of ["make-check", "mark-check"]) {
+    for (const id of ["make-check", "mark-check", "page-check"]) {
       state.turnstile[id] = window.turnstile.render(`#${id}`, { sitekey: siteKey, size: "flexible" });
     }
   };
@@ -103,15 +104,24 @@ async function loadConfig() {
     state.config = await res.json();
   } catch {
     // No demo server: the page was uploaded as plain files.
-    state.config = { demos: false, offline: true, left: { worksheet: 0, mark: 0, open: false }, questions: [], languages: [] };
+    state.config = {
+      demos: false,
+      offline: true,
+      left: { worksheet: 0, mark: 0, page: 0, open: false },
+      questions: [],
+      languages: [],
+      samples: [],
+    };
   }
   state.left = state.config.left;
   for (const lang of state.config.languages) $("#language").append(el("option", { value: lang }, lang));
   buildQuestions(state.config.questions);
+  buildSamples(state.config.samples || []);
   if (state.config.turnstile) loadTurnstile(state.config.turnstile);
   if (!state.config.demos) {
     $("#make-go").disabled = true;
     $("#mark-go").disabled = true;
+    $("#page-go").disabled = true;
   }
   showQuota();
 }
@@ -119,7 +129,7 @@ async function loadConfig() {
 /* ---------- Tabs ---------- */
 
 function setupTabs() {
-  const tabs = [$("#tab-make"), $("#tab-mark")];
+  const tabs = [...document.querySelectorAll('.tabs [role="tab"]')];
   const select = (tab) => {
     for (const t of tabs) {
       const on = t === tab;
@@ -559,12 +569,21 @@ const pad = {
   },
 };
 
-function shrinkPhoto(file) {
+// A JPEG small enough to send: lower the quality until it fits under the server's limit.
+function encodeJpeg(canvas) {
+  for (const quality of [0.85, 0.75, 0.65, 0.55]) {
+    const url = canvas.toDataURL("image/jpeg", quality);
+    if (url.length < 850_000) return url;
+  }
+  return canvas.toDataURL("image/jpeg", 0.45);
+}
+
+function shrinkPhoto(file, longest = 1200) {
   return new Promise((resolve, reject) => {
     const url = URL.createObjectURL(file);
     const img = new Image();
     img.onload = () => {
-      const scale = Math.min(1, 1200 / Math.max(img.width, img.height));
+      const scale = Math.min(1, longest / Math.max(img.width, img.height));
       const c = document.createElement("canvas");
       c.width = Math.round(img.width * scale);
       c.height = Math.round(img.height * scale);
@@ -573,7 +592,7 @@ function shrinkPhoto(file) {
       ctx.fillRect(0, 0, c.width, c.height);
       ctx.drawImage(img, 0, 0, c.width, c.height);
       URL.revokeObjectURL(url);
-      resolve(c.toDataURL("image/jpeg", 0.85));
+      resolve(encodeJpeg(c));
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
@@ -710,6 +729,180 @@ function setupMark() {
   $("#mark-form").addEventListener("submit", markAnswer);
 }
 
+/* ---------- Demo 3: mark a whole sample page ---------- */
+
+// The samples to print. Claude reads which one a page is from its footer, so nobody picks it here.
+function buildSamples(samples) {
+  const box = $("#spick");
+  box.replaceChildren();
+  for (const s of samples) {
+    box.append(
+      el(
+        "a",
+        { class: "sopt", href: `/samples/${s.id}.pdf`, target: "_blank", rel: "noopener" },
+        el(
+          "span",
+          { class: "card-in" },
+          el("img", { src: `/samples/${s.id}.jpg`, alt: "", loading: "lazy", width: "320", height: "414" }),
+          el("b", { text: s.title }),
+          el("span", { text: `Grade ${s.grade} · Print it` }),
+        ),
+      ),
+    );
+  }
+}
+
+// True when a rendered page is almost entirely white: a scan pdf.js couldn't decode.
+function looksBlank(canvas) {
+  const small = document.createElement("canvas");
+  small.width = 64;
+  small.height = 80;
+  const ctx = small.getContext("2d");
+  ctx.drawImage(canvas, 0, 0, 64, 80);
+  const px = ctx.getImageData(0, 0, 64, 80).data;
+  let ink = 0;
+  for (let i = 0; i < px.length; i += 4) if (px[i] + px[i + 1] + px[i + 2] < 600) ink++;
+  return ink < 20;
+}
+
+// A scan saved as a PDF (the iPhone's Notes or Files scanner, a copier) becomes a picture of its first
+// page, here in the browser, with pdf.js. It's loaded only when someone picks a PDF.
+async function pdfToImage(file) {
+  const pdfjs = await import("/vendor/pdfjs/pdf.min.mjs");
+  pdfjs.GlobalWorkerOptions.workerSrc = "/vendor/pdfjs/pdf.worker.min.mjs";
+  const doc = await pdfjs.getDocument({ data: await file.arrayBuffer(), isEvalSupported: false }).promise;
+  try {
+    const page = await doc.getPage(1);
+    const size = page.getViewport({ scale: 1 });
+    const viewport = page.getViewport({ scale: 1600 / Math.max(size.width, size.height) });
+    const c = document.createElement("canvas");
+    c.width = Math.round(viewport.width);
+    c.height = Math.round(viewport.height);
+    const ctx = c.getContext("2d");
+    ctx.fillStyle = "#fff";
+    ctx.fillRect(0, 0, c.width, c.height);
+    await page.render({ canvasContext: ctx, viewport }).promise;
+    if (looksBlank(c)) throw new Error("blank");
+    return { image: encodeJpeg(c), pages: doc.numPages };
+  } finally {
+    doc.destroy();
+  }
+}
+
+async function choosePage(e) {
+  const file = e.target.files?.[0];
+  e.target.value = "";
+  if (!file) return;
+  const status = $("#page-status");
+  status.className = "status";
+  status.textContent = "Getting your page ready…";
+  try {
+    const isPdf = file.type === "application/pdf" || /\.pdf$/i.test(file.name);
+    const out = isPdf ? await pdfToImage(file) : { image: await shrinkPhoto(file, 1600), pages: 1 };
+    state.pageImage = out.image;
+    const img = $("#page-preview");
+    img.src = out.image;
+    img.hidden = false;
+    $("#page-drop-text").hidden = true;
+    status.textContent = out.pages > 1 ? `That PDF has ${out.pages} pages; Claude will mark the first.` : "";
+  } catch (err) {
+    console.error(err);
+    state.pageImage = null;
+    status.className = "status err";
+    status.textContent =
+      err.message === "blank"
+        ? "That PDF came out blank here. Try a photo of the page instead."
+        : "That file couldn't be opened. Try a photo (JPEG or PNG) or a PDF scan.";
+  }
+}
+
+function renderPage(sample, image, r) {
+  const box = $("#page-result");
+  const label = { correct: "Right", partial: "Partly right", incorrect: "Not yet", blank: "Blank", unreadable: "Couldn't read it" };
+  const rows = (r.answers || []).map((a) => {
+    const flagged = a.confidence < 0.8 || a.verdict === "unreadable";
+    return el(
+      "div",
+      { class: "prow" },
+      el("p", { class: "where" }, `Q${a.q}`, a.part ? el("span", { text: a.part }) : null),
+      el(
+        "div",
+        {},
+        el("p", { class: "said" }, "Read ", el("q", { text: a.read || "(blank)" }), ` · ${label[a.verdict] || a.verdict}`),
+        el(
+          "p",
+          { class: "comment" },
+          a.verdict === "correct" ? el("span", { class: "tick", "aria-label": "check mark", text: "✓" }) : null,
+          el("span", { text: a.comment }),
+        ),
+        flagged ? el("span", { class: "flag", text: "Flagged for the teacher to check" }) : null,
+      ),
+    );
+  });
+  const right = (r.answers || []).filter((a) => a.verdict === "correct").length;
+  box.replaceChildren(
+    el("img", { src: image, alt: "Your filled-in page" }),
+    el(
+      "div",
+      { class: "page-sheet" },
+      el("h4", { text: sample.title }),
+      el("p", { class: "meta", text: `ID read as ${r.id_read || "?"} · ${right} of ${(r.answers || []).length} parts right` }),
+      ...rows,
+      el(
+        "div",
+        { class: "page-sum" },
+        r.strength ? el("p", {}, el("b", { text: "Strength: " }), r.strength) : null,
+        r.next_step ? el("p", {}, el("b", { text: "Next step: " }), r.next_step) : null,
+      ),
+    ),
+    el("p", { class: "page-note" }, "On paper, each comment prints beside its answer and the summary goes at the bottom of the page. ", el("a", { href: "#get" }, "Get Paper Loop for your class"), " to do this for a whole stack at once."),
+  );
+  box.hidden = false;
+  box.scrollIntoView({ behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth", block: "start" });
+}
+
+async function markPage(e) {
+  e.preventDefault();
+  const status = $("#page-status");
+  const go = $("#page-go");
+  status.className = "status err";
+  if (!state.pageImage) return void (status.textContent = "Add a photo or scan of your page first.");
+  const token = checkToken("page-check");
+  if (state.config?.turnstile && !token) return void (status.textContent = "Please finish the check box first.");
+
+  const image = state.pageImage;
+  state.busy.page = true;
+  go.disabled = true;
+  status.className = "status";
+  status.textContent = "Claude is reading your page. This takes about half a minute…";
+  try {
+    const res = await fetch("/api/page", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ image, token }),
+    });
+    const out = await res.json().catch(() => ({}));
+    setLeft(out.left);
+    if (!res.ok || !out.result) throw new Error(out.error || "Something went wrong. Try again in a minute.");
+    if (!out.result.ok) throw new Error(out.result.message || "Claude couldn't find a sample in that picture. Try another photo.");
+    const sample = state.config?.samples?.find((s) => s.id === out.result.sample) || { title: "Your sample" };
+    status.textContent = "";
+    renderPage(sample, image, out.result);
+  } catch (err) {
+    status.className = "status err";
+    status.textContent = err.message;
+  } finally {
+    state.busy.page = false;
+    resetCheck("page-check");
+    showQuota();
+  }
+}
+
+function setupPage() {
+  $("#page-file").addEventListener("change", choosePage);
+  $("#page-form").addEventListener("submit", markPage);
+}
+
 /* ---------- The score ---------- */
 
 // Never autoplays: it starts only when the visitor presses the button, fades in, and can be stopped
@@ -756,5 +949,6 @@ function setupScore() {
 setupTabs();
 setupMake();
 setupMark();
+setupPage();
 setupScore();
 loadConfig();

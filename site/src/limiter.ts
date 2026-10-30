@@ -1,16 +1,27 @@
 import { DurableObject } from "cloudflare:workers";
 
-export type Kind = "worksheet" | "mark";
+export type Kind = "worksheet" | "mark" | "page";
 
-export type Caps = { worksheet: number; mark: number; budgetUsd: number };
+export type Caps = { worksheet: number; mark: number; page: number; budgetUsd: number };
 
-export type Left = { worksheet: number; mark: number; open: boolean };
+export type Left = { worksheet: number; mark: number; page: number; open: boolean };
 
 export type Reservation =
   | { ok: true; day: string; left: Left }
   | { ok: false; reason: "visitor" | "budget"; left: Left };
 
-type Used = { worksheet: number; mark: number };
+// Counts saved before the page demo existed have no "page".
+type Used = { worksheet: number; mark: number; page?: number };
+
+const NONE: Used = { worksheet: 0, mark: 0, page: 0 };
+
+function remaining(caps: Caps, used: Used): Omit<Left, "open"> {
+  return {
+    worksheet: Math.max(0, caps.worksheet - used.worksheet),
+    mark: Math.max(0, caps.mark - used.mark),
+    page: Math.max(0, caps.page - (used.page ?? 0)),
+  };
+}
 
 // One instance holds the day's spending and each visitor's demo count. A single Durable Object is
 // strongly consistent, so the daily budget can't be overrun by requests arriving at once: each request
@@ -36,13 +47,9 @@ export class Limiter extends DurableObject {
   }
 
   private async left(visitor: string, caps: Caps, probe: number): Promise<Left> {
-    const used = (await this.ctx.storage.get<Used>(`v:${visitor}`)) ?? { worksheet: 0, mark: 0 };
+    const used = (await this.ctx.storage.get<Used>(`v:${visitor}`)) ?? NONE;
     const spent = (await this.ctx.storage.get<number>("spent")) ?? 0;
-    return {
-      worksheet: Math.max(0, caps.worksheet - used.worksheet),
-      mark: Math.max(0, caps.mark - used.mark),
-      open: spent + probe <= caps.budgetUsd,
-    };
+    return { ...remaining(caps, used), open: spent + probe <= caps.budgetUsd };
   }
 
   // "open" means today's budget has room for one more call costing `probe` dollars.
@@ -60,8 +67,8 @@ export class Limiter extends DurableObject {
     const spent = (await this.ctx.storage.get<number>("spent")) ?? 0;
     if (spent + cost > caps.budgetUsd) return { ok: false, reason: "budget", left };
     const key = `v:${visitor}`;
-    const used = (await this.ctx.storage.get<Used>(key)) ?? { worksheet: 0, mark: 0 };
-    used[kind] += 1;
+    const used = { ...NONE, ...(await this.ctx.storage.get<Used>(key)) };
+    used[kind] = (used[kind] ?? 0) + 1;
     await this.ctx.storage.put(key, used);
     await this.ctx.storage.put("spent", spent + cost);
     left[kind] -= 1;
@@ -79,8 +86,8 @@ export class Limiter extends DurableObject {
     if (refund) {
       const key = `v:${visitor}`;
       const used = await this.ctx.storage.get<Used>(key);
-      if (used && used[kind] > 0) {
-        used[kind] -= 1;
+      if (used && (used[kind] ?? 0) > 0) {
+        used[kind] = (used[kind] ?? 0) - 1;
         await this.ctx.storage.put(key, used);
       }
     }
@@ -107,12 +114,8 @@ export class MemoryLedger {
   }
 
   private left(visitor: string, caps: Caps, probe: number): Left {
-    const used = this.used.get(visitor) ?? { worksheet: 0, mark: 0 };
-    return {
-      worksheet: Math.max(0, caps.worksheet - used.worksheet),
-      mark: Math.max(0, caps.mark - used.mark),
-      open: this.spent + probe <= caps.budgetUsd,
-    };
+    const used = this.used.get(visitor) ?? NONE;
+    return { ...remaining(caps, used), open: this.spent + probe <= caps.budgetUsd };
   }
 
   async status(visitor: string, caps: Caps, probe: number): Promise<Left> {
@@ -125,8 +128,8 @@ export class MemoryLedger {
     const left = this.left(visitor, caps, floor);
     if (left[kind] <= 0) return { ok: false, reason: "visitor", left };
     if (this.spent + cost > caps.budgetUsd) return { ok: false, reason: "budget", left };
-    const used = this.used.get(visitor) ?? { worksheet: 0, mark: 0 };
-    used[kind] += 1;
+    const used = { ...NONE, ...this.used.get(visitor) };
+    used[kind] = (used[kind] ?? 0) + 1;
     this.used.set(visitor, used);
     this.spent += cost;
     left[kind] -= 1;
@@ -138,6 +141,6 @@ export class MemoryLedger {
     if (this.today() !== day) return;
     this.spent = Math.max(0, this.spent - reserved + actual);
     const used = this.used.get(visitor);
-    if (refund && used && used[kind] > 0) used[kind] -= 1;
+    if (refund && used && (used[kind] ?? 0) > 0) used[kind] = (used[kind] ?? 0) - 1;
   }
 }

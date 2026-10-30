@@ -23,9 +23,10 @@
   // Keep the demos' own one-line cost logs, but not Cloudflare's per-request logs, which hold more
   // about each visitor than the page promises.
   "observability": { "enabled": true, "logs": { "invocation_logs": false } },
+  // Deploys from GitHub would otherwise delete variables added in the dashboard.
+  "keep_vars": true,
   "vars": {
-    // "off" turns both demos off without a redeploy of the page.
-    "DEMOS": "on",
+    // To switch the demos off, add a variable DEMOS = off in the Worker's dashboard settings.
     "WORKSHEET_MODEL": "claude-sonnet-5-5",
     "MARK_MODEL": "claude-sonnet-5-5",
     // The most the demos can spend in a day, across all visitors, in US dollars.
@@ -33,6 +34,7 @@
     // Demos per visitor (per IP address) per day.
     "WORKSHEETS_PER_VISITOR": "3",
     "MARKS_PER_VISITOR": "8",
+    "PAGES_PER_VISITOR": "3",
     // Turnstile's site key is public. Its secret goes in with `wrangler secret put TURNSTILE_SECRET`.
     "TURNSTILE_SITE_KEY": ""
   }

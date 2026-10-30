@@ -1,13 +1,18 @@
 # SaaSpocalypse Now
 
 The website at [saaspocalypsenow.ai](https://saaspocalypsenow.ai): the case that the ed tech subscription
-is finished, dressed as a 1970s war-movie poster, with two live demos of Paper Loop that run on your Claude
-API key:
+is finished, dressed as a 1970s war-movie poster, with three live demos of Paper Loop that run on your
+Claude API key:
 
 - **Make a worksheet:** a visitor gives a topic and a grade, and Claude writes a one-page worksheet with
   an answer key and, if asked, a version in a home language. It streams onto the page as Claude writes it.
 - **Mark an answer:** a visitor writes an answer with a mouse or finger, or photographs one on paper, and
   Claude reads it and comments the way Paper Loop does.
+- **Mark a whole page:** a visitor prints one of the sample worksheets, fills it in, and uploads a phone
+  photo or a scan (a PDF from the iPhone's scanner works; the browser turns its first page into a picture
+  with pdf.js, in `public/vendor/pdfjs`). Claude reads which sample it is from the page, then marks every
+  answer against that sample's key, from `src/samples.json`, which `devtools/samples.py` writes. Then the
+  page shows how to install Paper Loop and say "Set up Paper Loop for my class."
 
 It's one Cloudflare Worker that serves the page from `public/` and the demos from `src/`. Nothing is
 stored except a daily count of demos per visitor and the day's spending. Visitors are counted by a salted
@@ -54,16 +59,20 @@ Measured on October 29, 2026 with Claude Sonnet 5.5:
 | Demo | About |
 | --- | --- |
 | Mark one answer | $0.006 |
+| Mark a whole sample page | $0.02 |
 | Make a worksheet | $0.015 |
 | Make a worksheet with a home-language version | $0.025 |
 
 Three limits keep the bill small. Change any of them in `wrangler.jsonc` and deploy again:
 
 - `DAILY_BUDGET_USD` (default **$5**): the most all visitors together can spend in a day. Each request
-  reserves its worst case first ($0.09 for a worksheet, $0.03 for a marking), so the cap holds even when
+  reserves its worst case first ($0.09 for a worksheet, $0.03 for one answer, $0.07 for a page), so the
+  cap holds even when
   many arrive at once. When the day's budget is gone, the page says so until midnight UTC.
-- `WORKSHEETS_PER_VISITOR` (3) and `MARKS_PER_VISITOR` (8): per IP address, per day.
-- `DEMOS`: set to `"off"` to turn both demos off.
+- `WORKSHEETS_PER_VISITOR` (3), `MARKS_PER_VISITOR` (8) and `PAGES_PER_VISITOR` (3): per IP address, per
+  day.
+- To switch the demos off without a deploy, add a variable `DEMOS` with the value `off` under the
+  Worker's **Settings → Variables and Secrets**; delete it to switch them back on.
 
 At $5 a day the worst case is about $150 a month. Also set a spend limit on the API key itself (step 2
 below), so a mistake here can't run up a bill.
@@ -112,7 +121,7 @@ You need a free Cloudflare account and Node.js. Commands run from this `site` fo
    ```
 
    Wrangler sets up both addresses and their certificates. It also prints a backup address, something
-   like `https://paperloop.<your-account>.workers.dev`. Open the site and try both demos.
+   like `https://paperloop.<your-account>.workers.dev`. Open the site and try the demos.
 
 ## A bot check (optional, recommended once it's shared widely)
 
@@ -189,8 +198,9 @@ The site runs at <http://localhost:8787>, with the same limits, and spends real 
 - **Error 1102, or "exceeded CPU" in the logs:** the free Workers plan allows 10 ms of computing per
   request. Waiting for Claude doesn't count, but a large photo might. The $5-a-month Workers Paid plan
   raises the limit.
-- **"The demos are switched off for now":** `DEMOS` is `"off"`, or the `ANTHROPIC_API_KEY` secret is
-  missing.
+- **"The demos are switched off for now":** the `ANTHROPIC_API_KEY` secret is missing (add it under the
+  Worker's **Settings → Variables and Secrets**, as type **Secret**), or a `DEMOS` variable is set to
+  `off`.
 - **Models:** `WORKSHEET_MODEL` and `MARK_MODEL` in `wrangler.jsonc`. If you switch to a model the
   Worker doesn't have a price for, it budgets as if every token cost the most of any model, so the daily
   cap only gets stricter. Prices live in `PRICES` in `src/worker.ts`.
