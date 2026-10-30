@@ -1,6 +1,6 @@
 ---
 name: paper-loop
-description: "Turns the school copier into a feedback machine for any subject, grades 2-12. Makes printable worksheets that can be marked from a scan (passages, written answers and essays, multiple choice, tables, show-your-work math, labeled diagrams, graphs, drawings, chemical equations, music), in versions with scaffolds, IEP accommodations, or home-language translations, a different copy for each student, or enrichment from free sources like Wikipedia. Plans lessons with a Word plan and PowerPoint slides. Makes group work where students teach each other (labs, jigsaws, peer tutoring, with role cards) and paper review games. Marks scanned class sets: reads every answer, writes a comment beside it, and returns marked pages to hand back, then a go-over deck, practice sheets, a progress dashboard, and family pages. Use when a teacher wants a worksheet, lesson, slides, differentiated copies, group activity, review game, or progress report, or has a scan of completed Paper Loop worksheets to mark or grade."
+description: "Turns the school copier into a feedback machine for any subject, grades 2-12. Makes printable worksheets, marked from a scan (passages, essays, multiple choice, tables, show-your-work math, labeled diagrams, graphs, drawings, equations, music), in versions with scaffolds, IEP accommodations, or home-language translations, a different copy for each student, or enrichment from free sources like Wikipedia. Plans lessons with a Word plan and PowerPoint slides. Makes group work where students teach each other (labs, jigsaws, peer tutoring, with role cards) and paper review games. Marks scanned class sets: reads every answer, writes a comment beside it, and returns marked pages to hand back, then a go-over deck, practice sheets, a progress dashboard, and family pages. Use when a teacher wants a worksheet, lesson, slides, differentiated copies, group activity, review game, or progress report, has a scan of completed Paper Loop worksheets or a filled-in Paper Loop sample to mark, or wants to get set up."
 ---
 
 # Paper Loop
@@ -15,6 +15,9 @@ They need numpy, scipy, Pillow, pypdfium2, and reportlab, and python-pptx for sl
 sandboxes include. If an import fails, `pip install` the missing one. `PL source` needs the internet; if the
 sandbox can't reach the site, use your web tool and save the text yourself. `PL preview` puts page images in a
 `preview` folder beside the file, for you to check; delete those folders before you give the teacher the files.
+
+If the teacher's Paper Loop folder (or their Claude Project) has a `setup.md`, read it first: it holds their
+classes, folders, ID digits, and preferences ("Getting started").
 
 ## Privacy: always
 
@@ -248,18 +251,53 @@ sample (such as `sample-ratios-gr6`):
 1. Rebuild it: run `PL make "<this skill's folder>/references/samples/<sample id>.json" --out "<folder>/<sample
    id>"`. The `<folder>` is the teacher's worksheets folder, or a "Paper Loop samples" folder. This makes
    the same sheet and its answer key.
-2. Mark the photo as in "Marking a scan", with that folder as the assignment. A phone photo works when all
-   four corner squares are in it. Any number in the ID boxes will do.
+2. Mark the photo as in "Marking a scan", with that folder as the assignment. A phone photo or an iPhone
+   scan works when all four corner squares are in it; a scan saved as a PDF goes to `prepare` like any
+   scan. Any number in the ID boxes will do.
 3. Give the teacher the marked page, and in a few lines say what Paper Loop did at each step:
    - it lined the page up;
    - it read the circled letters itself;
    - you read the rest and wrote the comments;
    - it flagged anything you were unsure of.
-
-   Then offer to make a worksheet for their own class.
+4. Then offer to set Paper Loop up for their own class, and if they say yes, go straight into "Getting
+   started".
 
 If the sample id isn't in `references/samples/`, it comes from a newer version of the plugin: say so, and
 offer to make a worksheet like it instead.
+
+## Getting started
+
+After a sample, or when a teacher says "set up Paper Loop", "get me started", or similar. Ask one thing at a
+time, skip anything they've already told you, and keep each step short: the point is a real worksheet in
+their hands within a few minutes.
+
+1. **Their classes.** What they teach (subject and grade), how many classes or periods, and about how many
+   students in each.
+2. **Class ID numbers, no names.** Each student writes a number, never a name. If the class already has
+   numbers, ask the teacher to type or paste just the numbers. Otherwise number them for the teacher:
+   0001, 0002 and so on (01, 02 for grades 2-3), with a different range for each class (0101-0130 for
+   period 1, 0201-0230 for period 2) so no two students share one. Tell the teacher to write each student's
+   number beside their name on their own list, and to keep that list out of Claude. Write each class's
+   `roster.csv` (a column named `id`), which marking uses to check every ID it reads.
+3. **A folder for each class**, named by the teacher ("Period 3 Math"), inside a "Paper Loop" folder, with
+   that class's `roster.csv` in it. Worksheets for the class go in its folder, and so does each marking.
+4. **`setup.md`** in the Paper Loop folder: their classes and folders, grades, subjects, ID digits, and their
+   preferences. Ask about these, or offer the defaults: comments that hint rather than give the answer, no
+   score printed, comments in English. Whenever `setup.md` is there, read it before anything else and use
+   its defaults without asking again.
+   - In Cowork or Claude Code, write these files into the teacher's own folder.
+   - In a chat, the files don't last after the chat ends. Give the teacher `setup.md` and the rosters to
+     keep, and suggest a Claude Project for their classes, with `setup.md` added to the project's files, so
+     every chat in it starts from their setup.
+5. **Their first real worksheet.** Ask what they're teaching this week, then make it for one class, as in
+   "Making a worksheet", into that class's folder.
+6. **How the loop runs from here**, in a few lines:
+   - Print the worksheet. Students write their class number in the ID boxes.
+   - Scan the stack on the school copier as one PDF (black and white or grayscale, 300 dpi, both sides if
+     the worksheet is two-sided), or photograph or scan each page with a phone. Most copiers can send the
+     scan to email or Google Drive.
+   - Share the scan with Claude and say "Mark this".
+   - Afterward, ask for go-over slides, a practice sheet for each student, or "How is my class doing?".
 
 ## Progress across worksheets
 

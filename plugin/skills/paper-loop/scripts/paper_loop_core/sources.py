@@ -142,7 +142,7 @@ def level_problems(defn: dict) -> list[str]:
 
 # --- Getting a text ----------------------------------------------------------------------------------
 
-AGENT = "PaperLoop/0.5 (classroom worksheets; https://github.com/badlerSI/paperloop) python-urllib"
+AGENT = "PaperLoop/0.6 (classroom worksheets; https://github.com/badlerSI/paperloop) python-urllib"
 
 
 def _get(url: str, tries: int = 3) -> bytes:

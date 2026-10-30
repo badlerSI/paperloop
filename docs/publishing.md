@@ -15,34 +15,61 @@ No single path reaches every Claude user. Three together come close.
 Districts on Claude for Teachers' Enterprise offering can push it to every teacher: an owner syncs the repo
 under **Organization settings → Plugins & skills** and sets it to install by default.
 
-## Done in the repo
+## Done
 
 - `plugin/README.md`: what it does, six example prompts, everything it runs and every site it contacts.
   The directory blocks a plugin without a README of at least 40 words in the plugin folder.
 - `PRIVACY.md`: the privacy policy the directory requires. Paper Loop collects nothing.
 - `SECURITY.md`: how to report a vulnerability privately, which the directory terms require.
-- `plugin.json`: version 0.5.0, with `homepage` and `repository`.
+- `plugin.json`: version 0.6.0, with `homepage` and `repository`.
 - `devtools/release.py` builds `dist/paper-loop.zip` for the releases page.
 - `tests/test_release.py` checks the zip, the README rules, file sizes, and that every site the scripts
   reach is named in the README and the privacy policy.
+- October 30, 2026: the repository was made public, private vulnerability reporting was turned on, and
+  release `v0.6.0` was published with `paper-loop.zip` attached. The website, saaspocalypsenow.ai, deploys
+  from `site/` on every push to `day-3`.
 
 ## Steps only the owner can take
 
-1. **Make the repository public** when ready: `badlerSI/paperloop` was created private on October 28. The
-   README, the plugin README, the samples' QR codes, and the scripts' user agent already point there. In its
-   settings, turn on private vulnerability reporting (**Security → Private vulnerability reporting**).
-2. **Make a release:** tag `v0.5.0`, run `devtools/release.py`, and attach `dist/paper-loop.zip`.
-3. **Try both installs** before telling anyone:
-   - the marketplace in Cowork on your Claude for Teachers account;
-   - the zip on a Free account.
+1. **Try both installs** before telling anyone:
+   - the marketplace in Cowork on your Claude for Teachers account (**Customize → Plugins → Add
+     marketplace** → `badlerSI/paperloop`);
+   - the zip on a Free account (**Customize → Skills** → upload `paper-loop.zip`, with code execution on).
 
-   On each, make a worksheet, mark a scan, and run `PL source` to see whether the sandbox reaches
-   Wikipedia.
-4. **Submit to the directory** at claude.ai/directory/manage: **Submit new → Plugin bundle**, plugin path
+   On each, print a sample from the website, fill it in, show Claude a phone photo, and say "Set up Paper
+   Loop for my class." Then make a worksheet, mark a scan, and run `PL source` to see whether the sandbox
+   reaches Wikipedia.
+2. **Submit to the directory** at claude.ai/directory/manage: **Submit new → Plugin bundle**, plugin path
    `plugin`, then **Validate**. The data-handling answers and the four compliance acknowledgements are a
-   legal attestation in your name, and the form asks for a contact email of your choosing.
-5. **Optional:** open an issue on `anthropics/k12-teacher-skills`, the skills built into Claude for
+   legal attestation in your name, and the form asks for a contact email of your choosing. Answers to
+   paste are below.
+3. **Optional:** open an issue on `anthropics/k12-teacher-skills`, the skills built into Claude for
    Teachers, to ask whether it takes contributions. Contributions there need a CLA.
+
+## Directory submission, ready to paste
+
+Check each answer against the form as it is on the day; these follow the requirements as read on October
+28, 2026.
+
+- **Repository:** `https://github.com/badlerSI/paperloop`, plugin path `plugin`.
+- **Name:** Paper Loop.
+- **Description:** the `description` in `plugin/.claude-plugin/plugin.json`.
+- **Example prompts:**
+  1. "Make me a one-page worksheet on the water cycle for 6th grade: two multiple choice, a short answer, a
+     diagram to label, and one to draw. I need a large-print version and a Spanish version."
+  2. "Here's the scan of the class set. Mark it."
+  3. "Make slides to go over what they missed, and a practice sheet for everyone."
+- **Privacy policy:** `https://github.com/badlerSI/paperloop/blob/HEAD/PRIVACY.md`.
+- **Security contact:** private vulnerability reporting on the repository's Security tab.
+- **What data it collects:** none. Scans, worksheets, and everything Paper Loop makes stay in the
+  teacher's Claude workspace. Students are known only by class ID numbers; Paper Loop never asks for a
+  name.
+- **What it connects to:** only the Wikimedia Foundation's API (`en.wikipedia.org`,
+  `simple.wikipedia.org`, `en.wikisource.org`), and only when the teacher asks for a reading; the request
+  carries an article title and a user agent naming Paper Loop. See "Readings from sites you don't control"
+  below before you answer the domains question.
+- **What it runs:** Python scripts in Claude's sandbox (numpy, scipy, Pillow, pypdfium2, reportlab,
+  python-pptx). It installs nothing and starts no servers.
 
 ## Decisions before submitting
 

@@ -4,7 +4,9 @@ Print worksheets, scan the class stack on the school copier, and get marked-up p
 
 It comes two ways: a Claude Cowork plugin, where Claude marks the work within a teacher's Claude account, and a command-line version that calls the API with your own key. The command-line version is the test bench for accuracy.
 
-Status: v0.5. [SPEC.md](SPEC.md) is the plan, [NOTES.md](NOTES.md) is where things stand.
+Status: v0.6. [SPEC.md](SPEC.md) is the plan, [NOTES.md](NOTES.md) is where things stand.
+
+**Try it first at [saaspocalypsenow.ai](https://saaspocalypsenow.ai):** make a worksheet, or print a sample, fill it in, and have the whole page marked from a phone photo. Then show Claude the same page and say "Set up Paper Loop for my class."
 
 ## For teachers: use it inside Claude, no setup
 
