@@ -46,7 +46,9 @@ function showQuota() {
   const c = state.config;
   if (!c) return;
   if (!c.demos) {
-    q.textContent = "The demos are switched off for now. Everything else on the page still works.";
+    q.textContent = c.offline
+      ? "The live demos aren't running on this copy of the site. Everything else on the page works."
+      : "The demos are switched off for now. Everything else on the page still works.";
     return;
   }
   const l = state.left;
@@ -100,7 +102,8 @@ async function loadConfig() {
     if (!res.ok) throw new Error(String(res.status));
     state.config = await res.json();
   } catch {
-    state.config = { demos: false, left: { worksheet: 0, mark: 0, open: false }, questions: [], languages: [] };
+    // No demo server: the page was uploaded as plain files.
+    state.config = { demos: false, offline: true, left: { worksheet: 0, mark: 0, open: false }, questions: [], languages: [] };
   }
   state.left = state.config.left;
   for (const lang of state.config.languages) $("#language").append(el("option", { value: lang }, lang));

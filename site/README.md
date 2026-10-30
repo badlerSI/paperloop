@@ -13,6 +13,22 @@ It's one Cloudflare Worker that serves the page from `public/` and the demos fro
 stored except a daily count of demos per visitor and the day's spending. Visitors are counted by a salted
 hash of their IP address, and those hashes are wiped at midnight UTC.
 
+## The quick way
+
+**With the live demos:** double-click `deploy.command` in this folder (or in the unzipped
+`saaspocalypsenow-full.zip`). It installs what it needs, opens your browser to sign in to Cloudflare,
+publishes the site, and asks once for the website's Claude API key (make one first: step 2 below). If
+saaspocalypsenow.ai isn't on your Cloudflare account yet, it publishes to a `workers.dev` address
+instead and tells you. Double-click it again to publish any change. It needs Node.js
+([nodejs.org](https://nodejs.org), the LTS version).
+
+**Without the demos:** in the Cloudflare dashboard, open **Workers & Pages → Create → Pages → Upload
+assets**, name the project, and drop in `saaspocalypsenow-upload.zip`. The page, the poster and the score
+all work; the demo area says the live demos aren't running. Then add the domain under the project's
+**Custom domains** tab.
+
+`tools/package.sh` rebuilds both zips into the project's `dist` folder.
+
 ## What it costs
 
 Measured on October 29, 2026 with Claude Sonnet 5.5:
@@ -174,3 +190,5 @@ The site runs at <http://localhost:8787>, with the same limits, and spends real 
 | `public/img/poster.svg`, `jungle.svg`, `grit.png`, `og.png` | The poster art and the share image |
 | `public/audio/valkyries.mp3` | The score |
 | `tools/make_art.py`, `tools/og.html`, `tools/make_og.sh` | What draws the art and renders the share image |
+| `deploy.command` | Double-click to publish the whole site |
+| `tools/package.sh` | Builds the full and upload-only zips |
