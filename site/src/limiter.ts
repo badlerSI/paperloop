@@ -86,3 +86,58 @@ export class Limiter extends DurableObject {
     }
   }
 }
+
+// The same rules without a Durable Object, for a plain upload to Cloudflare Pages, which can't create
+// one. Counts live in this server's memory, so they're approximate: each Cloudflare location keeps its
+// own, and a fresh copy of the server starts from zero. There, the API key's own spend limit (or its
+// credit balance) is the real cap.
+export class MemoryLedger {
+  private day = "";
+  private spent = 0;
+  private used = new Map<string, Used>();
+
+  private today(): string {
+    const day = new Date().toISOString().slice(0, 10);
+    if (day !== this.day) {
+      this.day = day;
+      this.spent = 0;
+      this.used.clear();
+    }
+    return day;
+  }
+
+  private left(visitor: string, caps: Caps, probe: number): Left {
+    const used = this.used.get(visitor) ?? { worksheet: 0, mark: 0 };
+    return {
+      worksheet: Math.max(0, caps.worksheet - used.worksheet),
+      mark: Math.max(0, caps.mark - used.mark),
+      open: this.spent + probe <= caps.budgetUsd,
+    };
+  }
+
+  async status(visitor: string, caps: Caps, probe: number): Promise<Left> {
+    this.today();
+    return this.left(visitor, caps, probe);
+  }
+
+  async reserve(visitor: string, kind: Kind, cost: number, caps: Caps, floor: number): Promise<Reservation> {
+    const day = this.today();
+    const left = this.left(visitor, caps, floor);
+    if (left[kind] <= 0) return { ok: false, reason: "visitor", left };
+    if (this.spent + cost > caps.budgetUsd) return { ok: false, reason: "budget", left };
+    const used = this.used.get(visitor) ?? { worksheet: 0, mark: 0 };
+    used[kind] += 1;
+    this.used.set(visitor, used);
+    this.spent += cost;
+    left[kind] -= 1;
+    left.open = this.spent + floor <= caps.budgetUsd;
+    return { ok: true, day, left };
+  }
+
+  async settle(visitor: string, kind: Kind, day: string, reserved: number, actual: number, refund: boolean): Promise<void> {
+    if (this.today() !== day) return;
+    this.spent = Math.max(0, this.spent - reserved + actual);
+    const used = this.used.get(visitor);
+    if (refund && used && used[kind] > 0) used[kind] -= 1;
+  }
+}

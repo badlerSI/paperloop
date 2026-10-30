@@ -15,17 +15,35 @@ hash of their IP address, and those hashes are wiped at midnight UTC.
 
 ## The quick way
 
-**With the live demos:** double-click `deploy.command` in this folder (or in the unzipped
-`saaspocalypsenow-full.zip`). It installs what it needs, opens your browser to sign in to Cloudflare,
-publishes the site, and asks once for the website's Claude API key (make one first: step 2 below). If
-saaspocalypsenow.ai isn't on your Cloudflare account yet, it publishes to a `workers.dev` address
-instead and tells you. Double-click it again to publish any change. It needs Node.js
-([nodejs.org](https://nodejs.org), the LTS version).
+**Upload it, demos included.** No command line needed.
 
-**Without the demos:** in the Cloudflare dashboard, open **Workers & Pages → Create → Pages → Upload
-assets**, name the project, and drop in `saaspocalypsenow-upload.zip`. The page, the poster and the score
-all work; the demo area says the live demos aren't running. Then add the domain under the project's
-**Custom domains** tab.
+1. In the Cloudflare dashboard, open **Workers & Pages → Create → Pages → Upload assets**, name the
+   project `saaspocalypsenow`, drop in `saaspocalypsenow-upload.zip` (zipped, as it is), and deploy. The
+   page works right away; the demo area says the demos are switched off until the next step.
+2. In the project, open **Settings → Variables and Secrets** and add one, for Production: type
+   **Secret**, name `ANTHROPIC_API_KEY`, value your Claude API key. Save.
+3. Settings only reach new deployments, so open **Deployments → Create deployment** and drop in the same
+   zip again. The demos now work.
+4. Add the domain under **Custom domains**: `saaspocalypsenow.ai`.
+
+The zip carries the demo server as `_worker.js`. A plain upload can't create the Durable Object that
+holds the strict daily limits, so on this path the per-visitor and daily caps are kept in each server's
+memory and are only approximate. The real cap is the key: its credit balance, or a workspace spend limit
+in the Claude Console. If **auto-reload** is on in the Console's billing settings, turn it off so the
+demos stop when the credit runs out instead of buying more.
+
+**From GitHub, with strict limits and a redeploy on every push:** in the Cloudflare dashboard, open the
+`saaspocalypsenow` Worker (or create one with that name; it must match `name` in `wrangler.jsonc`), go to
+**Settings → Builds → Connect**, pick `badlerSI/paperloop`, set the root directory to `site` and the
+production branch to `day-3`, and save. Then add the `ANTHROPIC_API_KEY` secret under **Settings →
+Variables and Secrets**. The first build attaches saaspocalypsenow.ai and www, so remove the domain from
+any other project first.
+
+**From your computer, with strict limits:** double-click `deploy.command` in this folder (or in the
+unzipped `saaspocalypsenow-full.zip`). It installs what it needs, opens your browser to sign in to
+Cloudflare, publishes the site, and asks once for the API key. If saaspocalypsenow.ai isn't on your
+Cloudflare account yet, it publishes to a `workers.dev` address instead and tells you. It needs Node.js
+([nodejs.org](https://nodejs.org), the LTS version).
 
 `tools/package.sh` rebuilds both zips into the project's `dist` folder.
 
@@ -150,8 +168,8 @@ The site runs at <http://localhost:8787>, with the same limits, and spends real 
   website plays, so check that your license covers streaming on a public site, and put the artist's
   credit in the footer if the license asks for one.
 
-  The MP3 is gitignored, so it isn't published with the code. Deploys upload it from this folder, so
-  deploy from the computer that has it, or make it again with the command above.
+  The MP3 is in the repository, so a GitHub deploy includes it, and it becomes public when the
+  repository does.
 
 ## Before you share the link
 

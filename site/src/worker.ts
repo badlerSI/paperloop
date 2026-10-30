@@ -1,21 +1,23 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
-import { Limiter, type Caps, type Kind, type Left } from "./limiter";
+import { Limiter, MemoryLedger, type Caps, type Kind, type Left, type Reservation } from "./limiter";
 import { LANGUAGES, MARK_SYSTEM, MarkSchema, QUESTIONS, WORKSHEET_SYSTEM, WorksheetSchema } from "./prompts";
 
 export { Limiter };
 
 interface Env {
   ASSETS: Fetcher;
-  LIMITER: DurableObjectNamespace<Limiter>;
+  // Missing on a plain upload to Cloudflare Pages; see MemoryLedger.
+  LIMITER?: DurableObjectNamespace<Limiter>;
   ANTHROPIC_API_KEY?: string;
-  DEMOS: string;
-  WORKSHEET_MODEL: string;
-  MARK_MODEL: string;
-  DAILY_BUDGET_USD: string;
-  WORKSHEETS_PER_VISITOR: string;
-  MARKS_PER_VISITOR: string;
+  // Set in wrangler.jsonc. A plain upload to Cloudflare Pages has none of them, so each has a default.
+  DEMOS?: string;
+  WORKSHEET_MODEL?: string;
+  MARK_MODEL?: string;
+  DAILY_BUDGET_USD?: string;
+  WORKSHEETS_PER_VISITOR?: string;
+  MARKS_PER_VISITOR?: string;
   TURNSTILE_SITE_KEY?: string;
   TURNSTILE_SECRET?: string;
   VISITOR_SALT?: string;
@@ -48,6 +50,12 @@ function jsonFormat(schema: z.ZodType) {
 const WORKSHEET_FORMAT = jsonFormat(WorksheetSchema);
 const MARK_FORMAT = jsonFormat(MarkSchema);
 
+const DEFAULT_MODEL = "claude-sonnet-5-5";
+
+function models(env: Env): { worksheet: string; mark: string } {
+  return { worksheet: env.WORKSHEET_MODEL || DEFAULT_MODEL, mark: env.MARK_MODEL || DEFAULT_MODEL };
+}
+
 function price(model: string): [number, number] {
   return PRICES[model] ?? [10, 50];
 }
@@ -72,7 +80,7 @@ function logUsage(demo: Kind, model: string, usage: Anthropic.Usage, usd: number
 }
 
 function caps(env: Env): Caps {
-  const num = (v: string, d: number) => (Number.isFinite(Number(v)) && v !== "" ? Number(v) : d);
+  const num = (v: string | undefined, d: number) => (v && Number.isFinite(Number(v)) ? Number(v) : d);
   return {
     worksheet: num(env.WORKSHEETS_PER_VISITOR, 3),
     mark: num(env.MARKS_PER_VISITOR, 8),
@@ -136,8 +144,17 @@ async function human(token: string | undefined, req: Request, env: Env): Promise
   return out.success === true;
 }
 
-function limiter(env: Env) {
-  return env.LIMITER.get(env.LIMITER.idFromName("demos"));
+type Ledger = {
+  status(visitor: string, caps: Caps, probe: number): Promise<Left>;
+  reserve(visitor: string, kind: Kind, cost: number, caps: Caps, floor: number): Promise<Reservation>;
+  settle(visitor: string, kind: Kind, day: string, reserved: number, actual: number, refund: boolean): Promise<void>;
+};
+
+const memory = new MemoryLedger();
+
+function limiter(env: Env): Ledger {
+  if (!env.LIMITER) return memory;
+  return env.LIMITER.get(env.LIMITER.idFromName("demos")) as unknown as Ledger;
 }
 
 function demosOn(env: Env): boolean {
@@ -329,7 +346,7 @@ function refused(reason: "visitor" | "budget", kind: Kind, left: Left): Response
 async function config(req: Request, env: Env): Promise<Response> {
   const on = demosOn(env);
   const left = on
-    ? await limiter(env).status(await visitor(req, env), caps(env), worstCase("mark", env.MARK_MODEL))
+    ? await limiter(env).status(await visitor(req, env), caps(env), worstCase("mark", models(env).mark))
     : { worksheet: 0, mark: 0, open: false };
   return json({
     demos: on,
@@ -346,10 +363,10 @@ async function worksheet(req: Request, env: Env, ctx: ExecutionContext): Promise
   const { topic, grade, language, token } = parsed.data;
   if (!(await human(token, req, env))) return sorry("Please finish the check box first.", 403);
 
-  const model = env.WORKSHEET_MODEL;
+  const model = models(env).worksheet;
   const who = await visitor(req, env);
   const reserved = worstCase("worksheet", model);
-  const booking = await limiter(env).reserve(who, "worksheet", reserved, caps(env), worstCase("mark", env.MARK_MODEL));
+  const booking = await limiter(env).reserve(who, "worksheet", reserved, caps(env), worstCase("mark", models(env).mark));
   if (!booking.ok) return refused(booking.reason, "worksheet", booking.left);
 
   const ask = [
@@ -457,7 +474,7 @@ async function mark(req: Request, env: Env): Promise<Response> {
   }
   if (!(await human(token, req, env))) return sorry("Please finish the check box first.", 403);
 
-  const model = env.MARK_MODEL;
+  const model = models(env).mark;
   const who = await visitor(req, env);
   const reserved = worstCase("mark", model);
   const booking = await limiter(env).reserve(who, "mark", reserved, caps(env), reserved);
@@ -525,10 +542,25 @@ async function api(req: Request, env: Env, ctx: ExecutionContext, url: URL): Pro
   return route(req, env, ctx);
 }
 
+// The same as public/_headers, which Cloudflare Pages doesn't apply to pages this Worker serves.
+const PAGE_HEADERS: Record<string, string> = {
+  "Content-Security-Policy":
+    "default-src 'self'; script-src 'self' https://challenges.cloudflare.com; frame-src https://challenges.cloudflare.com; " +
+    "img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; font-src 'self'; connect-src 'self'; base-uri 'none'; " +
+    "form-action 'self'; frame-ancestors 'none'; object-src 'none'",
+  "X-Content-Type-Options": "nosniff",
+  "Referrer-Policy": "strict-origin-when-cross-origin",
+  "Permissions-Policy": "camera=(self), microphone=(), geolocation=(), interest-cohort=()",
+};
+
 // Link previews need absolute URLs, and the page doesn't know which domain it will live on.
 async function page(req: Request, env: Env, url: URL): Promise<Response> {
   const res = await env.ASSETS.fetch(req);
   if (!res.headers.get("content-type")?.includes("text/html")) return res;
+  const out = new Response(res.body, res);
+  for (const [name, value] of Object.entries(PAGE_HEADERS)) {
+    if (!out.headers.has(name)) out.headers.set(name, value);
+  }
   return new HTMLRewriter()
     .on('meta[property="og:image"]', {
       element: (e) => {
@@ -540,7 +572,7 @@ async function page(req: Request, env: Env, url: URL): Promise<Response> {
         e.setAttribute("content", new URL("/", url.origin).href);
       },
     })
-    .transform(res);
+    .transform(out);
 }
 
 export default {
