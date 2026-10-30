@@ -101,7 +101,8 @@ don't list them in `materials` too.
 
 ## Marking a scan
 
-You need the scan PDF and the assignment folder `make` wrote. Use a new work folder for each scan, such as
+You need the scan PDF and the assignment folder `make` wrote. If the folder is gone (a new chat) but the
+worksheet's JSON is there, run `PL make` on the JSON again first: it makes the same sheet and key. Use a new work folder for each scan, such as
 `<assignment folder>/marking-<date>`. Folder names often have spaces or apostrophes, so put every path in
 double quotes. If you lose track at any point, `PL status "<work>"` says what's next.
 
@@ -274,21 +275,27 @@ their hands within a few minutes.
 1. **Their classes.** What they teach (subject and grade), how many classes or periods, and about how many
    students in each.
 2. **Class ID numbers, no names.** Each student writes a number, never a name. If the class already has
-   numbers, ask the teacher to type or paste just the numbers. Otherwise number them for the teacher:
-   0001, 0002 and so on (01, 02 for grades 2-3), with a different range for each class (0101-0130 for
-   period 1, 0201-0230 for period 2) so no two students share one. Tell the teacher to write each student's
-   number beside their name on their own list, and to keep that list out of Claude. Write each class's
-   `roster.csv` (a column named `id`), which marking uses to check every ID it reads.
+   numbers, ask the teacher to type or paste just the numbers. Otherwise make them, with a few lines of
+   Python rather than by hand, so that any two differ in at least two digits; then a roster can rescue a
+   smudged digit when marking. With 4 digits: the class (1-9), the student's place in the class (01-99),
+   and a last digit that's the sum of the first three, mod 10. Period 1's first three students are 1012,
+   1023 and 1034; period 2's are 2013, 2024 and 2035. In grades 2-3, IDs have 2 digits, so number them 01,
+   02 and so on, a separate list for each class. Tell the teacher to write each student's number beside
+   their name on their own list, and to keep that list out of Claude. Write each class's `roster.csv` (a
+   column named `id`), which marking uses to check every ID it reads.
 3. **A folder for each class**, named by the teacher ("Period 3 Math"), inside a "Paper Loop" folder, with
    that class's `roster.csv` in it. Worksheets for the class go in its folder, and so does each marking.
 4. **`setup.md`** in the Paper Loop folder: their classes and folders, grades, subjects, ID digits, and their
    preferences. Ask about these, or offer the defaults: comments that hint rather than give the answer, no
    score printed, comments in English. Whenever `setup.md` is there, read it before anything else and use
-   its defaults without asking again.
+   its defaults without asking again. It holds no student names, and nothing about any one student (an IEP,
+   learning English); "Privacy: always" applies to it like everything else.
    - In Cowork or Claude Code, write these files into the teacher's own folder.
-   - In a chat, the files don't last after the chat ends. Give the teacher `setup.md` and the rosters to
-     keep, and suggest a Claude Project for their classes, with `setup.md` added to the project's files, so
-     every chat in it starts from their setup.
+   - In a chat, the files don't last after the chat ends. Give the teacher `setup.md`, the rosters, and
+     each worksheet's JSON (the file `make` starts from) to keep, and suggest a Claude Project for their
+     classes with those files added, so every chat in it starts from their setup. Marking needs the
+     worksheet's folder: in a new chat, rebuild it from the JSON with `PL make` first, which makes the
+     same sheet and key.
 5. **Their first real worksheet.** Ask what they're teaching this week, then make it for one class, as in
    "Making a worksheet", into that class's folder.
 6. **How the loop runs from here**, in a few lines:
