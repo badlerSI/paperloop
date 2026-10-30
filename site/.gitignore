@@ -1,5 +1,3 @@
 node_modules/
 .wrangler/
 .dev.vars
-# The licensed score: deploys read it from disk, but it stays out of the public repo.
-public/audio/
