@@ -1,0 +1,33 @@
+{
+  // Paper Loop's website: the pitch, plus two demos that run on your Claude API key.
+  // Deploy steps are in README.md.
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "paperloop",
+  "main": "src/worker.ts",
+  "compatibility_date": "2026-10-01",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS",
+    "run_worker_first": ["/api/*", "/", "/index.html"]
+  },
+  "durable_objects": {
+    "bindings": [{ "name": "LIMITER", "class_name": "Limiter" }]
+  },
+  "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Limiter"] }],
+  // Keep the demos' own one-line cost logs, but not Cloudflare's per-request logs, which hold more
+  // about each visitor than the page promises.
+  "observability": { "enabled": true, "logs": { "invocation_logs": false } },
+  "vars": {
+    // "off" turns both demos off without a redeploy of the page.
+    "DEMOS": "on",
+    "WORKSHEET_MODEL": "claude-sonnet-5-5",
+    "MARK_MODEL": "claude-sonnet-5-5",
+    // The most the demos can spend in a day, across all visitors, in US dollars.
+    "DAILY_BUDGET_USD": "5",
+    // Demos per visitor (per IP address) per day.
+    "WORKSHEETS_PER_VISITOR": "3",
+    "MARKS_PER_VISITOR": "8",
+    // Turnstile's site key is public. Its secret goes in with `wrangler secret put TURNSTILE_SECRET`.
+    "TURNSTILE_SITE_KEY": ""
+  }
+}
