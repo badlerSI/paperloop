@@ -1,0 +1,29 @@
+<!doctype html>
+<!-- The link-preview image. Render it at 1200 x 630 with tools/make_og.sh. -->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: "Anton"; src: url("../public/fonts/anton-latin-400-normal.woff2") format("woff2"); }
+  @font-face { font-family: "Newsreader"; font-style: italic; src: url("../public/fonts/newsreader-latin-opsz-italic.woff2") format("woff2"); }
+  html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; background: #080201; }
+  .art { position: absolute; inset: 0; background: url("../public/img/poster.svg") 50% 100% / cover no-repeat; }
+  .text { position: absolute; left: 0; right: 0; top: 52px; text-align: center; color: #f3e6cc; }
+  .over { font: 22px/1 "Anton"; letter-spacing: 0.32em; color: #ffb347; text-transform: uppercase; }
+  h1 { margin: 14px 0 0; font: 132px/0.86 "Anton"; text-transform: uppercase; letter-spacing: 0.005em;
+    text-shadow: 0 4px 30px rgb(0 0 0 / 0.45);
+    -webkit-mask-image: url("../public/img/grit.png"); -webkit-mask-size: 260px; }
+  h1 span { display: block; }
+  h1 .now { color: #ffb347; font-size: 0.62em; letter-spacing: 0.32em; margin-right: -0.32em; margin-top: 0.08em; }
+  .tag { margin-top: 18px; font: italic 500 28px/1.2 "Newsreader"; color: #f8dcb6; text-shadow: 0 2px 14px rgb(12 3 2 / 0.85); }
+</style>
+</head>
+<body>
+  <div class="art"></div>
+  <div class="text">
+    <div class="over">One teacher. Three days. Under $50.</div>
+    <h1><span>SaaSpocalypse</span><span class="now">Now</span></h1>
+    <div class="tag">The ed tech subscription is finished.</div>
+  </div>
+</body>
+</html>

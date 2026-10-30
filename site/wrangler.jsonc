@@ -1,8 +1,8 @@
 {
-  // Paper Loop's website: the pitch, plus two demos that run on your Claude API key.
+  // SaaSpocalypse Now: the pitch for Paper Loop, plus two demos that run on your Claude API key.
   // Deploy steps are in README.md.
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "paperloop",
+  "name": "saaspocalypsenow",
   "main": "src/worker.ts",
   "compatibility_date": "2026-10-01",
   "assets": {
@@ -14,6 +14,11 @@
     "bindings": [{ "name": "LIMITER", "class_name": "Limiter" }]
   },
   "migrations": [{ "tag": "v1", "new_sqlite_classes": ["Limiter"] }],
+  // The domain has to be on your Cloudflare account before the first deploy (README, step 4).
+  "routes": [
+    { "pattern": "saaspocalypsenow.ai", "custom_domain": true },
+    { "pattern": "www.saaspocalypsenow.ai", "custom_domain": true }
+  ],
   // Keep the demos' own one-line cost logs, but not Cloudflare's per-request logs, which hold more
   // about each visitor than the page promises.
   "observability": { "enabled": true, "logs": { "invocation_logs": false } },

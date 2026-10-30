@@ -707,7 +707,51 @@ function setupMark() {
   $("#mark-form").addEventListener("submit", markAnswer);
 }
 
+/* ---------- The score ---------- */
+
+// Never autoplays: it starts only when the visitor presses the button, fades in, and can be stopped
+// from the header after they scroll away.
+function setupScore() {
+  const audio = $("#score");
+  const play = $("#score-play");
+  const stop = $("#score-stop");
+  if (!audio || !play) return;
+  let fade = null;
+  const show = (on) => {
+    play.setAttribute("aria-pressed", String(on));
+    $(".score-icon", play).textContent = on ? "❚❚" : "▶";
+    $(".score-label", play).textContent = on ? "Pause the score" : "Play the score";
+    stop.hidden = !on;
+  };
+  const fadeIn = () => {
+    clearInterval(fade);
+    audio.volume = 0;
+    fade = setInterval(() => {
+      audio.volume = Math.min(0.8, audio.volume + 0.05);
+      if (audio.volume >= 0.8) clearInterval(fade);
+    }, 90);
+  };
+  play.addEventListener("click", async () => {
+    if (!audio.paused) return audio.pause();
+    try {
+      fadeIn();
+      await audio.play();
+    } catch {
+      clearInterval(fade);
+      show(false);
+    }
+  });
+  stop.addEventListener("click", () => audio.pause());
+  audio.addEventListener("play", () => show(true));
+  audio.addEventListener("pause", () => show(false));
+  audio.addEventListener("ended", () => {
+    audio.currentTime = 0;
+    show(false);
+  });
+}
+
 setupTabs();
 setupMake();
 setupMark();
+setupScore();
 loadConfig();

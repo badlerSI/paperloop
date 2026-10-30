@@ -1,6 +1,8 @@
-# Paper Loop's website
+# SaaSpocalypse Now
 
-A one-page pitch with two live demos that run on your Claude API key:
+The website at [saaspocalypsenow.ai](https://saaspocalypsenow.ai): the case that the ed tech subscription
+is finished, dressed as a 1970s war-movie poster, with two live demos of Paper Loop that run on your Claude
+API key:
 
 - **Make a worksheet:** a visitor gives a topic and a grade, and Claude writes a one-page worksheet with
   an answer key and, if asked, a version in a home language. It streams onto the page as Claude writes it.
@@ -63,24 +65,27 @@ You need a free Cloudflare account and Node.js. Commands run from this `site` fo
    npx wrangler secret put VISITOR_SALT
    ```
 
-4. **Deploy.**
+4. **Put saaspocalypsenow.ai on Cloudflare.** `wrangler.jsonc` serves the site at `saaspocalypsenow.ai`
+   and `www.saaspocalypsenow.ai`, so the domain has to be on your Cloudflare account first. In the
+   dashboard, choose **Add a domain**, enter `saaspocalypsenow.ai`, and pick the Free plan. Cloudflare gives
+   you two nameservers: at the company you registered the domain with, replace its nameservers with those
+   two. When the dashboard shows the domain as **Active** (often within an hour), go on.
+
+5. **Deploy.**
 
    ```bash
    npm run deploy
    ```
 
-   Wrangler prints the address, something like `https://paperloop.<your-account>.workers.dev`. Open it and
-   try both demos.
-
-5. **Use your own domain (optional).** In the Cloudflare dashboard, open **Workers & Pages → paperloop →
-   Settings → Domains & Routes → Add → Custom domain**. The domain has to be on Cloudflare.
+   Wrangler sets up both addresses and their certificates. It also prints a backup address, something
+   like `https://saaspocalypsenow.<your-account>.workers.dev`. Open the site and try both demos.
 
 ## A bot check (optional, recommended once it's shared widely)
 
 The per-visitor limits stop casual overuse, but a script can change IP addresses. Cloudflare Turnstile
 adds a free check box that's usually invisible.
 
-1. In the Cloudflare dashboard, open **Turnstile → Add widget**, name it, add your site's hostname, and
+1. In the Cloudflare dashboard, open **Turnstile → Add widget**, name it, add `saaspocalypsenow.ai`, and
    choose **Managed**.
 2. Put the **site key** in `wrangler.jsonc` as `TURNSTILE_SITE_KEY`.
 3. Store the **secret key**:
@@ -103,11 +108,34 @@ The site runs at <http://localhost:8787>, with the same limits, and spends real 
 
 ## Watching what it spends
 
-- **Cloudflare:** Workers & Pages → paperloop → **Logs**. Each demo writes one line such as
+- **Cloudflare:** Workers & Pages → saaspocalypsenow → **Logs**. Each demo writes one line such as
   `{"demo":"mark","model":"claude-sonnet-5-5","stop":"end_turn","input":2033,"output":182,"usd":0.00589}`.
   Nothing a visitor typed or drew is logged, and Cloudflare's own per-request logs are switched off in
   `wrangler.jsonc` (`invocation_logs: false`), so the logs hold no addresses either.
 - **Claude Console:** the workspace's usage page shows the real bill.
+
+## The look and the score
+
+- **The poster** is original art in the style of the 1979 film's poster, not a copy of it: the sun setting
+  on ed tech, real lines of Paper Loop's code drifting across it like clouds, and paper airplanes flying
+  off ahead of the dark. `tools/make_art.py` draws it (and the jungle strip and the title's worn-ink
+  mask). The code lines are listed at the top of that script, and it stops with an error if one of them
+  is no longer in Paper Loop's source. The footer says the site is a parody with no connection to the
+  film.
+- **The share image** (`public/img/og.png`) is rendered from `tools/og.html` by `tools/make_og.sh`, which
+  needs Google Chrome.
+- **The score** is `public/audio/valkyries.mp3`, made from your licensed `valkyries.wav`:
+
+  ```bash
+  ffmpeg -i valkyries.wav -codec:a libmp3lame -q:a 3 -map_metadata -1 public/audio/valkyries.mp3
+  ```
+
+  It plays only when a visitor presses **Play the score**, never on its own. Anyone can download a file a
+  website plays, so check that your license covers streaming on a public site, and put the artist's
+  credit in the footer if the license asks for one.
+
+  The MP3 is gitignored, so it isn't published with the code. Deploys upload it from this folder, so
+  deploy from the computer that has it, or make it again with the command above.
 
 ## Before you share the link
 
@@ -142,4 +170,7 @@ The site runs at <http://localhost:8787>, with the same limits, and spends real 
 | `src/worker.ts` | The demos, the checks on every request, and the cost accounting |
 | `src/limiter.ts` | The Durable Object that holds the day's counts and spending |
 | `src/prompts.ts` | What Claude is told for each demo, the answer formats, and the sample questions |
-| `wrangler.jsonc` | Cloudflare settings and the limits |
+| `wrangler.jsonc` | Cloudflare settings, the domain, and the limits |
+| `public/img/poster.svg`, `jungle.svg`, `grit.png`, `og.png` | The poster art and the share image |
+| `public/audio/valkyries.mp3` | The score |
+| `tools/make_art.py`, `tools/og.html`, `tools/make_og.sh` | What draws the art and renders the share image |

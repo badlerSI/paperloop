@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Paper Loop</title>
+<title>SaaSpocalypse Now</title>
 <meta name="description" content="Districts paid for software that sat unused while reading fell. One teacher built a free replacement in three days for under $50. The ed tech subscription is finished.">
-<meta property="og:title" content="Paper Loop: the ed tech subscription is finished.">
+<meta property="og:title" content="SaaSpocalypse Now: the ed tech subscription is finished.">
 <meta property="og:description" content="One teacher built it in three days, for under $50 of a monthly Claude plan: a comment on every answer, on paper, by morning. Free. Try it in your browser.">
 <meta property="og:image" content="/img/og.png">
 <meta property="og:type" content="website">
@@ -13,6 +13,7 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="color-scheme" content="light dark">
 <link rel="icon" href="/img/icon.svg" type="image/svg+xml">
+<link rel="preload" href="/fonts/anton-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/newsreader-latin-opsz-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="preload" href="/fonts/public-sans-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/styles.css">
@@ -23,11 +24,12 @@
 
 <header class="top">
   <div class="wrap top-in">
-    <a class="brand" href="#" aria-label="Paper Loop, top of the page"><span class="brand-mark" aria-hidden="true"></span>Paper Loop</a>
+    <a class="brand" href="#" aria-label="SaaSpocalypse Now, top of the page"><span class="brand-mark" aria-hidden="true"></span>SaaSpocalypse Now</a>
     <nav aria-label="Sections">
       <a href="#numbers">The receipts</a>
       <a href="#little">Three days</a>
       <a href="#many">We the teachers</a>
+      <button class="nav-score" id="score-stop" type="button" hidden>♪ Stop the score</button>
       <a class="nav-try" href="#try">Try it</a>
     </nav>
   </div>
@@ -35,11 +37,35 @@
 
 <main id="main">
 
-<section class="hero wrap">
+<section class="poster" aria-labelledby="poster-title">
+  <div class="poster-stage">
+  <div class="poster-art" aria-hidden="true"></div>
+  <div class="poster-in wrap">
+    <p class="poster-over">One teacher. Three days. Under $50.</p>
+    <h1 id="poster-title" class="poster-title"><span>SaaSpocalypse</span> <span class="now">Now</span></h1>
+    <p class="poster-tag">The ed tech subscription is finished.</p>
+    <div class="cta">
+      <a class="btn btn-primary" href="#try">Try it yourself</a>
+      <button class="btn btn-score" id="score-play" type="button" aria-pressed="false"><span class="score-icon" aria-hidden="true">▶</span> <span class="score-label">Play the score</span></button>
+    </div>
+  </div>
+  </div>
+  <div class="billing wrap">
+    <p>A teachers' production · A Paper Loop picture</p>
+    <p>Written, directed and built in three days by Ben Adler</p>
+    <p>Starring 3.8 million public school teachers · One school copier · A stack of paper</p>
+    <p>Marking by Claude · Budget under $50 · No subscription required</p>
+    <p>Score: Ride of the Valkyries (future mix)</p>
+    <p class="billing-big">Coming to a classroom near you</p>
+  </div>
+</section>
+<audio id="score" src="/audio/valkyries.mp3" preload="none"></audio>
+
+<section class="hero wrap" id="tsunami">
   <div class="hero-text">
-    <p class="kicker">The tsunami</p>
-    <h1>The ed tech subscription is finished.</h1>
-    <p class="lede">For years, cash-strapped districts paid for software that mostly sat unused and barely moved test scores, while reading fell. A wave was always coming for that business. This is it.</p>
+    <p class="kicker">Reel 1 · The tsunami</p>
+    <h2>A wave was always coming for ed tech.</h2>
+    <p class="lede">For years, cash-strapped districts paid for software that mostly sat unused and barely moved test scores, while reading fell. That business was never going to last.</p>
     <p class="lede">I'm a teacher. I built Paper Loop in three days, as a side project, using under $50 of a monthly Claude plan. It does what the subscriptions promised: a specific comment on every answer, for every student, on paper, by morning. It's free.</p>
     <div class="cta">
       <a class="btn btn-primary" href="#try">Try it yourself</a>
@@ -73,7 +99,7 @@
 
 <section id="numbers" class="band">
   <div class="wrap">
-    <p class="kicker">The receipts</p>
+    <p class="kicker">Reel 2 · The receipts</p>
     <h2>Districts paid. Students didn't gain.</h2>
     <p class="section-lede">The decline started years before the pandemic. The money that followed it bought less than anyone hoped, and the software it bought mostly went unused.</p>
     <div class="stats">
@@ -102,7 +128,7 @@
 </section>
 
 <section id="works" class="wrap section">
-  <p class="kicker">Why it was bound to happen</p>
+  <p class="kicker">Reel 3 · Why it was bound to happen</p>
   <h2>What works was always cheap. The expensive part was a teacher's time.</h2>
   <p class="section-lede">The strongest results in education research come from cheap, human things: students practicing what they learned, specific comments on their work, and parents told the truth. None of it needs a license. It needs someone to read every answer, and AI just made that nearly free.</p>
 
@@ -162,7 +188,7 @@
 
 <section id="little" class="band">
   <div class="wrap">
-    <p class="kicker">How little it took</p>
+    <p class="kicker">Reel 4 · How little it took</p>
     <h2>Three days. One teacher. Under $50.</h2>
     <p class="section-lede">No startup, no grant, no team. I built Paper Loop between October 26 and 28, 2026, on an ordinary Claude subscription, using less than $50 of one month's plan. It was an afterthought. It will wipe out an industry as soon as teachers learn to use it.</p>
     <div class="tiles">
@@ -189,7 +215,7 @@
 </section>
 
 <section id="how" class="wrap section">
-  <p class="kicker">How Paper Loop works</p>
+  <p class="kicker">Reel 5 · The weapon</p>
   <h2>A copier, a stack of paper, and Claude.</h2>
   <p class="section-lede">Paper Loop is free and open source. It runs inside Claude for Teachers, which is free for verified US K-12 teachers. Students never touch a screen.</p>
   <ol class="loop">
@@ -201,6 +227,7 @@
     <li><span class="loop-n">6</span><h3>Hand back</h3><p>Marked pages go back the next day, with go-over slides, a practice sheet for each student, and a page for families.</p></li>
   </ol>
   <p class="loop-back">…and the results plan tomorrow's lesson.</p>
+  <blockquote class="toner"><p>I love the smell of toner in the morning.</p><footer>Every teacher, 7:15 a.m.</footer></blockquote>
   <ul class="facts">
     <li><strong>Every student,</strong> the same high bar</li>
     <li><strong>No student names,</strong> ever</li>
@@ -211,7 +238,7 @@
 
 <section id="many" class="ink">
   <div class="wrap many">
-    <p class="kicker">We the teachers</p>
+    <p class="kicker">Reel 6 · We the teachers</p>
     <h2>We are the many. Ed tech is the few.</h2>
     <div class="many-body">
       <p>There are 3.8 million public school teachers in this country.<a class="ref" href="#src-15" aria-label="Source 15">15</a> We buy the supplies our budgets don't cover. We crowdfund the books our students keep.<a class="ref" href="#src-16" aria-label="Source 16">16</a> We give up our evenings to the marking. Meanwhile our districts renew subscriptions that mostly go unopened.<a class="ref" href="#src-2" aria-label="Source 2">2</a></p>
@@ -227,7 +254,7 @@
 </section>
 
 <section id="try" class="wrap section">
-  <p class="kicker">Try it</p>
+  <p class="kicker">Reel 7 · Try it</p>
   <h2>Don't take my word for it.</h2>
   <p class="section-lede">Two small demos, running on Paper Loop's own Claude account. Make a worksheet on any school topic, or write an answer and watch it get marked.</p>
   <p class="quota" id="quota" aria-live="polite"></p>
@@ -324,7 +351,7 @@
 <section id="about" class="band">
   <div class="wrap about">
     <div>
-      <p class="kicker">Who built it</p>
+      <p class="kicker">Credits · Who built it</p>
       <h2>I taught 8th-grade science at a Title I school in East Oakland.</h2>
     </div>
     <div class="about-text">
@@ -368,7 +395,8 @@
 
 <footer class="foot">
   <div class="wrap foot-in">
-    <p><span class="brand-mark" aria-hidden="true"></span>Paper Loop is an independent open-source project under the Apache 2.0 license. Anthropic didn't make it and doesn't endorse it. The demos use Claude through Anthropic's API.</p>
+    <p><span class="brand-mark" aria-hidden="true"></span>SaaSpocalypse Now is a parody. It isn't connected to the 1979 film or the people who made it. Paper Loop is an independent open-source project under the Apache 2.0 license; Anthropic didn't make it and doesn't endorse it. The demos use Claude through Anthropic's API.</p>
+    <p>Score: Ride of the Valkyries by Richard Wagner, in a future mix used under license.</p>
     <p><a href="https://github.com/badlerSI/paperloop">GitHub</a> · <a href="#privacy">Privacy</a> · Fonts: Newsreader and Public Sans (SIL Open Font License)</p>
   </div>
 </footer>
