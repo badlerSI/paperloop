@@ -499,6 +499,13 @@ input:focus, select:focus, textarea:focus { outline: none; border-color: var(--p
 .work::after { content: "Answer: ________"; position: absolute; right: 10px; bottom: 6px; font-size: 13px; color: var(--s-gray); }
 .sheet:not([lang="en"]) .work::after { content: "________"; }
 .sheet[dir="rtl"] .work::after { right: auto; left: 10px; }
+.wtable { border-collapse: collapse; margin: 2px 0 4px; font-size: 13.5px; }
+.wtable th, .wtable td { border: 1.3px solid #555; padding: 5px 12px; min-width: 64px; height: 30px; text-align: center; }
+.wtable th { background: #f1f1ee; font-weight: 700; }
+.wtable .cell-answer { color: var(--s-pen); font-style: italic; font-weight: 600; }
+.nline { display: block; width: 100%; max-width: 440px; height: auto; margin: 4px 0; }
+.grid { display: block; width: 100%; max-width: 320px; height: auto; margin: 4px 0; }
+.drawbox { height: 150px; border: 1.3px solid #555; border-radius: 3px; }
 .blank { display: inline-block; min-width: 90px; border-bottom: 1.3px solid #333; transform: translateY(-3px); }
 .side { font: italic 500 13.5px/1.35 "Public Sans", sans-serif; color: var(--s-pen); }
 .side p { margin: 0 0 6px; }

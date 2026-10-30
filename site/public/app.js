@@ -236,7 +236,103 @@ function sheetHead(title, instructions, digits, lang) {
   );
 }
 
-function questionBody(q, kind) {
+const SVG_NS = "http://www.w3.org/2000/svg";
+
+function svg(tag, attrs = {}, ...kids) {
+  const node = document.createElementNS(SVG_NS, tag);
+  for (const [k, v] of Object.entries(attrs)) node.setAttribute(k, String(v));
+  for (const kid of kids) node.append(kid instanceof Node ? kid : document.createTextNode(String(kid)));
+  return node;
+}
+
+// Claude's numbers made safe to draw: finite, in order, and never more than `most` steps.
+function ticksFor(min, max, step, most = 20) {
+  min = Number(min);
+  max = Number(max);
+  step = Math.abs(Number(step));
+  if (!Number.isFinite(min) || !Number.isFinite(max) || max <= min) return null;
+  if (!Number.isFinite(step) || step <= 0) step = 1;
+  while ((max - min) / step > most) step *= 2;
+  const ticks = [];
+  for (let i = 0; i <= most; i++) {
+    const v = min + i * step;
+    if (v > max + step / 1000) break;
+    ticks.push(Number(v.toFixed(6)));
+  }
+  return ticks.length > 1 ? ticks : null;
+}
+
+const tickText = (v) => String(Number(v.toFixed(3)));
+
+function numberLine(spec) {
+  const ticks = ticksFor(spec?.min, spec?.max, spec?.step);
+  if (!ticks) return null;
+  const W = 440, H = 58, pad = 26, y = 22;
+  const lo = ticks[0], hi = ticks[ticks.length - 1];
+  const x = (v) => pad + ((v - lo) / (hi - lo)) * (W - 2 * pad);
+  const line = svg("svg", { viewBox: `0 0 ${W} ${H}`, class: "nline", role: "img", "aria-label": `A number line from ${tickText(lo)} to ${tickText(hi)}` });
+  line.append(
+    svg("line", { x1: 6, y1: y, x2: W - 6, y2: y, stroke: "#333", "stroke-width": 1.5 }),
+    svg("path", { d: `M2 ${y} l9 -5 v10 z M${W - 2} ${y} l-9 -5 v10 z`, fill: "#333" }),
+  );
+  const every = ticks.length > 11 ? 2 : 1;
+  ticks.forEach((v, i) => {
+    line.append(svg("line", { x1: x(v), y1: y - 7, x2: x(v), y2: y + 7, stroke: "#333", "stroke-width": 1.2 }));
+    if (i % every === 0 || i === ticks.length - 1) {
+      line.append(svg("text", { x: x(v), y: y + 24, "text-anchor": "middle", "font-size": 12, fill: "#333" }, tickText(v)));
+    }
+  });
+  return line;
+}
+
+function coordinateGrid(spec) {
+  const xs = ticksFor(spec?.x_min, spec?.x_max, 1);
+  const ys = ticksFor(spec?.y_min, spec?.y_max, 1);
+  if (!xs || !ys) return null;
+  const cell = Math.min(260 / (xs.length - 1), 220 / (ys.length - 1), 26);
+  const left = 34, top = 10, w = cell * (xs.length - 1), h = cell * (ys.length - 1);
+  const W = left + w + 16, H = top + h + 40;
+  const X = (i) => left + i * cell;
+  const Y = (j) => top + h - j * cell;
+  const g = svg("svg", { viewBox: `0 0 ${W} ${H}`, class: "grid", role: "img", "aria-label": `A coordinate grid, x from ${tickText(xs[0])} to ${tickText(xs[xs.length - 1])}, y from ${tickText(ys[0])} to ${tickText(ys[ys.length - 1])}` });
+  xs.forEach((_, i) => g.append(svg("line", { x1: X(i), y1: top, x2: X(i), y2: top + h, stroke: "#cfd2da" })));
+  ys.forEach((_, j) => g.append(svg("line", { x1: left, y1: Y(j), x2: left + w, y2: Y(j), stroke: "#cfd2da" })));
+  const zx = xs.indexOf(0) >= 0 ? xs.indexOf(0) : 0;
+  const zy = ys.indexOf(0) >= 0 ? ys.indexOf(0) : 0;
+  g.append(
+    svg("line", { x1: X(zx), y1: top, x2: X(zx), y2: top + h, stroke: "#333", "stroke-width": 1.5 }),
+    svg("line", { x1: left, y1: Y(zy), x2: left + w, y2: Y(zy), stroke: "#333", "stroke-width": 1.5 }),
+  );
+  const xe = xs.length > 11 ? 2 : 1;
+  const ye = ys.length > 11 ? 2 : 1;
+  xs.forEach((v, i) => i % xe === 0 && g.append(svg("text", { x: X(i), y: Y(zy) + 14, "text-anchor": "middle", "font-size": 10, fill: "#333" }, tickText(v))));
+  ys.forEach((v, j) => j % ye === 0 && v !== 0 && g.append(svg("text", { x: X(zx) - 5, y: Y(j) + 3.5, "text-anchor": "end", "font-size": 10, fill: "#333" }, tickText(v))));
+  g.append(
+    svg("text", { x: left + w / 2, y: H - 6, "text-anchor": "middle", "font-size": 11, fill: "#333" }, String(spec.x_label || "x").slice(0, 40)),
+    svg("text", { x: 11, y: top + h / 2, "text-anchor": "middle", "font-size": 11, fill: "#333", transform: `rotate(-90 11 ${top + h / 2})` }, String(spec.y_label || "y").slice(0, 40)),
+  );
+  return g;
+}
+
+// A table to complete. In the key, the blank cells show their answers.
+function tableBlock(table, withAnswers) {
+  if (!table || !Array.isArray(table.columns) || !table.columns.length) return null;
+  const head = el("tr", {}, table.columns.slice(0, 6).map((c) => el("th", { text: c })));
+  const rows = (table.rows || []).slice(0, 8).map((r) =>
+    el(
+      "tr",
+      {},
+      (r?.cells || []).slice(0, 6).map((c) =>
+        c?.blank
+          ? el("td", { class: withAnswers ? "cell-answer" : "cell-blank", text: withAnswers ? c.text ?? "" : "" })
+          : el("td", { text: c?.text ?? "" }),
+      ),
+    ),
+  );
+  return el("table", { class: "wtable" }, el("thead", {}, head), el("tbody", {}, rows));
+}
+
+function questionBody(q, kind, withAnswers = false) {
   const parts = [];
   const prompt = String(q.prompt ?? "");
   if (kind === "fill" && prompt.includes("____")) {
@@ -257,6 +353,14 @@ function questionBody(q, kind) {
     );
   } else if (kind === "math") {
     parts.push(el("div", { class: "work", "aria-label": "space to show work" }));
+  } else if (kind === "table") {
+    parts.push(tableBlock(q.table, withAnswers) ?? el("div", { class: "lines", "aria-label": "space to write" }));
+  } else if (kind === "number_line") {
+    parts.push(numberLine(q.number_line) ?? el("div", { class: "lines", "aria-label": "space to write" }));
+  } else if (kind === "graph") {
+    parts.push(coordinateGrid(q.graph) ?? el("div", { class: "work", "aria-label": "space to show work" }));
+  } else if (kind === "draw") {
+    parts.push(el("div", { class: "drawbox", "aria-label": "space to draw" }));
   } else if (kind === "short") {
     parts.push(el("div", { class: "lines", "aria-label": "space to write" }));
   }
@@ -288,10 +392,12 @@ function renderSheet() {
   qs.slice(0, 8).forEach((q, i) => {
     if (!q || !q.prompt) return;
     const vq = version && Array.isArray(version.questions) ? version.questions[i] : null;
-    const shown = vq ? { ...q, title: vq.title, prompt: vq.prompt, options: vq.options } : q;
+    const shown = vq ? { ...q, title: vq.title, prompt: vq.prompt, options: vq.options, table: vq.table ?? q.table } : q;
     const kind = q.kind || "short";
-    const { promptNode, parts } = questionBody(shown, kind);
-    promptNode.prepend(el("b", { text: `${i + 1}. ${shown.title ? `${shown.title}: ` : ""}` }));
+    const { promptNode, parts } = questionBody(shown, kind, view === "key");
+    // A title that ends in its own punctuation ("Same Taste?") gets no colon after it.
+    const title = shown.title ? `${shown.title}${/[?!.:]$/.test(shown.title) ? " " : ": "}` : "";
+    promptNode.prepend(el("b", { text: `${i + 1}. ${title}` }));
     const side = el("div", { class: "side" });
     if (view === "key") {
       const answer = kind === "choice" && /^[A-H]$/.test(String(q.answer ?? "").trim())
@@ -300,6 +406,9 @@ function renderSheet() {
       side.append(
         el("p", { class: "k", text: `Answer: ${answer ?? ""}` }),
         q.full_credit ? el("p", { text: `Full credit: ${q.full_credit}` }) : null,
+        kind === "draw" && Array.isArray(q.checklist) && q.checklist.length
+          ? el("p", { text: `The drawing shows: ${q.checklist.join("; ")}.` })
+          : null,
         q.common_mistake ? el("p", { class: "k", text: `If a student writes “${q.common_mistake}”:` }) : null,
         q.comment ? el("p", { text: q.comment }) : null,
         q.skill ? el("p", { class: "skill", text: `Skill: ${q.skill}` }) : null,
