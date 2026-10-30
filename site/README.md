@@ -33,9 +33,9 @@ in the Claude Console. If **auto-reload** is on in the Console's billing setting
 demos stop when the credit runs out instead of buying more.
 
 **From GitHub, with strict limits and a redeploy on every push:** in the Cloudflare dashboard, open the
-`saaspocalypsenow` Worker (or create one with that name; it must match `name` in `wrangler.jsonc`), go to
-**Settings → Builds → Connect**, pick `badlerSI/paperloop`, set the root directory to `site` and the
-production branch to `day-3`, and save. Then add the `ANTHROPIC_API_KEY` secret under **Settings →
+`paperloop` Worker (or create one with that name; it must match `name` in `wrangler.jsonc`), go to
+**Settings → Builds → Connect**, pick `badlerSI/paperloop`, set the root directory to `site` (not `/`)
+and the production branch to `day-3`, and save. Then add the `ANTHROPIC_API_KEY` secret under **Settings →
 Variables and Secrets**. The first build attaches saaspocalypsenow.ai and www, so remove the domain from
 any other project first.
 
@@ -112,7 +112,7 @@ You need a free Cloudflare account and Node.js. Commands run from this `site` fo
    ```
 
    Wrangler sets up both addresses and their certificates. It also prints a backup address, something
-   like `https://saaspocalypsenow.<your-account>.workers.dev`. Open the site and try both demos.
+   like `https://paperloop.<your-account>.workers.dev`. Open the site and try both demos.
 
 ## A bot check (optional, recommended once it's shared widely)
 
@@ -142,7 +142,7 @@ The site runs at <http://localhost:8787>, with the same limits, and spends real 
 
 ## Watching what it spends
 
-- **Cloudflare:** Workers & Pages → saaspocalypsenow → **Logs**. Each demo writes one line such as
+- **Cloudflare:** Workers & Pages → paperloop → **Logs**. Each demo writes one line such as
   `{"demo":"mark","model":"claude-sonnet-5-5","stop":"end_turn","input":2033,"output":182,"usd":0.00589}`.
   Nothing a visitor typed or drew is logged, and Cloudflare's own per-request logs are switched off in
   `wrangler.jsonc` (`invocation_logs: false`), so the logs hold no addresses either.

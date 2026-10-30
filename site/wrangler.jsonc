@@ -2,7 +2,8 @@
   // SaaSpocalypse Now: the pitch for Paper Loop, plus two demos that run on your Claude API key.
   // Deploy steps are in README.md.
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "saaspocalypsenow",
+  // Must match the Worker's name in the Cloudflare dashboard, or GitHub builds fail.
+  "name": "paperloop",
   "main": "src/worker.ts",
   "compatibility_date": "2026-10-01",
   "assets": {
