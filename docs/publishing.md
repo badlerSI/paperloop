@@ -26,7 +26,8 @@ under **Organization settings → Plugins & skills** and sets it to install by d
 - `tests/test_release.py` checks the zip, the README rules, file sizes, and that every site the scripts
   reach is named in the README and the privacy policy.
 - October 30, 2026: the repository was made public, private vulnerability reporting was turned on, and
-  release `v0.6.0` was published with `paper-loop.zip` attached. The website, saaspocalypsenow.ai, deploys
+  release `v0.6.0` was published with `paper-loop.zip` attached; `v0.6.1` (a hands-on question by default)
+  followed the same day. The website, saaspocalypsenow.ai, deploys
   from `site/` on every push to `day-3`.
 
 ## Steps only the owner can take

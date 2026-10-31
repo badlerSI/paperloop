@@ -1,7 +1,7 @@
 {
   "name": "paper-loop",
   "description": "Turn the school copier into a feedback machine: plan lessons with slides, make worksheets Claude can mark from a scan (with versions for students who need supports or another language, a different copy for each student, and enrichment from free sources), mark class sets with a comment beside every answer, then go over what the class missed, give each student practice on their misses, and track progress for teachers and families.",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "author": {
     "name": "Ben Adler"
   },
