@@ -92,6 +92,20 @@ def test_the_dashboard_stands_alone_and_names_no_one(tmp_path):
     assert not re.search(r"<(script|link|img)[^>]+(src|href)=\"https?://", page)  # nothing loads from the web
     assert "Period 3 Math: progress" in page and '"0101"' in page
     assert "prefers-color-scheme: dark" in page
+    # The browser itself blocks any request: names a teacher shows in the page can't go anywhere.
+    assert re.search(r'<meta http-equiv="Content-Security-Policy" content="default-src \'none\';', page)
+    assert "What to do next" in page and 'id="names-text"' in page
+
+
+def test_the_dashboard_knows_each_question_and_how_many_answered(tmp_path):
+    cls = tmp_path / "Period 3"
+    _marked(cls, "week1", "2026-10-20", {"0101": {1: 0}, "0102": {}, "0103": {1: 0}}, pages_of={"0103": [1]})
+    data = S.read_json(PG.build(cls)["out"] / "progress.json")
+    q1, q2 = data["worksheets"][0]["questions"][:2]
+    assert q1["answered"] == 3 and round(q1["full"], 2) == 0.33
+    assert q2["answered"] == 2  # 0103's page with Q2 is still in the review pile
+    assert q1["prompt"] and len(q1["prompt"]) <= 161 and "\n" not in q1["prompt"]
+    assert PG._short("word " * 60).endswith("…") and len(PG._short("word " * 60)) <= 161
 
 
 def test_family_pages_have_a_line_for_the_name_and_speak_the_family_language(tmp_path):

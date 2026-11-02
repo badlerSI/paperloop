@@ -324,9 +324,14 @@ When the teacher asks how the class or a student is doing over time, or wants so
    Add `--roster "<ids.csv>"` for one class period, and `--class-name "Period 3 Math"`. It reads every
    marked class under the folder and writes `<folder>/progress/`:
    - `dashboard.html`: the teacher's dashboard, one file that opens in any browser and needs no internet.
-     It shows each skill, student by student (got it, getting there, still practicing), groups for the
-     next lesson, how each worksheet went, what marking noticed, and, for students who had help on the
-     page, whether it's fading as their scores hold.
+     It opens with what to do next (what to reteach, small groups, who to check in with, what to go
+     over), each with a request the teacher can copy back to you. Then each skill, student by student
+     (still practicing, getting there, got it), the students who need the most help first; groups for the
+     next lesson, with how each skill has gone; each worksheet question by question; the most-missed
+     questions; and, for students who had help on the page, whether it's fading as their scores hold.
+     **Show names** lets the teacher paste their own class list to see names instead of IDs. The list
+     stays in the open page, is never saved, and the page can't send anything anywhere. Never ask for
+     that list, or for a picture of the dashboard with names on it.
    - `parents.docx`: a page for each family in plain words. It covers what the class is learning, how
      their child is doing on each skill, their latest feedback, and something to try at home. A line for
      the teacher to write the name.
