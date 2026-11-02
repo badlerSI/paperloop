@@ -283,9 +283,13 @@ their hands within a few minutes.
    smudged digit when marking. With 4 digits: the class (1-9), the student's place in the class (01-99),
    and a last digit that's the sum of the first three, mod 10. Period 1's first three students are 1012,
    1023 and 1034; period 2's are 2013, 2024 and 2035. In grades 2-3, IDs have 2 digits, so number them 01,
-   02 and so on, a separate list for each class. Tell the teacher to write each student's number beside
-   their name on their own list, and to keep that list out of Claude. Write each class's `roster.csv` (a
-   column named `id`), which marking uses to check every ID it reads.
+   02 and so on, a separate list for each class. Number students in the order of the teacher's own class
+   list (their gradebook's), so the nth number is the nth name: the list they already have is then the key,
+   and marked pages come back in its order. Write each class's `roster.csv` (a column named `id`), which
+   marking uses to check every ID it reads. Then make ID cards: `PL cards "<roster.csv>" ["<more.csv>"]
+   --out "<Paper Loop folder>/id-cards.pdf"` writes, for each class, a list of its numbers with a blank line
+   for each name, then a card per student to cut out and keep. The teacher writes the names by hand; neither
+   page is ever scanned, and names stay out of Claude.
 3. **A folder for each class**, named by the teacher ("Period 3 Math"), inside a "Paper Loop" folder, with
    that class's `roster.csv` in it. Worksheets for the class go in its folder, and so does each marking.
 4. **`setup.md`** in the Paper Loop folder: their classes and folders, grades, subjects, ID digits, and their
@@ -307,6 +311,9 @@ their hands within a few minutes.
      the worksheet is two-sided), or photograph or scan each page with a phone. Most copiers can send the
      scan to email or Google Drive.
    - Share the scan with Claude and say "Mark this".
+   - Give them `references/scanning.md` to keep by the copier (the same page is at
+     https://saaspocalypsenow.ai/scanning, to print). It covers copier settings, files too big to email,
+     and getting the scan into Claude.
    - Afterward, ask for go-over slides, a practice sheet for each student, or "How is my class doing?".
 
 ## Progress across worksheets

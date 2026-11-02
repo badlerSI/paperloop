@@ -42,8 +42,8 @@ rules are in [`skills/paper-loop/SKILL.md`](skills/paper-loop/SKILL.md).
 
 Paper Loop is for teachers, not for students to use directly. Plugins work on Claude's paid plans and on
 the free [Claude for Teachers](https://www.anthropic.com/news/claude-for-teachers) plan for US K-12
-educators. On the Free plan, upload the skill instead: download `paper-loop.zip` from the
-[releases page](https://github.com/badlerSI/paperloop/releases) and add it under **Customize → Skills**.
+educators. On the Free plan, upload the skill instead: download
+[`paper-loop.zip`](https://github.com/badlerSI/paperloop/releases/latest/download/paper-loop.zip) and add it under **Customize → Skills**.
 
 On a teacher's own account, keep student work de-identified (class ID numbers, no names) unless the school
 or district has authorized Claude for student records.

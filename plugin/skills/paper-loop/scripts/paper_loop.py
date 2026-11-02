@@ -21,6 +21,8 @@
     status WORK                          where a marking run stands, and what to do next
     practice WORK [--most N]             after marking: a practice sheet for each student, of what they missed
     progress FOLDER [--roster ids.csv]   a dashboard, family pages, and a gradebook file across marked classes
+    cards ROSTER.csv... --out FILE.pdf [--class-name NAME]
+                                         ID cards to cut out, ten to a page, after a class list for the teacher
     source wikipedia|simple|gutenberg NAME --out FILE.json
                                          a free text to read and adapt, with its license and link
     pieces PIECES.json --out DIR         cards, board games for a checker or chess board, dice, a spinner,
@@ -525,6 +527,21 @@ def cmd_practice(args) -> int:
     return 0
 
 
+def cmd_cards(args) -> int:
+    from paper_loop_core import cards as C
+    try:
+        report = C.build(args.rosters, args.out, args.class_name or "")
+    except (ValueError, OSError) as e:
+        print(f"Can't make ID cards: {e}")
+        return 1
+    print(f"Wrote {report['out']} ({report['pages']} pages):")
+    for k in report["classes"]:
+        print(f"  {k['class']}: a class list, then {k['ids']} cards")
+    print("Print it on card stock if there is some. The teacher writes names on the class list by hand, in the "
+          "order of their own class list, and hands each student their card to keep. Neither one gets scanned.")
+    return 0
+
+
 def cmd_progress(args) -> int:
     from paper_loop_core import progress as PG
     try:
@@ -762,6 +779,11 @@ def main() -> int:
     p.add_argument("--roster", type=Path, help="only these class IDs (a CSV), for one class period")
     p.add_argument("--class-name", help="the name printed on the reports (default: the folder's name)")
     p.set_defaults(func=cmd_progress)
+    p = sub.add_parser("cards")
+    p.add_argument("rosters", type=Path, nargs="+", help="each class's roster.csv (a column named id)")
+    p.add_argument("--out", type=Path, required=True, help="the PDF to write")
+    p.add_argument("--class-name", help="the class's name, with one roster (default: the roster's folder name)")
+    p.set_defaults(func=cmd_cards)
     p = sub.add_parser("zoom")
     p.add_argument("image", type=Path)
     p.add_argument("--region", help="left,top,right,bottom as fractions of the image, e.g. 0.5,0,1,0.5")
