@@ -741,10 +741,34 @@ async function home(req: Request, env: Env, url: URL): Promise<Response> {
     .transform(out);
 }
 
+// Safari plays video and audio only from a server that answers a Range request with just that part of the
+// file (206). Static assets send the whole file, so the Worker cuts the part out. The files are a few MB.
+async function media(req: Request, env: Env): Promise<Response> {
+  const res = await env.ASSETS.fetch(req);
+  const range = req.headers.get("Range")?.match(/^bytes=(\d*)-(\d*)$/);
+  if (res.status !== 200 || !range || (range[1] === "" && range[2] === "")) {
+    const out = new Response(res.body, res);
+    out.headers.set("Accept-Ranges", "bytes");
+    return out;
+  }
+  const file = await res.arrayBuffer();
+  const size = file.byteLength;
+  const [start, end] = range[1] === ""
+    ? [Math.max(0, size - Number(range[2])), size - 1] // "bytes=-500": the last 500
+    : [Number(range[1]), range[2] === "" ? size - 1 : Math.min(Number(range[2]), size - 1)];
+  if (start > end) return new Response(null, { status: 416, headers: { "Content-Range": `bytes */${size}` } });
+  const headers = new Headers(res.headers);
+  headers.set("Accept-Ranges", "bytes");
+  headers.set("Content-Range", `bytes ${start}-${end}/${size}`);
+  headers.set("Content-Length", String(end - start + 1));
+  return new Response(file.slice(start, end + 1), { status: 206, headers });
+}
+
 export default {
   async fetch(req, env, ctx): Promise<Response> {
     const url = new URL(req.url);
     if (url.pathname === "/" || url.pathname === "/index.html") return home(req, env, url);
+    if (url.pathname.startsWith("/video/") || url.pathname.startsWith("/audio/")) return media(req, env);
     if (!url.pathname.startsWith("/api/")) return env.ASSETS.fetch(req);
     try {
       return await api(req, env, ctx, url);
