@@ -21,6 +21,8 @@
     status WORK                          where a marking run stands, and what to do next
     practice WORK [--most N]             after marking: a practice sheet for each student, of what they missed
     progress FOLDER [--roster ids.csv]   a dashboard, family pages, and a gradebook file across marked classes
+    gradebook FOLDER [--roster ids.csv]  a page that puts worksheet scores into the school's gradebook: the
+                                         teacher opens their gradebook's file in it, and names stay there
     cards ROSTER.csv... --out FILE.pdf [--class-name NAME]
                                          ID cards to cut out, ten to a page, after a class list for the teacher
     source wikipedia|simple|gutenberg NAME --out FILE.json
@@ -542,6 +544,34 @@ def cmd_cards(args) -> int:
     return 0
 
 
+def cmd_gradebook(args) -> int:
+    from paper_loop_core import gradebook as GB
+    from paper_loop_core import progress as PG
+    try:
+        report = GB.build(args.folder, args.out, args.roster, args.class_name or "")
+    except (PG.ProgressError, ValueError, OSError) as e:
+        print(f"Can't make the gradebook page: {e}")
+        return 1
+    sheets = report["worksheets"]
+    print(f"Wrote {report['out']}: {len(sheets)} worksheet{'s' if len(sheets) != 1 else ''}, "
+          f"{len(report['ids'])} class IDs" + (f" (from {report['roster']})" if report["roster"] else
+                                                " (the ones on marked pages: no roster.csv found)") + ".")
+    for w in sheets:
+        done = sum(not s["missing"] for s in w["students"].values())
+        print(f"  {w['date']} {w['title']}: {done} scored, out of {w['possible']:g} points"
+              + (f" ({len(w['students']) - done} not finished marking)" if done < len(w["students"]) else ""))
+    for title, sid, missing in report["incomplete"]:
+        print(f"  {title}: {sid} isn't finished marking (Q{', Q'.join(map(str, missing))} in the review pile), so "
+              "the page leaves their score blank")
+    if not report["numbered"]:
+        print("  These class IDs weren't made by setup, so their order may not be the class list's: the teacher "
+              "should match by their own list of IDs and names, in the page.")
+    print("Give the teacher the page. They open it in a browser, choose their gradebook, and open the file it "
+          "exports; the page matches students and saves a file to import. That file has names: never ask for it, "
+          "or for the saved import file.")
+    return 0
+
+
 def cmd_progress(args) -> int:
     from paper_loop_core import progress as PG
     try:
@@ -779,6 +809,12 @@ def main() -> int:
     p.add_argument("--roster", type=Path, help="only these class IDs (a CSV), for one class period")
     p.add_argument("--class-name", help="the name printed on the reports (default: the folder's name)")
     p.set_defaults(func=cmd_progress)
+    p = sub.add_parser("gradebook")
+    p.add_argument("folder", type=Path, help="the folder that holds this class's worksheets and marking folders")
+    p.add_argument("--out", type=Path, help="where the page goes (default: FOLDER/progress)")
+    p.add_argument("--roster", type=Path, help="the class's IDs (a CSV; default: FOLDER/roster.csv)")
+    p.add_argument("--class-name", help="the name on the page (default: the folder's name)")
+    p.set_defaults(func=cmd_gradebook)
     p = sub.add_parser("cards")
     p.add_argument("rosters", type=Path, nargs="+", help="each class's roster.csv (a column named id)")
     p.add_argument("--out", type=Path, required=True, help="the PDF to write")

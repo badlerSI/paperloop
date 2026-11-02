@@ -23,6 +23,10 @@ anything a teacher does with it.
   project page, as Wikimedia asks of scripts. It carries nothing else: no student work, no names, no email
   address.
 - **Nowhere else.** The scripts make no other network requests.
+- **Names stay on the teacher's computer.** The progress dashboard and the gradebook page are files that open
+  in the teacher's browser. A teacher can show their own class list in them, or open their gradebook's file to
+  match class IDs to names. Those names stay in the open page: the pages save nothing, and each one blocks
+  itself from sending anything anywhere (a Content-Security-Policy that allows no network requests).
 
 ## Sources Paper Loop draws on, and whose terms apply
 

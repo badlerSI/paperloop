@@ -44,11 +44,12 @@ Paper Loop is also a plugin for Claude Cowork. Claude does the marking itself, s
 7. **Go over it**: "Make slides to go over what they missed." The deck starts with how the class did on each question, then takes the most-missed questions first: how the class answered (a chart of the letters chosen, the wrong answers two or more students gave), then the answer worked through, and ends with students fixing one mistake on their marked copy. Nothing on it identifies a student. Planning tomorrow's lesson? It can open with these slides.
 8. **Practice what they missed**: "Make practice sheets." Each student gets a sheet of the questions they missed, with new numbers and last time's comment above each one, and their ID already printed. Scan them back the same way.
 9. **See progress**: "How is my class doing?" You get:
-   - a dashboard that opens in any browser (skills student by student, groups for the next lesson, what marking noticed);
+   - a dashboard that opens in any browser (what to do next, skills student by student, groups for the next lesson, the most-missed questions, and one student at a time);
    - a progress page for each family, in their language if you like;
-   - a gradebook file.
+   - a file of each student's latest score on each skill.
 
    Students are known only by class ID; the family page has a line for you to write the name.
+10. **Put scores in your gradebook**: "Put this week's worksheets in my gradebook." Claude makes a page you open in your browser. Choose your gradebook (Canvas, PowerSchool, Schoology, Skyward, Aeries, D2L Brightspace, or any spreadsheet), open the file it exports, check who's who, and save a file to import back. Google Classroom and Infinite Campus can't import from a file, so for them you get a list to type in from. Your gradebook's file has names, so it stays in your browser: the page can't send anything anywhere, and Claude never sees it.
 
 Privacy: Claude only looks at the cropped answers and the ID boxes, never the whole page, and never sees names. On your own Claude for Teachers account, keep student work de-identified (class ID numbers, no names) unless your school or district has authorized Claude for student records. See [Anthropic's terms for teachers](https://support.claude.com/en/articles/15926041-claude-for-teachers-your-data-and-our-terms).
 

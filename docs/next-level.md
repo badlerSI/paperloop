@@ -58,6 +58,12 @@ own page code, and a scan of every copy marks as one stack.
   to try at home, an interpreter notice, and a footer that says AI helped mark.
 - `progress.csv`: numbers, with help on the page as its own column.
 
+**Gradebook** (`PL gradebook`).
+- `gradebook.html`: each student's score on each marked worksheet, by class ID. The teacher opens their
+  gradebook's exported file in it; the page matches students (by order, or by the teacher's own list of IDs
+  and names) and saves a file to import back. Names never leave the browser, and practice sheets, absent
+  students, and pages still in the review pile stay blank rather than zero.
+
 **The next day's slides.** A lesson phase with `"review"` opens with the earlier worksheet's go-over: how it
 went, the most-missed questions with how the class answered, and a "Fix it" slide for the marked copies.
 

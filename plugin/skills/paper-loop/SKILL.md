@@ -161,7 +161,8 @@ double quotes. If you lose track at any point, `PL status "<work>"` says what's 
      they decide the other way.
 7. **Render.** `PL render "<work>"`, adding `--accept-flags` if the teacher said to print flags as marked
    (it isn't needed when nothing is flagged), `--grade back` to put the score on the last page, or
-   `--grade csv` for a gradebook file (use one when the teacher asks for scores or grades). By default no score is printed. Give the teacher
+   `--grade csv` for a file of each class ID's points (use one when the teacher asks for scores or grades; to put
+   them into the school's gradebook, see Scores into the gradebook). By default no score is printed. Give the teacher
    `<work>/out/returned.pdf` and say whether to print it single- or double-sided. If there's a
    `review_pile.pdf`, say which pages are in it and why. Those are usually a smudged or missing ID, which
    the teacher can sort by hand.
@@ -355,6 +356,30 @@ When the teacher asks how the class or a student is doing over time, or wants so
    - Each status comes from the skill's most recent new evidence: a later worksheet, or a practice sheet
      with new numbers. Practicing the very same question again doesn't change a status.
    - Family pages don't replace IEP progress reports; the case manager writes those.
+
+## Scores into the gradebook
+
+When the teacher wants marked worksheets in their school's gradebook:
+
+1. Run `PL gradebook "<class folder>"` (it reads the folder's `roster.csv`; add `--class-name "Period 3 Math"`).
+   It writes `<class folder>/progress/gradebook.html`, with each student's score on each marked worksheet by
+   class ID. Practice sheets aren't in it, an absent student's score is blank rather than a zero, and a student
+   whose pages are still in the review pile is blank until marking is finished.
+2. Give the teacher the page. They open it in a browser, tick the worksheets, choose their gradebook, and
+   follow its steps: save a file from the gradebook, open it in the page, check who's who, and save the file
+   to import back. The page matches students by order (setup numbers students in the order of the teacher's
+   class list) or by the teacher's own list of class IDs and names, which they can save there for next time.
+   - It makes import files for Canvas (a new assignment, or one already there), PowerSchool's PowerTeacher
+     Pro, Schoology, Skyward, Aeries, and D2L Brightspace.
+   - Google Classroom and Infinite Campus can't import scores from a file, so for them it's a list of names
+     and scores to type in from.
+   - "Another gradebook" fills a column of any file with a column of names, and "No file" copies the scores
+     in class ID order.
+   - PowerTeacher Pro, Aeries, and Skyward import into an assignment that's already there, so the teacher
+     makes it first.
+3. That file, the list, and the file it saves all have names: never ask for any of them, or for a picture of
+   the page once a file is open. If a step in the page doesn't match the teacher's screens, a district's
+   setup may differ; suggest their school's contact for that system rather than guessing.
 
 ## Reporting back
 
