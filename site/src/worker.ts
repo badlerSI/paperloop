@@ -1,7 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import { zodOutputFormat } from "@anthropic-ai/sdk/helpers/zod";
 import { z } from "zod";
-import { Limiter, MemoryLedger, type Caps, type Kind, type Left, type Reservation } from "./limiter";
+import { Limiter, MemoryLedger, type Caps, type Kind, type Left, type Reservation, type Who } from "./limiter";
 import {
   LANGUAGES,
   MARK_SYSTEM,
@@ -31,6 +31,7 @@ interface Env {
   WORKSHEETS_PER_VISITOR?: string;
   MARKS_PER_VISITOR?: string;
   PAGES_PER_VISITOR?: string;
+  VISITORS_PER_ADDRESS?: string;
   TURNSTILE_SITE_KEY?: string;
   TURNSTILE_SECRET?: string;
   VISITOR_SALT?: string;
@@ -105,6 +106,7 @@ function caps(env: Env): Caps {
     mark: num(env.MARKS_PER_VISITOR, 8),
     page: num(env.PAGES_PER_VISITOR, 3),
     budgetUsd: num(env.DAILY_BUDGET_USD, 5),
+    perAddress: num(env.VISITORS_PER_ADDRESS, 10),
   };
 }
 
@@ -133,11 +135,25 @@ function network(ip: string): string {
 
 // Without VISITOR_SALT the API key is the salt: it's just as secret, so the hashes still can't be
 // reversed by trying every address.
-async function visitor(req: Request, env: Env): Promise<string> {
-  const ip = network(req.headers.get("CF-Connecting-IP") ?? "local");
+async function scramble(env: Env, text: string): Promise<string> {
   const salt = env.VISITOR_SALT || env.ANTHROPIC_API_KEY || "paper-loop";
-  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${salt}|${ip}`)));
+  const digest = new Uint8Array(await crypto.subtle.digest("SHA-256", new TextEncoder().encode(`${salt}|${text}`)));
   return [...digest.slice(0, 12)].map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+const COOKIE = "pl_visitor";
+
+// Each browser gets a random number in a cookie that only the demo API sees. A script that drops the
+// cookie gets a new number every time, so its address's ceiling, and the day's budget, still hold it.
+async function identify(req: Request, env: Env): Promise<{ who: Who; setCookie: string | null }> {
+  const sent = (req.headers.get("Cookie") ?? "").match(new RegExp(`(?:^|;\\s*)${COOKIE}=([0-9a-f]{32})(?:;|$)`));
+  const browser = sent ? sent[1] : crypto.randomUUID().replaceAll("-", "");
+  const ip = network(req.headers.get("CF-Connecting-IP") ?? "local");
+  const who = { visitor: await scramble(env, `browser|${browser}`), address: await scramble(env, ip) };
+  const setCookie = sent
+    ? null
+    : `${COOKIE}=${browser}; Path=/api/; Max-Age=2592000; HttpOnly; Secure; SameSite=Strict`;
+  return { who, setCookie };
 }
 
 // Browsers always send Origin on a POST. This stops other websites from spending the budget through
@@ -165,9 +181,9 @@ async function human(token: string | undefined, req: Request, env: Env): Promise
 }
 
 type Ledger = {
-  status(visitor: string, caps: Caps, probe: number): Promise<Left>;
-  reserve(visitor: string, kind: Kind, cost: number, caps: Caps, floor: number): Promise<Reservation>;
-  settle(visitor: string, kind: Kind, day: string, reserved: number, actual: number, refund: boolean): Promise<void>;
+  status(who: Who, caps: Caps, probe: number): Promise<Left>;
+  reserve(who: Who, kind: Kind, cost: number, caps: Caps, floor: number): Promise<Reservation>;
+  settle(who: Who, kind: Kind, day: string, reserved: number, actual: number, refund: boolean): Promise<void>;
 };
 
 const memory = new MemoryLedger();
@@ -357,9 +373,16 @@ function picture(base64: string): Picture | null {
   return null;
 }
 
-function refused(reason: "visitor" | "budget", kind: Kind, left: Left): Response {
+function refused(reason: "visitor" | "address" | "budget", kind: Kind, left: Left): Response {
   if (reason === "visitor") {
-    return sorry("That's all of those for today from this connection. They reset at midnight UTC.", 429, left);
+    return sorry("That's all of those for today in this browser. They reset at midnight UTC.", 429, left);
+  }
+  if (reason === "address") {
+    return sorry(
+      "Lots of people on this internet connection (a whole school, maybe) have tried that one today. They reset at midnight UTC.",
+      429,
+      left,
+    );
   }
   // "open" says whether the cheapest demo, one answer, still fits today.
   if (kind !== "mark" && left.open) {
@@ -369,10 +392,10 @@ function refused(reason: "visitor" | "budget", kind: Kind, left: Left): Response
   return sorry("Today's free demos are used up. They reset at midnight UTC.", 429, left);
 }
 
-async function config(req: Request, env: Env): Promise<Response> {
+async function config(env: Env, who: Who): Promise<Response> {
   const on = demosOn(env);
   const left = on
-    ? await limiter(env).status(await visitor(req, env), caps(env), worstCase("mark", models(env).mark))
+    ? await limiter(env).status(who, caps(env), worstCase("mark", models(env).mark))
     : { worksheet: 0, mark: 0, page: 0, open: false };
   return json({
     demos: on,
@@ -384,14 +407,13 @@ async function config(req: Request, env: Env): Promise<Response> {
   });
 }
 
-async function worksheet(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+async function worksheet(req: Request, env: Env, ctx: ExecutionContext, who: Who): Promise<Response> {
   const parsed = WorksheetRequest.safeParse(await readBody(req));
   if (!parsed.success) return sorry("Give a topic (up to 160 characters) and a grade from 2 to 12.", 400);
   const { topic, grade, language, token } = parsed.data;
   if (!(await human(token, req, env))) return sorry("Please finish the check box first.", 403);
 
   const model = models(env).worksheet;
-  const who = await visitor(req, env);
   const reserved = worstCase("worksheet", model);
   const booking = await limiter(env).reserve(who, "worksheet", reserved, caps(env), worstCase("mark", models(env).mark));
   if (!booking.ok) return refused(booking.reason, "worksheet", booking.left);
@@ -491,7 +513,7 @@ function checkPicture(image: string): { pic: Picture; data: string } | Response 
   return { pic, data };
 }
 
-async function mark(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+async function mark(req: Request, env: Env, ctx: ExecutionContext, who: Who): Promise<Response> {
   const parsed = MarkRequest.safeParse(await readBody(req));
   if (!parsed.success) return sorry("Write an answer first, or use a smaller photo.", 400);
   const { question, custom, image, token } = parsed.data;
@@ -509,7 +531,6 @@ async function mark(req: Request, env: Env, ctx: ExecutionContext): Promise<Resp
   if (!(await human(token, req, env))) return sorry("Please finish the check box first.", 403);
 
   const model = models(env).mark;
-  const who = await visitor(req, env);
   const reserved = worstCase("mark", model);
   const booking = await limiter(env).reserve(who, "mark", reserved, caps(env), reserved);
   if (!booking.ok) return refused(booking.reason, "mark", booking.left);
@@ -544,7 +565,7 @@ type Booked = Extract<Reservation, { ok: true }>;
 
 type PictureJob = {
   kind: "mark" | "page";
-  who: string;
+  who: Who;
   booking: Booked;
   reserved: number;
   model: string;
@@ -625,7 +646,7 @@ const SAMPLE_KEYS = JSON.stringify(
 );
 
 // A whole filled-in sample page, from a phone photo or a scan the browser turned into a picture.
-async function markPage(req: Request, env: Env, ctx: ExecutionContext): Promise<Response> {
+async function markPage(req: Request, env: Env, ctx: ExecutionContext, who: Who): Promise<Response> {
   const parsed = PageRequest.safeParse(await readBody(req));
   if (!parsed.success) return sorry("Add a photo or scan of your page, or use a smaller one.", 400);
   const { image, token } = parsed.data;
@@ -635,7 +656,6 @@ async function markPage(req: Request, env: Env, ctx: ExecutionContext): Promise<
   if (!(await human(token, req, env))) return sorry("Please finish the check box first.", 403);
 
   const model = models(env).mark;
-  const who = await visitor(req, env);
   const reserved = worstCase("page", model);
   const booking = await limiter(env).reserve(who, "page", reserved, caps(env), worstCase("mark", model));
   if (!booking.ok) return refused(booking.reason, "page", booking.left);
@@ -663,8 +683,18 @@ async function markPage(req: Request, env: Env, ctx: ExecutionContext): Promise<
   });
 }
 
+// Runs one API call for this visitor, and gives a browser it hasn't seen before its cookie.
+async function asVisitor(req: Request, env: Env, run: (who: Who) => Promise<Response>): Promise<Response> {
+  const { who, setCookie } = await identify(req, env);
+  const res = await run(who);
+  if (!setCookie) return res;
+  const out = new Response(res.body, res);
+  out.headers.append("Set-Cookie", setCookie);
+  return out;
+}
+
 async function api(req: Request, env: Env, ctx: ExecutionContext, url: URL): Promise<Response> {
-  if (url.pathname === "/api/config" && req.method === "GET") return config(req, env);
+  if (url.pathname === "/api/config" && req.method === "GET") return asVisitor(req, env, (who) => config(env, who));
   const routes: Record<string, typeof mark | typeof worksheet> = {
     "/api/worksheet": worksheet,
     "/api/mark": mark,
@@ -675,7 +705,7 @@ async function api(req: Request, env: Env, ctx: ExecutionContext, url: URL): Pro
   if (req.method !== "POST") return sorry("Use POST.", 405);
   if (!sameOrigin(req, url)) return sorry("Demos run from this site only.", 403);
   if (!demosOn(env)) return sorry("The demos are switched off for now.", 503);
-  return route(req, env, ctx);
+  return asVisitor(req, env, (who) => route(req, env, ctx, who));
 }
 
 // The same as public/_headers, which Cloudflare Pages doesn't apply to pages this Worker serves.

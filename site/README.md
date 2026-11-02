@@ -15,8 +15,10 @@ Claude API key:
   page shows how to install Paper Loop and say "Set up Paper Loop for my class."
 
 It's one Cloudflare Worker that serves the page from `public/` and the demos from `src/`. Nothing is
-stored except a daily count of demos per visitor and the day's spending. Visitors are counted by a salted
-hash of their IP address, and those hashes are wiped at midnight UTC.
+stored except a daily count of demos per visitor and the day's spending. A visitor is one browser, known
+by a random number in a cookie that only the demo API sees, and each internet address also has a ceiling, so
+a whole school on one address can try the demos without a script getting unlimited tries. Both are stored
+as salted hashes and wiped at midnight UTC.
 
 ## The quick way
 
@@ -69,8 +71,10 @@ Three limits keep the bill small. Change any of them in `wrangler.jsonc` and dep
   reserves its worst case first ($0.09 for a worksheet, $0.03 for one answer, $0.07 for a page), so the
   cap holds even when
   many arrive at once. When the day's budget is gone, the page says so until midnight UTC.
-- `WORKSHEETS_PER_VISITOR` (3), `MARKS_PER_VISITOR` (8) and `PAGES_PER_VISITOR` (3): per IP address, per
+- `WORKSHEETS_PER_VISITOR` (3), `MARKS_PER_VISITOR` (8) and `PAGES_PER_VISITOR` (3): per browser, per
   day.
+- `VISITORS_PER_ADDRESS` (10): one internet address gets this many browsers' worth of each demo a day
+  (30 worksheets, 80 answers, 30 pages).
 - To switch the demos off without a deploy, add a variable `DEMOS` with the value `off` under the
   Worker's **Settings → Variables and Secrets**; delete it to switch them back on.
 
@@ -125,7 +129,7 @@ You need a free Cloudflare account and Node.js. Commands run from this `site` fo
 
 ## A bot check (optional, recommended once it's shared widely)
 
-The per-visitor limits stop casual overuse, but a script can change IP addresses. Cloudflare Turnstile
+The per-visitor limits stop casual overuse, but a script can drop its cookie and change IP addresses. Cloudflare Turnstile
 adds a free check box that's usually invisible.
 
 1. In the Cloudflare dashboard, open **Turnstile → Add widget**, name it, add `saaspocalypsenow.ai`, and

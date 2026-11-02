@@ -6,7 +6,7 @@
 <title>SaaSpocalypse Now</title>
 <meta name="description" content="Districts paid for software that sat unused while reading fell. One teacher built a free replacement in three days for under $50. The ed tech subscription is finished.">
 <meta property="og:title" content="SaaSpocalypse Now: the ed tech subscription is finished.">
-<meta property="og:description" content="One teacher built it in three days, for under $50 of a monthly Claude plan: a comment on every answer, on paper, by morning. Free. Try it in your browser.">
+<meta property="og:description" content="One teacher built it in three days, for under $50 of a monthly Claude plan: a comment on every answer, printed on the student's own page. Free. Try it in your browser.">
 <meta property="og:image" content="https://saaspocalypsenow.ai/img/og.png">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://saaspocalypsenow.ai/">
@@ -66,7 +66,7 @@
     <p class="kicker">Reel 1 · The tsunami</p>
     <h2>A wave was always coming for ed tech.</h2>
     <p class="lede">For years, cash-strapped districts paid for software that mostly sat unused and barely moved test scores, while reading fell. That business was never going to last.</p>
-    <p class="lede">I'm a teacher. I built Paper Loop in three days, as a side project, using under $50 of a monthly Claude plan. It does what the subscriptions promised: a specific comment on every answer, for every student, on paper, by morning. It's free.</p>
+    <p class="lede">I'm a teacher. I built Paper Loop in three days, as a side project, using under $50 of a monthly Claude plan. It does what the subscriptions promised: a specific comment on every answer, for every student, printed on their own page. It's free.</p>
     <div class="cta">
       <a class="btn btn-primary" href="#try">Try it yourself</a>
       <a class="btn" href="#numbers">See the receipts</a>
@@ -197,7 +197,7 @@
 
   <aside class="thread">
     <p class="thread-head">When the expensive part becomes nearly free, the middlemen go.</p>
-    <p>A teacher with 150 students and a six-question worksheet has 900 answers to read. That's why the best practices never scaled, and why districts bought software that promised to do it instead. Claude can now draft every one of those comments overnight, with the teacher checking. A subscription has nothing left to sell.</p>
+    <p>A teacher with 150 students and a six-question worksheet has 900 answers to read. That's why the best practices never scaled, and why districts bought software that promised to do it instead. Claude can now draft every one of those comments, with the teacher checking. A subscription has nothing left to sell.</p>
   </aside>
 </section>
 
@@ -282,6 +282,19 @@
   <p class="kicker">Reel 7 · Try it</p>
   <h2>Don't take my word for it.</h2>
   <p class="section-lede">Three small demos, running on Paper Loop's own Claude account. Make a worksheet on any school topic, write one answer and watch it get marked, or print a sample, fill it in, and have the whole page marked from a phone photo.</p>
+  <figure class="howto">
+    <video controls playsinline preload="none" poster="/img/try-poster.jpg" width="1920" height="1080" aria-describedby="howto-steps">
+      <source src="/video/try-paper-loop.mp4" type="video/mp4">
+    </video>
+    <figcaption>Paper Loop in 45 seconds, no sound.</figcaption>
+    <ol class="sr-only" id="howto-steps">
+      <li>Print a sample worksheet.</li>
+      <li>Fill it in like a student. Get a few wrong on purpose.</li>
+      <li>Take a photo, with all four corner squares in view.</li>
+      <li>Claude marks every answer, with a comment beside it.</li>
+      <li>Then say: “Set up Paper Loop for my class.”</li>
+    </ol>
+  </figure>
   <p class="quota" id="quota" aria-live="polite"></p>
 
   <div class="tabs" role="tablist" aria-label="Demos">
@@ -403,13 +416,14 @@
   <aside class="getit" id="get">
     <h3>Want this for your class? Paper Loop is free.</h3>
     <ol>
-      <li><b>On Claude for Teachers, Pro, Max or Team:</b> in Claude, open <b>Customize → Plugins → Add marketplace</b>, enter <code>badlerSI/paperloop</code>, and install Paper Loop.</li>
-      <li><b>On the Free plan:</b> download <a href="https://github.com/badlerSI/paperloop/releases/latest">paper-loop.zip</a>, then in Claude open <b>Customize → Skills</b> and upload it. Code execution has to be on (<b>Settings → Capabilities</b>).</li>
+      <li><b>On <a href="https://www.anthropic.com/news/claude-for-teachers">Claude for Teachers</a> (free for US K-12 teachers), Pro, Max or Team:</b> in Claude, open <b>Customize → Plugins → Add marketplace</b>, enter <code>badlerSI/paperloop</code>, and install Paper Loop.</li>
+      <li><b>On the Free plan:</b> download <a href="https://github.com/badlerSI/paperloop/releases/latest/download/paper-loop.zip">paper-loop.zip</a>, then in Claude open <b>Customize → Skills</b> and upload it. Code execution has to be on (<b>Settings → Capabilities</b>).</li>
       <li><b>Then show Claude your filled-in sample and say “Set up Paper Loop for my class.”</b> Claude marks it, sets up class numbers (never names) and a folder for each class, and makes your first real worksheet.</li>
     </ol>
+    <p class="getit-more">For your first class set: <a href="/scanning">Scanning a class set</a>, one page to keep by the copier.</p>
   </aside>
 
-  <p class="privacy" id="privacy">What you type, draw, or photograph goes to Anthropic's API to be read, and this site keeps none of it. To limit the demos, the site counts them by a scrambled form of your internet address and wipes the counts every night. Cloudflare, which hosts the site and runs the bot check when there is one, keeps its own short-term server records.</p>
+  <p class="privacy" id="privacy">What you type, draw, or photograph goes to Anthropic's API to be read, and this site keeps none of it. To limit the demos, the site gives your browser a random number in a cookie, counts the demos by it and by a scrambled form of your internet address, and wipes the counts every night. Cloudflare, which hosts the site and runs the bot check when there is one, keeps its own short-term server records.</p>
 </section>
 
 <section id="about" class="band">

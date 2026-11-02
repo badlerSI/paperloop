@@ -31,10 +31,12 @@
     "MARK_MODEL": "claude-sonnet-5-5",
     // The most the demos can spend in a day, across all visitors, in US dollars.
     "DAILY_BUDGET_USD": "5",
-    // Demos per visitor (per IP address) per day.
+    // Demos per visitor (one browser) per day.
     "WORKSHEETS_PER_VISITOR": "3",
     "MARKS_PER_VISITOR": "8",
     "PAGES_PER_VISITOR": "3",
+    // One internet address, such as a whole school's, gets this many visitors' worth of demos a day.
+    "VISITORS_PER_ADDRESS": "10",
     // Turnstile's site key is public. Its secret goes in with `wrangler secret put TURNSTILE_SECRET`.
     "TURNSTILE_SITE_KEY": ""
   }

@@ -219,7 +219,6 @@ function sheetHead(title, instructions, digits, lang) {
   return el(
     "header",
     { class: "sheet-head" },
-    el("div", { class: "qr", "aria-hidden": "true" }),
     el(
       "div",
       {},
@@ -381,7 +380,6 @@ function renderSheet() {
     lang: version ? LANG_CODES[language] : "en",
     dir: version && RTL.has(language) ? "rtl" : undefined,
   });
-  for (const c of ["tl", "tr", "bl", "br"]) sheet.append(el("span", { class: `corner ${c}`, "aria-hidden": "true" }));
 
   const title = version ? version.title : ws.title;
   const instructions = version ? version.instructions : ws.instructions;
@@ -421,7 +419,7 @@ function renderSheet() {
   }
   sheet.append(list);
   if (view !== "key") sheet.append(el("div", { class: "sheet-sum", text: version ? "" : "Next step:" }));
-  sheet.append(el("p", { class: "sheet-foot", text: "paper loop demo · page 1 of 1 · please don't write in the corner squares" }));
+  sheet.append(el("p", { class: "sheet-foot", text: "Paper Loop demo · a preview, so it can't be marked · in Claude, Paper Loop adds the corner squares and code that marking needs" }));
   out.append(sheet);
 }
 
