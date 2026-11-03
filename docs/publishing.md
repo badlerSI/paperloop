@@ -27,9 +27,9 @@ under **Organization settings → Plugins & skills** and sets it to install by d
   reach is named in the README and the privacy policy.
 - October 30, 2026: the repository was made public, private vulnerability reporting was turned on, and
   release `v0.6.0` was published with `paper-loop.zip` attached; `v0.6.1` (a hands-on question by default)
-  followed the same day, and `v0.6.2` (ID cards and a scanning guide) and `v0.6.3` (a dashboard that
-  starts with what to do next) on November 2. The website, saaspocalypsenow.ai, deploys from `site/` on
-  every push to `day-3`.
+  followed the same day, and `v0.6.2` (ID cards and a scanning guide), `v0.6.3` (a dashboard that
+  starts with what to do next), and `v0.6.4` (scores into the school's gradebook) on November 2. The
+  website, saaspocalypsenow.ai, deploys from `site/` on every push to `day-3`.
 
 ## Steps only the owner can take
 
